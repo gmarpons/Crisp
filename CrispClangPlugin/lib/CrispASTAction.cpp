@@ -7,7 +7,10 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendPluginRegistry.h"
 
+#include "PrologEngine.h"
+
 using namespace clang;
+using namespace prolog;
 
 namespace {
 
@@ -33,10 +36,14 @@ namespace {
     
     virtual void HandleTranslationUnit(ASTContext &Context) {
       facts() << "Handling translation unit!\n";
+      plRunEngine(RulesFileName);
 
       // traverse AST to visit declarations and statements
       TraverseDecl(Context.getTranslationUnitDecl());
       facts() << "Traversing of the AST done!\n";
+
+      plTopLevel();
+      plCleanUp();
     }
     
     // Visit declarations
