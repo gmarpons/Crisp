@@ -74,16 +74,16 @@ namespace prolog {
     return Success;
   }
 
-  int plAssertDeclIsA(const Decl *Decl, const std::string &Sort) {
+  int plAssertIsA(void *Elem, const std::string &Sort) {
     int Success;
-    term_t DeclT = PL_new_term_ref();
-    Success = PL_put_pointer(DeclT, (void *) Decl);
+    term_t ElemT = PL_new_term_ref();
+    Success = PL_put_pointer(ElemT, Elem);
     if ( !Success) return Success;
     term_t SortA = PL_new_term_ref();
     PL_put_atom_chars(SortA, Sort.c_str());
     functor_t IsAF = PL_new_functor(PL_new_atom("isA"), 2);
     term_t IsAT = PL_new_term_ref();
-    Success = PL_cons_functor(IsAT, IsAF, DeclT, SortA);
+    Success = PL_cons_functor(IsAT, IsAF, ElemT, SortA);
     if ( !Success) return Success;
     functor_t AssertzF = PL_new_functor(PL_new_atom("assertz"), 1);
     term_t AssertzT = PL_new_term_ref();
@@ -93,6 +93,14 @@ namespace prolog {
     DEBUG(if ( !Success) dbgs() << "Error asserting 'isA " 
                                 << Sort << "' fact.\n");
     return Success;
+  }
+
+  int plAssertDeclIsA(Decl *Decl, const std::string &Sort) {
+    return plAssertIsA((void *) Decl, Sort);
+  }
+
+  int plAssertTypeIsA(Type *Type, const std::string &Sort) {
+    return plAssertIsA((void *) Type, Sort);
   }
 
 }

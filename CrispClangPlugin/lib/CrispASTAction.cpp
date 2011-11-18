@@ -1,4 +1,9 @@
 #include <string>
+#include <vector>
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
+#include <boost/range/algorithm/for_each.hpp>
+#include <boost/range/iterator_range.hpp>
 
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/RecursiveASTVisitor.h"
@@ -6,6 +11,7 @@
 #include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendPluginRegistry.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -14,6 +20,8 @@
 using namespace llvm;
 using namespace clang;
 using namespace prolog;
+namespace b = boost;
+namespace l = boost::lambda;
 
 namespace {
 
@@ -26,22 +34,37 @@ namespace {
       , RulesFileName(RFN) {
       // ErrorInfo is an output arg to get info about potential errors
       // opening the file/stream.
-      FactsOutputStream = new llvm::raw_fd_ostream("-", ErrorInfo);
+      FactsOutputStream = new raw_fd_ostream("-", ErrorInfo);
     }
 
     virtual ~CrispConsumer() {
       delete FactsOutputStream;
     }
     
-    llvm::raw_ostream &facts() {
+    raw_ostream &facts() {
       return *FactsOutputStream;
     }
     
+    void VisitTypeFromTypesTable(Type *T) {
+      if (isa<PointerType>(T)) {
+        std::string Sort("PointerType");
+        (void) plAssertTypeIsA(T, Sort); // Return value ignored
+      }
+    }
+
     virtual void HandleTranslationUnit(ASTContext &Context) {
       DEBUG(dbgs() << "Handling translation unit!\n");
       int Success = plRunEngine(RulesFileName);
 
       if (Success) {
+        // Traverse types in the translation unit
+        b::for_each(b::make_iterator_range(Context.types_begin()
+                                           , Context.types_end())
+                    , l::bind(&CrispConsumer::VisitTypeFromTypesTable
+                              , this
+                              , l::_1)
+                    );
+
         // traverse AST to visit declarations and statements
         TraverseDecl(Context.getTranslationUnitDecl());
         DEBUG(dbgs() << "Traversing of the AST done!\n");
@@ -86,7 +109,7 @@ namespace {
 
   private:
     CompilerInstance &CompilerInstance;
-    llvm::raw_ostream *FactsOutputStream;
+    raw_ostream *FactsOutputStream;
     std::string ErrorInfo;
     std::string RulesFileName;
   };
@@ -100,7 +123,7 @@ namespace {
     
   protected:
     virtual ASTConsumer* CreateASTConsumer(CompilerInstance& CI
-                                           , llvm::StringRef) {
+                                           , StringRef) {
       return new CrispConsumer(CI, RulesFileName);
     }
     
