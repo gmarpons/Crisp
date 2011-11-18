@@ -1,6 +1,6 @@
 ##===- projects/CrispClangPlugin/lib/Makefile --------------------*- Makefile -*-===##
 
-# TODO: put the following library dependencies as configuration
+# FIXME: put the following library dependencies as configuration
 # options using automake/autoconf
 CPPFLAGS += "-I/srv/llvm-build/boost_1_46_0"
 CPPFLAGS += "-I/usr/lib/swi-prolog/include/"
@@ -24,7 +24,7 @@ LOADABLE_MODULE=1
 
 include $(LEVEL)/Makefile.common
 
-# TODO: put the following library dependencies as configuration
+# FIXME: put the following library dependencies as configuration
 # options using automake/autoconf
 LDFLAGS += -L/usr/lib/swi-prolog/lib
 LIBS += -lswipl

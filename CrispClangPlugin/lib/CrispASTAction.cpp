@@ -6,9 +6,12 @@
 #include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendPluginRegistry.h"
+#include "llvm/Support/Debug.h"
+#include "llvm/Support/raw_ostream.h"
 
 #include "PrologEngine.h"
 
+using namespace llvm;
 using namespace clang;
 using namespace prolog;
 
@@ -35,18 +38,27 @@ namespace {
     }
     
     virtual void HandleTranslationUnit(ASTContext &Context) {
-      facts() << "Handling translation unit!\n";
-      plRunEngine(RulesFileName);
+      DEBUG(dbgs() << "Handling translation unit!\n");
+      int Success = plRunEngine(RulesFileName);
 
-      // traverse AST to visit declarations and statements
-      TraverseDecl(Context.getTranslationUnitDecl());
-      facts() << "Traversing of the AST done!\n";
+      if (Success) {
+        // traverse AST to visit declarations and statements
+        TraverseDecl(Context.getTranslationUnitDecl());
+        DEBUG(dbgs() << "Traversing of the AST done!\n");
 
-      plTopLevel();
-      plCleanUp();
+        // when debugging, open a PROLOG interactive session
+        DEBUG(Success = plInteractiveSession());
+      }
+
+      DEBUG(if (Success) dbgs() << "Translation unit analyzed.\n";
+            else dbgs() << "Analysis aborted: Prolog engine failed.\n";);
+      (void) plCleanUp(Success ? 0 : 1); // Return value ignored
     }
     
     // Visit declarations
+
+    // TODO: handle Prolog errors when visiting AST (now return values
+    // of pl* funcs are ignored).
     
     virtual bool VisitDecl(Decl *D) {
       SourceManager &SM = CompilerInstance.getSourceManager();
@@ -55,14 +67,20 @@ namespace {
       unsigned int C = SM.getSpellingColumnNumber(SL);
       const char *FN = SM.getBufferName(SL);
 
-      facts() << "Decl: " << FN << ":" << L <<  ":" << C << "\n";
+      DEBUG(dbgs() << "Decl: " << FN << ":" << L <<  ":" << C << "\n");
+      return true;
+    }
+
+    virtual bool VisitCXXMethodDecl(Decl *D) {
+      std::string Sort("CXXMethodDecl");
+      (void) plAssertDeclIsA(D, Sort); // Return value ignored
       return true;
     }
 
     // Visit types
     
     virtual bool VisitType(Type *T) {
-      facts() << "Type: " << T->getTypeClassName() << "\n";
+      DEBUG(dbgs() << "Type: " << T->getTypeClassName() << "\n");
       return true;
     }
 
@@ -76,6 +94,8 @@ namespace {
   class CrispASTAction : public PluginASTAction {
   public:
     CrispASTAction() {
+      DebugFlag = 1;            // FIXME: use a plugin option to
+                                // activate debug mode.
     }
     
   protected:

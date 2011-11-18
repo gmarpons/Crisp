@@ -4,7 +4,7 @@
 #
 ##===----------------------------------------------------------------------===##
 
-# TODO: put the following library dependencies as configuration
+# FIXME: put the following library dependencies as configuration
 # options using automake/autoconf
 CPPFLAGS += "-I/srv/llvm-build/boost_1_46_1"
 CPPFLAGS += "-I/usr/lib/swi-prolog/include/"
