@@ -91,9 +91,7 @@ $(PrologSavedStateBuildPath): $(DataDir)/.dir
 
 $(PrologSavedStateBuildPath): $(FullPathSources)
 	$(Echo) Linking $(BuildMode) Prolog saved state $(PROLOGSAVEDSTATENAME)
-	$(Verb) $(SWIPL) -o $@ -c $(FullPathSources)
-	$(Echo) ======= Finished Linking $(BuildMode) Prolog saved state \
-		$(PROLOGSAVEDSTATENAME)
+	$(Verb) $(SWIPL) --quiet -o $@ -c $(FullPathSources)
 
 # endif PROLOGSAVEDSTATENAME
 endif
