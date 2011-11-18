@@ -37,10 +37,10 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 
+#include "crisp/SWIPrologInterface.h"
 #include "CompilationInfo.h"
 #include "PrologAssertClangFacts.h"
 #include "PrologRegisterPredicates.h"
-#include "crisp/SWIPrologInterface.h"
 
 using namespace llvm;
 using namespace clang;
@@ -96,7 +96,7 @@ void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
   DebugFlag = 1;                // FIXME: use a plugin option to
                                 // (de-)activate debug mode.
 
-  DEBUG(dbgs() << "Handling translation unit!" << "\n");
+  DEBUG(dbgs() << "Handling translation unit." << "\n");
   plRegisterPredicates();
   // FIXME: RulesFileName is ignored at the moment
   int Success = plRunEngine("PrologBootForCrispClangPlugin.sh");
@@ -106,7 +106,7 @@ void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
     SourceManager& SC(Context.getSourceManager());
     FileID MainFileID = SC.getMainFileID();
     const char* MainFileName = SC.getFileEntryForID(MainFileID)->getName();
-    DEBUG(dbgs() << "Main file name: " << MainFileName << "\n");
+    DEBUG(dbgs() << "Main source file name: " << MainFileName << "\n");
     plAssertTranslationUnitMainFileName(MainFileName);
 
     // Traverse types in the translation unit
@@ -132,9 +132,9 @@ void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
     deleteCompilationInfo();
   }
   
-  // FIXME: when Success (and debugging) nothing is printed on cout/cerr.
   DEBUG(if (Success) dbgs() << "Translation unit analyzed.\n";
-        else dbgs() << "Analysis aborted: Prolog engine failed.\n";);
+        else dbgs() << "Translation unit analysis aborted: "
+                    << "Prolog engine failed.\n";);
   (void) plCleanUp(Success ? 0 : 1); // Return value ignored
 
   DebugFlag = 0;                // FIXME: use a plugin option to

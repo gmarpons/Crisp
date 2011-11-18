@@ -18,18 +18,22 @@
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
 /// \file
-/// Crisp LLVM Function pass entry point.
+/// Crisp LLVM Function pass plugin entry point.
 
 #define DEBUG_TYPE "crisp"
 
+#include <string>
+
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
+#include "llvm/Module.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetData.h"
 
 #include "crisp/SWIPrologInterface.h"
+#include "PrologAssertLLVMFacts.h"
 
 using namespace llvm;
 using namespace prolog;
@@ -64,20 +68,30 @@ namespace {
 
 bool CrispFunctionPass::doInitialization(Module& M) {
   DEBUG(dbgs() << "Initializing Crisp Function Pass.\n");
-  Success = plRunEngine("Simple.pl"); // FIXME: put a meaningful script name
+  DEBUG(dbgs() << "Handling LLVM Module.\n");
+  // TODO: plRegisterPredicates();
+  Success = plRunEngine("PrologBootForCrispLLVMPass.sh");
+
+  if (Success) {
+    // Assert module name
+    const std::string& ModuleId(M.getModuleIdentifier());
+    DEBUG(dbgs() << "LLVM Module name: " << ModuleId << "\n");
+    plAssertLLVMModuleFileName(ModuleId.c_str());
+  }
 
   DEBUG(if (Success) dbgs() << "Crisp Function Pass initialized.\n";
         else dbgs() << "Analysis aborted: Prolog engine failed.\n";);
 
-  return false;                 // Module is not modified
+  return false;                 // M is not modified
 }
 
 bool CrispFunctionPass::runOnFunction(Function& F) {
   if (Success) {
     ++NumFunctionsFun;
+    DEBUG(dbgs() << "Processing function: " << F.getName() << "\n");
   }
 
-  return false;                 // Function is not modified
+  return false;                 // F is not modified
 }
 
 // Analysis pass (it does not modify the program), but has some
@@ -89,7 +103,6 @@ void CrispFunctionPass::getAnalysisUsage(AnalysisUsage& AU) const {
 }
 
 void CrispFunctionPass::releaseMemory() {
-  DEBUG(dbgs() << "Release memory for crisp-fun pass." << "\n");
 }
 
 bool CrispFunctionPass::doFinalization(Module& M) {
@@ -99,7 +112,10 @@ bool CrispFunctionPass::doFinalization(Module& M) {
     // When debugging, open a PROLOG interactive session
     DEBUG(Success = plInteractiveSession());
   }
+  DEBUG(if (Success) dbgs() << "LLVM Module analyzed.\n";
+        else dbgs() << "LLVM Module analysis aborted: "
+                    << "Prolog engine failed.\n";);
   (void) plCleanUp(Success ? 0 : 1); // Return value ignored
 
-  return false;                 // Module is not modified
+  return false;                 // M is not modified
 }

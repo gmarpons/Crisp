@@ -43,7 +43,8 @@ namespace prolog {
   int plRunEngine(const std::string &BootFileName) {
     // Look for dir where saved state files for booting Prolog are
     // placed: either build data dir or install data dir, depending on
-    // whether DATA_OBJ_ROOT is defined.
+    // whether DATA_OBJ_ROOT is defined (in order to define it, its
+    // necessary to set ENABLE_DATA_OBJ_ROOT variable when compiling).
 #ifdef DATA_OBJ_ROOT
     fs::directory_entry BootFilesDir(XSTR(DATA_OBJ_ROOT));
 #else
