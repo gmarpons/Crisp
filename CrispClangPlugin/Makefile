@@ -4,14 +4,6 @@
 #
 ##===----------------------------------------------------------------------===##
 
-# FIXME: put the following library dependencies as configuration
-# options using automake/autoconf
-CPPFLAGS += "-I/srv/llvm-build/boost_1_46_1"
-CPPFLAGS += "-I/usr/lib/swi-prolog/include/"
-CPPFLAGS += "-I/srv/llvm-build/llvm-obj/tools/clang/include/"
-CPPFLAGS += "-I/home/gmarpons/babel/LLVMtoolsAndProjects/clang-gmarpons.git/include/"
-CPPFLAGS += "-fexceptions"
-
 #
 # Indicates our relative path to the top of the project's root directory.
 #

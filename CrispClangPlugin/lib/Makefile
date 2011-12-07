@@ -1,12 +1,4 @@
-##===- projects/CrispClangPlugin/lib/Makefile --------------------*- Makefile -*-===##
-
-# FIXME: put the following library dependencies as configuration
-# options using automake/autoconf
-CPPFLAGS += "-I/srv/llvm-build/boost_1_46_0"
-CPPFLAGS += "-I/usr/lib/swi-prolog/include/"
-CPPFLAGS += "-I/srv/llvm-build/llvm-obj/tools/clang/include/"
-CPPFLAGS += "-I/home/gmarpons/babel/LLVMtoolsAndProjects/clang-gmarpons.git/include/"
-CPPFLAGS += "-fexceptions"
+##===- projects/CrispClangPlugin/lib/Makefile --------------*- Makefile -*-===##
 
 #
 # Relative path to the top of the source tree.
@@ -24,7 +16,9 @@ LOADABLE_MODULE=1
 
 include $(LEVEL)/Makefile.common
 
-# FIXME: put the following library dependencies as configuration
-# options using automake/autoconf
-LDFLAGS += -L/usr/lib/swi-prolog/lib
-LIBS += -lswipl
+LDFLAGS += ${SWIPL_LDFLAGS}
+LIBS += ${SWIPL_LIBS}
+CPPFLAGS += ${SWIPL_CPPFLAGS}
+CXXFLAGS += ${CLANG_OBJ_CXXFLAGS}
+CXXFLAGS += ${CLANG_SRC_CXXFLAGS}
+CPPFLAGS += ${BOOST_CPPFLAGS}

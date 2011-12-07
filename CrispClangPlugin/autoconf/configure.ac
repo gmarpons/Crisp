@@ -1145,6 +1145,62 @@ AC_ARG_WITH(oprofile,
 AC_DEFINE_UNQUOTED([USE_OPROFILE],$USE_OPROFILE,
                    [Define if we have the oprofile JIT-support library])
 
+dnl Check for SWI Prolog library
+dnl Introduce optional configure parameters for a non-standard
+dnl install prefix (or libs dir) of SWI Prolog.
+AC_ARG_WITH([swipl-prefix],
+  [AS_HELP_STRING([--with-swipl-prefix=PREFIX],
+    [set a non-standard install prefix of SWI Prolog])],
+  [SWIPL_PREFIX_SET=1],
+  [SWIPL_PREFIX_SET=0])
+dnl If optional parameter used, extend path flags for compiler and linker
+if test $SWIPL_PREFIX_SET = 1 ; then
+  dnl Extend the compiler and linker flags according to the path set
+  SWIPL_CPPFLAGS="-I${with_swipl_prefix}/include"
+  SWIPL_LDFLAGS="-L${with_swipl_prefix}/lib"
+fi
+AC_ARG_WITH([swipl-libs],
+  [AS_HELP_STRING([--with-swipl-libs=PATH],
+    [set a non-standard library path of SWI Prolog])],
+  [SWIPL_LIBS_SET=1],
+  [SWIPL_LIBS_SET=0])
+dnl If optional parameter used, extend path flags for linker
+if test $SWIPL_LIBS_SET = 1 ; then
+  dnl Extend the compiler and linker flags according to the path set (overrides
+  dnl swipl_prefix).
+  SWIPL_LDFLAGS="-L${with_swipl_libs}"
+fi
+dnl Store current LDFLAGS and merge with SWIPL_LDFLAGS for library check
+OLD_LDFLAGS=$LDFLAGS
+LDFLAGS="$SWIPL_LDFLAGS $LDFLAGS"
+dnl Check for SWI Prolog library, modifies LIBS if found
+AC_SEARCH_LIBS([PL_initialise], [swipl],
+  [FOUND_SWIPL_LIBS=1;],
+  [FOUND_SWIPL_LIBS=0;])
+dnl Handle results
+if test $FOUND_SWIPL_LIBS != 1; then
+  dnl Notify results
+  AC_MSG_NOTICE([])
+  AC_MSG_NOTICE([The SWI Prolog library was not found!])
+  if test  $SWIPL_LIBS_SET = 1 ; then
+    AC_MSG_NOTICE([The library path '$with_swipl_libs' for SWI Prolog was set.])
+    AC_MSG_NOTICE([--> Maybe wrong?])
+  elif test  $SWIPL_PREFIX_SET = 1 ; then
+    AC_MSG_NOTICE([The install prefix '$with_swipl_prefix' for SWI Prolog was set.])
+    AC_MSG_NOTICE([--> Maybe wrong?])
+  else
+    AC_MSG_NOTICE([No non-standard install dirs for SWI-Prolog were set.])
+    AC_MSG_NOTICE([--> You might want to use '--with-swipl-*=PATH'])
+  fi
+  AC_MSG_NOTICE([])
+  AC_MSG_ERROR([SWI Prolog is an essential dependency: cannot build and stop here!])
+fi
+dnl Reset original LDFLAGS
+LDFLAGS=$OLD_LDFLAGS
+dnl Set SWIPL_LDFLAGS and SWIPL_LIBS for use in Makefiles
+AC_SUBST(SWIPL_LDFLAGS)
+AC_SUBST(SWIPL_LIBS,[-lswipl])
+
 dnl===-----------------------------------------------------------------------===
 dnl===
 dnl=== SECTION 6: Check for header files
@@ -1199,6 +1255,126 @@ AC_LINK_IFELSE(
   AC_MSG_RESULT(no)
   AC_DEFINE(HAVE_CRASHREPORTER_INFO, 0,
             Define if __crashreporter_info__ exists.))
+
+dnl Check for SWI Prolog headers
+dnl Introduce optional configure parameters for a non-standard
+dnl install includes dir of SWI Prolog.
+AC_ARG_WITH([swipl-includes],
+  [AS_HELP_STRING([--with-swipl-includes=PATH],
+    [set a non-standard headers path of SWI Prolog])],
+  [SWIPL_INCLUDES_SET=1],
+  [SWIPL_INCLUDES_SET=0])
+dnl If optional parameter used, extend path flags for compiler
+if test $SWIPL_INCLUDES_SET = 1 ; then
+  dnl Extend the compiler flags according to the path set (overrides
+  dnl swipl-prefix).
+  SWIPL_CPPFLAGS="-I${with_swipl_includes}"
+fi
+dnl Store current CPPFLAGS and merge with SWIPL_CPPFLAGS for compilation check   
+OLD_CPPFLAGS=$CPPFLAGS;
+CPPFLAGS="$CPPFLAGS $SWIPL_CPPFLAGS"
+dnl Check for SWI Prolog library headers   
+AC_MSG_CHECKING([for the SWI Prolog headers])
+dnl Try to compile a file that includes a header of the library SWI Prolog
+AC_COMPILE_IFELSE([[#include "SWI-Prolog.h"]],
+  [AC_MSG_RESULT([yes])
+    FOUND_SWIPL_INCLUDES=1;],
+  [AC_MSG_RESULT([no])
+    FOUND_SWIPL_INCLUDES=0;])
+dnl Handle results
+if test $FOUND_SWIPL_INCLUDES != 1; then
+  dnl Notify results
+  AC_MSG_NOTICE([])
+  AC_MSG_NOTICE([The SWI Prolog headers were not found!])
+  if test  $SWIPL_INCLUDES_SET = 1 ; then
+    AC_MSG_NOTICE([The headers path '$with_swipl_includes' for SWI Prolog was set.])
+    AC_MSG_NOTICE([--> Maybe wrong?])
+  elif test  $SWIPL_PREFIX_SET = 1 ; then
+    AC_MSG_NOTICE([The install prefix '$with_swipl_prefix' for SWI Prolog was set.])
+    AC_MSG_NOTICE([--> Maybe wrong?])
+  else
+    AC_MSG_NOTICE([No non-standard install dirs for SWI-Prolog were set.])
+    AC_MSG_NOTICE([--> You might want to use '--with-swipl-*=PATH'])
+  fi
+  AC_MSG_NOTICE([])
+  AC_MSG_ERROR([SWI Prolog is an essential dep: cannot build and stop here!])
+fi
+dnl Reset original CFLAGS
+CPPFLAGS=$OLD_CPPFLAGS
+dnl Set SWIPL_CPP_FLAGS for use in Makefiles
+AC_SUBST(SWIPL_CPPFLAGS)
+
+dnl Check for Clang header files (object dir)
+CLANG_SRC_ROOT="${llvm_src}/tools/clang"
+CLANG_OBJ_ROOT="${LLVM_ABS_OBJ_ROOT}/tools/clang"
+CLANG_OBJ_CXXFLAGS="-I${CLANG_OBJ_ROOT}/include"
+dnl Store current CXXFLAGS and merge with CLANG_OBJ_CXXFLAGS for compilation check   
+OLD_CXXFLAGS=$CXXFLAGS;
+CXXFLAGS="$CXXFLAGS $CLANG_OBJ_CXXFLAGS"
+dnl Check for Clang library headers (object dir)
+AC_MSG_CHECKING([for the Clang headers (object dir)])
+dnl Try to compile a file that includes a header of the library Clang
+AC_LANG_PUSH([C++])
+AC_COMPILE_IFELSE([[#include "clang/Basic/Version.inc"]],
+  [AC_MSG_RESULT([yes])
+    FOUND_CLANG_INCLUDES_OBJ=1;],
+  [AC_MSG_RESULT([no])
+    FOUND_CLANG_INCLUDES_OBJ=0;])
+AC_LANG_POP([C++])
+dnl Handle results
+if test $FOUND_CLANG_INCLUDES_OBJ != 1; then
+  dnl Notify results
+  AC_MSG_NOTICE([])
+  AC_MSG_NOTICE([The Clang object headers were not found!])
+  AC_MSG_NOTICE([Clang object headers should be in])
+  AC_MSG_NOTICE([  '${CLANG_OBJ_ROOT}/include'.])
+  AC_MSG_NOTICE([--> Compile LLVM with Clang sources downloaded in])
+  AC_MSG_NOTICE([      '${CLANG_SRC_ROOT}'])
+  AC_MSG_NOTICE([])
+  AC_MSG_ERROR([Clang is an essential dep: cannot build and stop here!])
+fi
+dnl Reset original CXXFLAGS
+CXXFLAGS=$OLD_CXXFLAGS
+dnl Set CLANG_OBJ_CXXFLAGS for use in Makefiles
+AC_SUBST(CLANG_OBJ_CXXFLAGS)
+
+dnl Check for Clang header files (sources dir)
+CLANG_SRC_CXXFLAGS="-I${CLANG_SRC_ROOT}/include"
+LLVM_SRC_AND_OBJ_CXXFLAGS="-I${LLVM_ABS_OBJ_ROOT}/include -I${llvm_src}/include"
+dnl Store current CXXFLAGS and merge with CLANG_SRC_CXXFLAGS for compilation check   
+OLD_CXXFLAGS=$CXXFLAGS;
+CXXFLAGS="$CXXFLAGS $LLVM_SRC_AND_OBJ_CXXFLAGS $CLANG_SRC_CXXFLAGS $CLANG_OBJ_CXXFLAGS"
+dnl Check for Clang library headers (sources dir)
+AC_MSG_CHECKING([for the Clang headers (sources dir)])
+dnl Try to compile a file that includes a header of the library Clang
+AC_LANG_PUSH([C++])
+AC_COMPILE_IFELSE([[#include "clang/Basic/Version.h"]],
+  [AC_MSG_RESULT([yes])
+    FOUND_CLANG_INCLUDES_SRC=1;],
+  [AC_MSG_RESULT([no])
+    FOUND_CLANG_INCLUDES_SRC=0;])
+AC_LANG_POP([C++])
+dnl Handle results
+if test $FOUND_CLANG_INCLUDES_SRC != 1; then
+  dnl Notify results
+  AC_MSG_NOTICE([])
+  AC_MSG_NOTICE([The Clang source headers were not found!])
+  AC_MSG_NOTICE([Clang source headers should be found in])
+  AC_MSG_NOTICE([  '${CLANG_SRC_ROOT}/include'.])
+  AC_MSG_NOTICE([--> Put Clang sources in])
+  AC_MSG_NOTICE([      '${CLANG_SRC_ROOT}'])
+  AC_MSG_NOTICE([])
+  AC_MSG_ERROR([Clang is an essential dep: cannot build and stop here!])
+fi
+dnl Reset original CXXFLAGS
+CXXFLAGS=$OLD_CXXFLAGS
+dnl Set CLANG_SRC_CXXFLAGS for use in Makefiles
+AC_SUBST(CLANG_SRC_CXXFLAGS)
+
+dnl Check for Boost C++ Library (Base).
+BOOST_REQUIRE([1.46.1])
+dnl Set BOOST_CPPFLAGS for use in Makefiles
+dnl AC_SUBST(BOOST_CPPFLAGS)
 
 dnl===-----------------------------------------------------------------------===
 dnl===
@@ -1488,9 +1664,7 @@ dnl Configure project makefiles
 dnl List every Makefile that exists within your source tree
 AC_CONFIG_MAKEFILE(Makefile)
 AC_CONFIG_MAKEFILE(lib/Makefile)
-AC_CONFIG_MAKEFILE(lib/sample/Makefile)
 AC_CONFIG_MAKEFILE(tools/Makefile)
-AC_CONFIG_MAKEFILE(tools/sample/Makefile)
 
 dnl This must be last
 AC_OUTPUT

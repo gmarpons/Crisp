@@ -20,3 +20,15 @@ PROJ_INSTALL_ROOT := @prefix@
 
 # Include LLVM's Master Makefile.
 include $(LLVM_SRC_ROOT)/Makefile.common
+
+# Set SWI Prolog variables
+SWIPL_LDFLAGS = @SWIPL_LDFLAGS@
+SWIPL_LIBS = @SWIPL_LIBS@
+SWIPL_CPPFLAGS = @SWIPL_CPPFLAGS@
+
+# Set Clang variables
+CLANG_OBJ_CXXFLAGS = @CLANG_OBJ_CXXFLAGS@
+CLANG_SRC_CXXFLAGS = @CLANG_SRC_CXXFLAGS@
+
+# Set Boost C++ Library variables
+BOOST_CPPFLAGS = @BOOST_CPPFLAGS@
