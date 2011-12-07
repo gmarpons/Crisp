@@ -70,7 +70,7 @@ namespace prolog {
     int Success = PL_call(PrologT, NULL);
     PL_discard_foreign_frame(FId);
     DEBUG(if ( !Success) 
-            dbgs() << "Could not start Prolog interactive session.\n");
+            dbgs() << "Error running Prolog interactive session.\n");
     return Success;
   }
 

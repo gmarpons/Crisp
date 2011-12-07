@@ -40,7 +40,6 @@ namespace {
     virtual void HandleTranslationUnit(ASTContext &Context);
     virtual bool VisitDecl(Decl *D);
     virtual bool VisitCXXMethodDecl(Decl *D);
-    virtual bool VisitType(Type *T);
 
   private:
     raw_ostream &facts();
@@ -64,10 +63,9 @@ raw_ostream & CrispConsumer::facts() {
 }
     
 void CrispConsumer::VisitTypeFromTypesTable(Type *T) {
-  if (isa<PointerType>(T)) {
-    std::string Sort("PointerType");
-    (void) plAssertTypeIsA(T, Sort); // Return value ignored
-  }
+  std::string TypeClassName(T->getTypeClassName());
+  std::string Sort(TypeClassName + "Type");
+  (void) plAssertTypeIsA(T, Sort); // Return value ignored
 }
 
 void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
@@ -115,13 +113,6 @@ bool CrispConsumer::VisitDecl(Decl *D) {
 bool CrispConsumer::VisitCXXMethodDecl(Decl *D) {
   std::string Sort("CXXMethodDecl");
   (void) plAssertDeclIsA(D, Sort); // Return value ignored
-  return true;
-}
-
-// Visit types
-    
-bool CrispConsumer::VisitType(Type *T) {
-  DEBUG(dbgs() << "Type: " << T->getTypeClassName() << "\n");
   return true;
 }
 
