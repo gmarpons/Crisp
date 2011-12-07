@@ -48,10 +48,32 @@ foreign_t pl_getPointeeType(term_t TypeT, term_t PointeeT) {
 foreign_t pl_getCanonicalTypeUnqualified(term_t TypeT, term_t DesugaredT) {
   Type *T;
   if (!PL_get_pointer(TypeT, (void **) &T))
-    return PL_warning("getUnqualifiedDesugaredType/2: instantiation fault");
+    return PL_warning("getCanonicalTypeUnqualified/2: instantiation fault");
   const Type *DesugaredAux = T->getCanonicalTypeUnqualified().getTypePtr();
   int Success;
   term_t DesugaredAuxT = PL_new_term_ref();
   Success = PL_put_pointer(DesugaredAuxT, (void *) DesugaredAux);
   return PL_unify(DesugaredT, DesugaredAuxT);
+}
+
+foreign_t pl_getResultType(term_t TypeT, term_t ResultT) {
+  FunctionType *FT;
+  if (!PL_get_pointer(TypeT, (void **) &FT))
+    return PL_warning("getResultType/2: instantiation fault");
+  const Type *ResultAux = FT->getResultType().getTypePtr();
+  int Success;
+  term_t ResultAuxT = PL_new_term_ref();
+  Success = PL_put_pointer(ResultAuxT, (void *) ResultAux);
+  return PL_unify(ResultT, ResultAuxT);
+}
+
+foreign_t pl_getType(term_t ValueDeclT, term_t TypeT) {
+  ValueDecl *VD;
+  if ( !PL_get_pointer(ValueDeclT, (void **) &VD))
+    return PL_warning("getType/2: instantiation fault");
+  const Type *TypeAux = VD->getType().getTypePtr();
+  int Success;
+  term_t TypeAuxT = PL_new_term_ref();
+  Success = PL_put_pointer(TypeAuxT, (void *) TypeAux);
+  return PL_unify(TypeT, TypeAuxT);
 }
