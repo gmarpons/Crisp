@@ -1,5 +1,5 @@
 // PrologEngine.h: Interface with the embbedded SWI Prolog engine. -*- C++ -*-
-//
+
 // Copyright (C) 2011 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
 // This file is part of Crisp.
