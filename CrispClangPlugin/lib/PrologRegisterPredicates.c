@@ -32,4 +32,6 @@ void plRegisterPredicates() {
                       , (pl_function_t) &pl_getResultType, 0);
   PL_register_foreign("getType", 2
                       , (pl_function_t) &pl_getType, 0);
+  PL_register_foreign("getPresumedLoc", 4,
+                      (pl_function_t) &pl_getPresumedLoc, 0);
 }

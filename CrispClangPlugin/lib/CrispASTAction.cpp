@@ -27,13 +27,13 @@
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Basic/FileManager.h"
-#include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendPluginRegistry.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 
+#include "CompilationInfo.h"
 #include "PrologEngine.h"
 
 using namespace llvm;
@@ -58,7 +58,6 @@ namespace {
     virtual ~CrispConsumer();
     virtual void HandleTranslationUnit(ASTContext &Context);
     virtual bool VisitDecl(Decl *D);
-    virtual bool VisitCXXMethodDecl(Decl *D);
 
   private:
     raw_ostream &facts();
@@ -100,14 +99,22 @@ void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
                           , l::_1)
                 );
     
-    // traverse AST to visit declarations and statements
+    // Traverse AST to visit declarations and statements
     TraverseDecl(Context.getTranslationUnitDecl());
     DEBUG(dbgs() << "Traversing of the AST done!\n");
     
-    // when debugging, open a PROLOG interactive session
+    // Set some global data to be accessed from Prolog (var
+    // CompilationInfo defined in CompilationInfo.h).
+    newCompilationInfo(CompilerInstance);
+
+    // When debugging, open a PROLOG interactive session
     DEBUG(Success = plInteractiveSession());
+    
+    // Free global data
+    deleteCompilationInfo();
   }
   
+  // FIXME: when Success (and debugging) nothing is printed on cout/cerr.
   DEBUG(if (Success) dbgs() << "Translation unit analyzed.\n";
         else dbgs() << "Analysis aborted: Prolog engine failed.\n";);
   (void) plCleanUp(Success ? 0 : 1); // Return value ignored
@@ -119,21 +126,21 @@ void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
 // pl* funcs are ignored).
     
 bool CrispConsumer::VisitDecl(Decl *D) {
-  SourceManager &SM = CompilerInstance.getSourceManager();
-  SourceLocation SL = D->getLocation();
-  unsigned int L = SM.getSpellingLineNumber(SL);
-  unsigned int C = SM.getSpellingColumnNumber(SL);
-  const char *FN = SM.getBufferName(SL);
-  
-  DEBUG(dbgs() << "Decl: " << FN << ":" << L <<  ":" << C << "\n");
+  // FIXME: the following code is inefficient (uses string
+  // concatenation a lot of times). Specific Visit* methods should be
+  // written instead.
+  std::string DeclKindName(D->getDeclKindName());
+  std::string Sort(DeclKindName + "Decl");
+  (void) plAssertDeclIsA(D, Sort); // Return value ignored
+
   return true;
 }
 
-bool CrispConsumer::VisitCXXMethodDecl(Decl *D) {
-  std::string Sort("CXXMethodDecl");
-  (void) plAssertDeclIsA(D, Sort); // Return value ignored
-  return true;
-}
+// bool CrispConsumer::VisitCXXMethodDecl(Decl *D) {
+//   std::string Sort("CXXMethodDecl");
+//   (void) plAssertDeclIsA(D, Sort); // Return value ignored
+//   return true;
+// }
 
 namespace {
 
