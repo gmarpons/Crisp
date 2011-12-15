@@ -49,7 +49,7 @@ extern "C" {
     foreign_t pl_unqualifiedTypeAsString(term_t TypeT, term_t NameT);
 
     /** \param TypeT +Type
-        \param CanonicalT Type
+        \param CanonicalT QualType
      */
     foreign_t pl_getCanonicalTypeUnqualified(term_t TypeT, term_t CanonicalT);
 

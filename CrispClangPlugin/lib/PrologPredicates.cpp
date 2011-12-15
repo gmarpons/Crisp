@@ -62,8 +62,8 @@ namespace prolog {
     if ( !PL_get_pointer(TypeT, (void **) &T))
       return PL_warning("getCanonicalTypeUnqualified/2: "
                         "instantiation fault on first arg");
-    const Type *Canonical = T->getCanonicalTypeUnqualified().getTypePtr();
-    return PL_unify_pointer(CanonicalT, (void *) Canonical);
+    return PL_unify_pointer(CanonicalT,
+                            T->getCanonicalTypeUnqualified().getAsOpaquePtr());
   }
   
   foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT) {
