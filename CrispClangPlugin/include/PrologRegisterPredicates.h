@@ -18,6 +18,9 @@
    along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef CRISPCLANGPLUGIN_PROLOGREGISTERPREDICATES_H
+#define CRISPCLANGPLUGIN_PROLOGREGISTERPREDICATES_H
+
 #include <SWI-Prolog.h>
 
 #ifdef __cplusplus
@@ -28,4 +31,6 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

@@ -17,6 +17,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
+#ifndef CRISPCLANGPLUGIN_COMPILATIONINFO_H
+#define CRISPCLANGPLUGIN_COMPILATIONINFO_H
+
 #include "clang/Frontend/CompilerInstance.h"
 
 using namespace clang;
@@ -36,3 +39,5 @@ namespace prolog {
     
 
 } // End of namespace prolog
+
+#endif

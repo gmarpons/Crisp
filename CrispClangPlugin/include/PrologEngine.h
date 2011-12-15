@@ -17,6 +17,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
+#ifndef CRISPCLANGPLUGIN_PROLOGENGINE_H
+#define CRISPCLANGPLUGIN_PROLOGENGINE_H
+
 #include <SWI-Prolog.h>
 #include <string>
 
@@ -31,3 +34,5 @@ namespace prolog {
   int plAssertDeclIsA(Decl *Decl, const std::string &Sort);
   int plAssertTypeIsA(Type *Type, const std::string &Sort);
 } // End prolog namespace
+
+#endif
