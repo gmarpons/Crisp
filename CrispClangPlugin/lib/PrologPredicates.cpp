@@ -18,6 +18,8 @@
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -40,18 +42,29 @@ namespace prolog {
     Type *T;
     if ( !PL_get_pointer(TypeT, (void **) &T))
       return PL_warning("typeName/2: instantiation fault on first arg");
-    if (RecordType *RT = dyn_cast<RecordType>(T)) {
-      NamedDecl *ND = RT->getDecl();
+    if (TypedefType *X = dyn_cast<TypedefType>(T)) {
+      NamedDecl *ND = X->getDecl();
       return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
     }
-    else if (TypedefType *TT = dyn_cast<TypedefType>(T)) {
-      NamedDecl *ND = TT->getDecl();
+    else if (TagType *X = dyn_cast<TagType>(T)) { // RecordType + EnumType
+      NamedDecl *ND = X->getDecl();
       return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
     }
-    // TODO: add all the other Type subclasses that have a getDecl() method
-    else if (BuiltinType *BT = dyn_cast<BuiltinType>(T)) {
+    else if (BuiltinType *X = dyn_cast<BuiltinType>(T)) {
       const PrintingPolicy &PP = getCompilationInfo()->getPrintingPolicy();
-      return PL_unify_atom_chars(NameT, BT->getName(PP));
+      return PL_unify_atom_chars(NameT, X->getName(PP));
+    }
+    else if (TemplateTypeParmType *X = dyn_cast<TemplateTypeParmType>(T)) {
+      NamedDecl *ND = X->getDecl();
+      return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
+    }
+    else if (UnresolvedUsingType *X = dyn_cast<UnresolvedUsingType>(T)) {
+      NamedDecl *ND = X->getDecl();
+      return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
+    }
+    else if (InjectedClassNameType *X = dyn_cast<InjectedClassNameType>(T)) {
+      NamedDecl *ND = X->getDecl();
+      return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
     }
     return FALSE;
   }
