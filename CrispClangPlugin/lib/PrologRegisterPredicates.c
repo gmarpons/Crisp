@@ -28,8 +28,8 @@ void plRegisterPredicates() {
                       (pl_function_t) &pl_unqualifiedTypeAsString, 0);
   PL_register_foreign("getAsString", 2, 
                       (pl_function_t) &pl_getAsString, 0);
-  PL_register_foreign("typeName", 2,
-                      (pl_function_t) &pl_typeName, 0);
+  PL_register_foreign("getTypePtr", 2,
+                      (pl_function_t) &pl_getTypePtr, 0);
   PL_register_foreign("getPointeeType", 2
                       , (pl_function_t) &pl_getPointeeType, 0);
   PL_register_foreign("getCanonicalTypeUnqualified", 2

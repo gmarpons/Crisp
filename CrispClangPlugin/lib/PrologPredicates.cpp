@@ -57,52 +57,18 @@ namespace prolog {
     return PL_unify_atom_chars(NameT, QT.getAsString().c_str());
   }
 
-  // foreign_t pl_valueDeclQualTypeAsString(term_t ValueDeclT, term_t NameT) {
-  //   const ValueDecl *VD;
-  //   if ( !PL_get_pointer(ValueDeclT, (void **) &VD))
-  //     return PL_warning("valueDeclQualTypeAsString/2: "
-  //                       "instantiation fault on first arg");
-  //   return PL_unify_atom_chars(NameT, VD->getType().getAsString().c_str());
-  // }
-
-  // DEPRECATED
-  foreign_t pl_typeName(term_t TypeT, term_t NameT) {
-    Type *T;
-    if ( !PL_get_pointer(TypeT, (void **) &T))
-      return PL_warning("typeName/2: instantiation fault on first arg");
-    if (TypedefType *X = dyn_cast<TypedefType>(T)) {
-      NamedDecl *ND = X->getDecl();
-      return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
-    }
-    else if (TagType *X = dyn_cast<TagType>(T)) { // RecordType + EnumType
-      NamedDecl *ND = X->getDecl();
-      return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
-    }
-    else if (BuiltinType *X = dyn_cast<BuiltinType>(T)) {
-      const PrintingPolicy &PP = getCompilationInfo()->getPrintingPolicy();
-      return PL_unify_atom_chars(NameT, X->getName(PP));
-    }
-    else if (TemplateTypeParmType *X = dyn_cast<TemplateTypeParmType>(T)) {
-      NamedDecl *ND = X->getDecl();
-      return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
-    }
-    else if (UnresolvedUsingType *X = dyn_cast<UnresolvedUsingType>(T)) {
-      NamedDecl *ND = X->getDecl();
-      return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
-    }
-    else if (InjectedClassNameType *X = dyn_cast<InjectedClassNameType>(T)) {
-      NamedDecl *ND = X->getDecl();
-      return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
-    }
-    return FALSE;
+  foreign_t pl_getTypePtr(term_t QualTypeT, term_t TypeT) {
+    const QualType QT;
+    if ( !PL_get_pointer(QualTypeT, (void **) &QT))
+      return PL_warning("getTypePtr/2: instantiation fault on first arg");
+    return PL_unify_pointer(TypeT, (void *) QT.getTypePtr());
   }
-  
+
   foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT) {
     PointerType *PT;
     if ( !PL_get_pointer(PointerT, (void **) &PT))
       return PL_warning("getPointeeType/2: instantiation fault on first arg");
-    const Type *Pointee = PT->getPointeeType().getTypePtr();
-    return PL_unify_pointer(PointeeT, (void *) Pointee);
+    return PL_unify_pointer(PointeeT, PT->getPointeeType().getAsOpaquePtr());
   }
   
   foreign_t pl_getCanonicalTypeUnqualified(term_t TypeT, term_t CanonicalT) {
@@ -118,8 +84,7 @@ namespace prolog {
     FunctionType *FT;
     if ( !PL_get_pointer(FunctionT, (void **) &FT))
       return PL_warning("getResultType/2: instantiation fault on first arg");
-    const Type *Result = FT->getResultType().getTypePtr();
-    return PL_unify_pointer(ResultT, (void *) Result);
+    return PL_unify_pointer(ResultT, FT->getResultType().getAsOpaquePtr());
   }
   
   foreign_t pl_getUnqualifiedType(term_t ValueT, term_t TypeT) {

@@ -43,19 +43,18 @@ extern "C" {
      */
     foreign_t pl_unqualifiedTypeAsString(term_t TypeT, term_t NameT);
 
-    /** \param TypeT +QualType
+    /** \param QualTypeT +QualType
         \param NameT Atom
      */
     foreign_t pl_getAsString(term_t QualTypeT, term_t NameT);
 
-    /** Deprecated.
-        \param TypeT +Type
-        \param NameT Atom
+    /** \param QualTypeT +QualType
+        \param TypeT Type
      */
-    foreign_t pl_typeName(term_t TypeT, term_t NameT);
+    foreign_t pl_getTypePtr(term_t QualTypeT, term_t TypeT);
 
     /** \param PointerT +PointerType
-        \param PointeeT Type
+        \param PointeeT QualType
      */
     foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT);
 
@@ -65,7 +64,7 @@ extern "C" {
     foreign_t pl_getCanonicalTypeUnqualified(term_t TypeT, term_t CanonicalT);
 
     /** \param FunctionT +FunctionType
-        \param ResultT Type
+        \param ResultT QualType
      */
     foreign_t pl_getResultType(term_t FunctionT, term_t ResultT);
 
