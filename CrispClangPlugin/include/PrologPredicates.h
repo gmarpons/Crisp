@@ -36,9 +36,20 @@ extern "C" {
     /** \param NamedDeclT +NamedDecl
         \param NameT Atom
      */
-    foreign_t pl_declName(term_t NamedDeclT, term_t NameT);
+    foreign_t pl_getNameAsString(term_t NamedDeclT, term_t NameT);
 
     /** \param TypeT +Type
+        \param NameT Atom
+     */
+    foreign_t pl_unqualifiedTypeAsString(term_t TypeT, term_t NameT);
+
+    /** \param TypeT +QualType
+        \param NameT Atom
+     */
+    foreign_t pl_getAsString(term_t QualTypeT, term_t NameT);
+
+    /** Deprecated.
+        \param TypeT +Type
         \param NameT Atom
      */
     foreign_t pl_typeName(term_t TypeT, term_t NameT);
@@ -60,6 +71,11 @@ extern "C" {
 
     /** \param ValueT +ValueDecl
         \param TypeT Type
+     */
+    foreign_t pl_getUnqualifiedType(term_t ValueT, term_t TypeT);
+
+    /** \param ValueT +ValueDecl
+        \param TypeT QualType
      */
     foreign_t pl_getType(term_t ValueT, term_t TypeT);
 
