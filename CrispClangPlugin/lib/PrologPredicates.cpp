@@ -32,38 +32,20 @@ using namespace clang;
 
 namespace prolog {
 
-  foreign_t pl_getAsString(term_t QualTypeT, term_t NameT) {
+  foreign_t pl_getAsString(term_t TypeT, term_t NameT) {
     const QualType QT;
-    if ( !PL_get_pointer(QualTypeT, (void **) &QT))
+    if ( !PL_get_pointer(TypeT, (void **) &QT))
       return PL_warning("getAsString/2: "
                         "instantiation fault on first arg");
     return PL_unify_atom_chars(NameT, QT.getAsString().c_str());
   }
 
-  foreign_t pl_getTypePtr(term_t QualTypeT, term_t TypeT) {
-    const QualType QT;
-    if ( !PL_get_pointer(QualTypeT, (void **) &QT))
-      return PL_warning("getTypePtr/2: instantiation fault on first arg");
-    return PL_unify_pointer(TypeT, (void *) QT.getTypePtr());
-  }
-
-  foreign_t pl_unqualifiedTypeAsString(term_t TypeT, term_t NameT) {
-    const Type *T;
-    if ( !PL_get_pointer(TypeT, (void **) &T))
-      return PL_warning("unqualifiedTypeAsString/2: "
+  foreign_t pl_getCanonicalType(term_t TypeT, term_t CanonicalT) {
+    QualType QT;
+    if ( !PL_get_pointer(TypeT, (void **) &QT))
+      return PL_warning("getCanonicalType/2: "
                         "instantiation fault on first arg");
-    unsigned int Qualifiers = 0;
-    QualType QT(T, Qualifiers);
-    return PL_unify_atom_chars(NameT, QT.getAsString().c_str());
-  }
-
-  foreign_t pl_getCanonicalTypeUnqualified(term_t TypeT, term_t CanonicalT) {
-    Type *T;
-    if ( !PL_get_pointer(TypeT, (void **) &T))
-      return PL_warning("getCanonicalTypeUnqualified/2: "
-                        "instantiation fault on first arg");
-    return PL_unify_pointer(CanonicalT,
-                            T->getCanonicalTypeUnqualified().getAsOpaquePtr());
+    return PL_unify_pointer(CanonicalT, QT.getCanonicalType().getAsOpaquePtr());
   }
   
   foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT) {
@@ -99,11 +81,11 @@ namespace prolog {
     return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
   }
 
-  foreign_t pl_getType(term_t ValueT, term_t QualTypeT) {
+  foreign_t pl_getType(term_t ValueT, term_t TypeT) {
     const ValueDecl *VD;
     if ( !PL_get_pointer(ValueT, (void **) &VD))
       return PL_warning("getType/2: instantiation fault on first arg");
-    return PL_unify_pointer(QualTypeT, VD->getType().getAsOpaquePtr());
+    return PL_unify_pointer(TypeT, VD->getType().getAsOpaquePtr());
   }
 
 } // End namespace prolog

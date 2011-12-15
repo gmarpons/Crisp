@@ -31,35 +31,28 @@ extern "C" {
     /** If parameter types are not respected when calling one of the
         following predicates from Prolog, a runtime error is
         raised.
+
+        Every place where a 'Type' argument is used, methods of
+        'QualType' can also be used.
     */
 
-    /** \param QualTypeT +QualType
-        \param NameT Atom
-     */
-    foreign_t pl_getAsString(term_t QualTypeT, term_t NameT);
-
-    /** \param QualTypeT +QualType
-        \param TypeT Type
-     */
-    foreign_t pl_getTypePtr(term_t QualTypeT, term_t TypeT);
-
     /** \param TypeT +Type
         \param NameT Atom
      */
-    foreign_t pl_unqualifiedTypeAsString(term_t TypeT, term_t NameT);
+    foreign_t pl_getAsString(term_t TypeT, term_t NameT);
 
     /** \param TypeT +Type
-        \param CanonicalT QualType
+        \param CanonicalT Type
      */
-    foreign_t pl_getCanonicalTypeUnqualified(term_t TypeT, term_t CanonicalT);
+    foreign_t pl_getCanonicalType(term_t TypeT, term_t CanonicalT);
 
     /** \param PointerT +PointerType
-        \param PointeeT QualType
+        \param PointeeT Type
      */
     foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT);
 
     /** \param FunctionT +FunctionType
-        \param ResultT QualType
+        \param ResultT Type
      */
     foreign_t pl_getResultType(term_t FunctionT, term_t ResultT);
 
@@ -77,7 +70,7 @@ extern "C" {
     foreign_t pl_getNameAsString(term_t NamedDeclT, term_t NameT);
 
     /** \param ValueT +ValueDecl
-        \param TypeT QualType
+        \param TypeT Type
      */
     foreign_t pl_getType(term_t ValueT, term_t TypeT);
 
