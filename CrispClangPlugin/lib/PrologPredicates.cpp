@@ -32,23 +32,6 @@ using namespace clang;
 
 namespace prolog {
 
-  foreign_t pl_getNameAsString(term_t NamedDeclT, term_t NameT) {
-    NamedDecl *ND;
-    if ( !PL_get_pointer(NamedDeclT, (void **) &ND))
-      return PL_warning("declName/2: instantiation fault on first arg");
-    return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
-  }
-
-  foreign_t pl_unqualifiedTypeAsString(term_t TypeT, term_t NameT) {
-    const Type *T;
-    if ( !PL_get_pointer(TypeT, (void **) &T))
-      return PL_warning("unqualifiedTypeAsString/2: "
-                        "instantiation fault on first arg");
-    unsigned int Qualifiers = 0;
-    QualType QT(T, Qualifiers);
-    return PL_unify_atom_chars(NameT, QT.getAsString().c_str());
-  }
-
   foreign_t pl_getAsString(term_t QualTypeT, term_t NameT) {
     const QualType QT;
     if ( !PL_get_pointer(QualTypeT, (void **) &QT))
@@ -64,13 +47,16 @@ namespace prolog {
     return PL_unify_pointer(TypeT, (void *) QT.getTypePtr());
   }
 
-  foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT) {
-    PointerType *PT;
-    if ( !PL_get_pointer(PointerT, (void **) &PT))
-      return PL_warning("getPointeeType/2: instantiation fault on first arg");
-    return PL_unify_pointer(PointeeT, PT->getPointeeType().getAsOpaquePtr());
+  foreign_t pl_unqualifiedTypeAsString(term_t TypeT, term_t NameT) {
+    const Type *T;
+    if ( !PL_get_pointer(TypeT, (void **) &T))
+      return PL_warning("unqualifiedTypeAsString/2: "
+                        "instantiation fault on first arg");
+    unsigned int Qualifiers = 0;
+    QualType QT(T, Qualifiers);
+    return PL_unify_atom_chars(NameT, QT.getAsString().c_str());
   }
-  
+
   foreign_t pl_getCanonicalTypeUnqualified(term_t TypeT, term_t CanonicalT) {
     Type *T;
     if ( !PL_get_pointer(TypeT, (void **) &T))
@@ -80,6 +66,13 @@ namespace prolog {
     return PL_unify_pointer(CanonicalT, (void *) Canonical);
   }
   
+  foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT) {
+    PointerType *PT;
+    if ( !PL_get_pointer(PointerT, (void **) &PT))
+      return PL_warning("getPointeeType/2: instantiation fault on first arg");
+    return PL_unify_pointer(PointeeT, PT->getPointeeType().getAsOpaquePtr());
+  }
+  
   foreign_t pl_getResultType(term_t FunctionT, term_t ResultT) {
     FunctionType *FT;
     if ( !PL_get_pointer(FunctionT, (void **) &FT))
@@ -87,22 +80,6 @@ namespace prolog {
     return PL_unify_pointer(ResultT, FT->getResultType().getAsOpaquePtr());
   }
   
-  foreign_t pl_getUnqualifiedType(term_t ValueT, term_t TypeT) {
-    const ValueDecl *VD;
-    if ( !PL_get_pointer(ValueT, (void **) &VD))
-      return PL_warning("getUnqualifiedType/2: "
-                        "instantiation fault on first arg");
-    const Type *Type = VD->getType().getTypePtr();
-    return PL_unify_pointer(TypeT, (void *) Type);
-  }
-  
-  foreign_t pl_getType(term_t ValueT, term_t QualTypeT) {
-    const ValueDecl *VD;
-    if ( !PL_get_pointer(ValueT, (void **) &VD))
-      return PL_warning("getType/2: instantiation fault on first arg");
-    return PL_unify_pointer(QualTypeT, VD->getType().getAsOpaquePtr());
-  }
-
   foreign_t pl_getPresumedLoc(term_t DeclT, term_t FilenameT,
                               term_t LineT, term_t ColT) {
     const Decl *D;
@@ -114,5 +91,19 @@ namespace prolog {
     if ( !PL_unify_int64(LineT, (int64_t) PL.getLine())) return FALSE;
     return PL_unify_int64(ColT, (int64_t) PL.getColumn());
   }     
+
+  foreign_t pl_getNameAsString(term_t NamedDeclT, term_t NameT) {
+    NamedDecl *ND;
+    if ( !PL_get_pointer(NamedDeclT, (void **) &ND))
+      return PL_warning("declName/2: instantiation fault on first arg");
+    return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
+  }
+
+  foreign_t pl_getType(term_t ValueT, term_t QualTypeT) {
+    const ValueDecl *VD;
+    if ( !PL_get_pointer(ValueT, (void **) &VD))
+      return PL_warning("getType/2: instantiation fault on first arg");
+    return PL_unify_pointer(QualTypeT, VD->getType().getAsOpaquePtr());
+  }
 
 } // End namespace prolog

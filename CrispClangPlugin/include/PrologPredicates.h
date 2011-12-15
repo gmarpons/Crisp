@@ -33,16 +33,6 @@ extern "C" {
         raised.
     */
 
-    /** \param NamedDeclT +NamedDecl
-        \param NameT Atom
-     */
-    foreign_t pl_getNameAsString(term_t NamedDeclT, term_t NameT);
-
-    /** \param TypeT +Type
-        \param NameT Atom
-     */
-    foreign_t pl_unqualifiedTypeAsString(term_t TypeT, term_t NameT);
-
     /** \param QualTypeT +QualType
         \param NameT Atom
      */
@@ -53,30 +43,25 @@ extern "C" {
      */
     foreign_t pl_getTypePtr(term_t QualTypeT, term_t TypeT);
 
-    /** \param PointerT +PointerType
-        \param PointeeT QualType
+    /** \param TypeT +Type
+        \param NameT Atom
      */
-    foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT);
+    foreign_t pl_unqualifiedTypeAsString(term_t TypeT, term_t NameT);
 
     /** \param TypeT +Type
         \param CanonicalT Type
      */
     foreign_t pl_getCanonicalTypeUnqualified(term_t TypeT, term_t CanonicalT);
 
+    /** \param PointerT +PointerType
+        \param PointeeT QualType
+     */
+    foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT);
+
     /** \param FunctionT +FunctionType
         \param ResultT QualType
      */
     foreign_t pl_getResultType(term_t FunctionT, term_t ResultT);
-
-    /** \param ValueT +ValueDecl
-        \param TypeT Type
-     */
-    foreign_t pl_getUnqualifiedType(term_t ValueT, term_t TypeT);
-
-    /** \param ValueT +ValueDecl
-        \param TypeT QualType
-     */
-    foreign_t pl_getType(term_t ValueT, term_t TypeT);
 
     /** \param DeclT +Decl
         \param FilenameT Atom
@@ -85,6 +70,16 @@ extern "C" {
      */
     foreign_t pl_getPresumedLoc(term_t DeclT, term_t FilenameT,
                                 term_t LineT, term_t ColT);
+
+    /** \param NamedDeclT +NamedDecl
+        \param NameT Atom
+     */
+    foreign_t pl_getNameAsString(term_t NamedDeclT, term_t NameT);
+
+    /** \param ValueT +ValueDecl
+        \param TypeT QualType
+     */
+    foreign_t pl_getType(term_t ValueT, term_t TypeT);
 
 #ifdef __cplusplus
   } /* End namespace prolog */
