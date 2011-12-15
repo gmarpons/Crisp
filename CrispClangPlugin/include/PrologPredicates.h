@@ -25,12 +25,46 @@ extern "C" {
   namespace prolog {
 #endif
 
-    foreign_t pl_declName(term_t DeclT, term_t NameT);
+    /** If parameter types are not respected when calling one of the
+        following predicates from Prolog, a runtime error is
+        raised.
+    */
+
+    /** \param NamedDeclT +NamedDecl
+        \param NameT Atom
+     */
+    foreign_t pl_declName(term_t NamedDeclT, term_t NameT);
+
+    /** \param TypeT +Type
+        \param NameT Atom
+     */
     foreign_t pl_typeName(term_t TypeT, term_t NameT);
-    foreign_t pl_getPointeeType(term_t TypeT, term_t PointeeT);
-    foreign_t pl_getCanonicalTypeUnqualified(term_t TypeT, term_t DesugaredT);
-    foreign_t pl_getResultType(term_t TypeT, term_t ResultT);
-    foreign_t pl_getType(term_t ValueDeclT, term_t TypeT);
+
+    /** \param PointerT +PointerType
+        \param PointeeT Type
+     */
+    foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT);
+
+    /** \param TypeT +Type
+        \param CanonicalT Type
+     */
+    foreign_t pl_getCanonicalTypeUnqualified(term_t TypeT, term_t CanonicalT);
+
+    /** \param FunctionT +FunctionType
+        \param ResultT Type
+     */
+    foreign_t pl_getResultType(term_t FunctionT, term_t ResultT);
+
+    /** \param ValueT +ValueDecl
+        \param TypeT Type
+     */
+    foreign_t pl_getType(term_t ValueT, term_t TypeT);
+
+    /** \param DeclT +Decl
+        \param FilenameT Atom
+        \param LineT an Integer
+        \param ColT an Integer
+     */
     foreign_t pl_getPresumedLoc(term_t DeclT, term_t FilenameT,
                                 term_t LineT, term_t ColT);
 

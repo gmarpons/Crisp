@@ -29,14 +29,11 @@ using namespace clang;
 
 namespace prolog {
 
-  foreign_t pl_declName(term_t DeclT, term_t NameT) {
-    Decl *D;
-    if (!PL_get_pointer(DeclT, (void **) &D))
-      return PL_warning("declName/2: instantiation fault");
-    if (NamedDecl *ND = dyn_cast<NamedDecl>(D)) {
-      return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
-    }
-    return FALSE;
+  foreign_t pl_declName(term_t NamedDeclT, term_t NameT) {
+    NamedDecl *ND;
+    if ( !PL_get_pointer(NamedDeclT, (void **) &ND))
+      return PL_warning("declName/2: instantiation fault on first arg");
+    return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
   }
 
   // TODO: simplify the followin funcs using PL_unify_pointer insead
@@ -44,8 +41,8 @@ namespace prolog {
   
   foreign_t pl_typeName(term_t TypeT, term_t NameT) {
     Type *T;
-    if (!PL_get_pointer(TypeT, (void **) &T))
-      return PL_warning("typeName/2: instantiation fault");
+    if ( !PL_get_pointer(TypeT, (void **) &T))
+      return PL_warning("typeName/2: instantiation fault on first arg");
     if (RecordType *RT = dyn_cast<RecordType>(T)) {
       NamedDecl *ND = RT->getDecl();
       return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
@@ -59,58 +56,44 @@ namespace prolog {
     return FALSE;
   }
   
-  foreign_t pl_getPointeeType(term_t TypeT, term_t PointeeT) {
-    Type *T;
-    if (!PL_get_pointer(TypeT, (void **) &T))
-      return PL_warning("getPointeeType/2: instantiation fault");
-    if (PointerType *PT = dyn_cast<PointerType>(T)) {
-      const Type *PointeeAux = PT->getPointeeType().getTypePtr();
-      int Success;
-      term_t PointeeAuxT = PL_new_term_ref();
-      Success = PL_put_pointer(PointeeAuxT, (void *) PointeeAux);
-      return PL_unify(PointeeT, PointeeAuxT);
-    }
-    return FALSE;
+  foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT) {
+    PointerType *PT;
+    if ( !PL_get_pointer(PointerT, (void **) &PT))
+      return PL_warning("getPointeeType/2: instantiation fault on first arg");
+    const Type *Pointee = PT->getPointeeType().getTypePtr();
+    return PL_unify_pointer(PointeeT, (void *) Pointee);
   }
   
-  foreign_t pl_getCanonicalTypeUnqualified(term_t TypeT, term_t DesugaredT) {
+  foreign_t pl_getCanonicalTypeUnqualified(term_t TypeT, term_t CanonicalT) {
     Type *T;
-    if (!PL_get_pointer(TypeT, (void **) &T))
-      return PL_warning("getCanonicalTypeUnqualified/2: instantiation fault");
-    const Type *DesugaredAux = T->getCanonicalTypeUnqualified().getTypePtr();
-    int Success;
-    term_t DesugaredAuxT = PL_new_term_ref();
-    Success = PL_put_pointer(DesugaredAuxT, (void *) DesugaredAux);
-    return PL_unify(DesugaredT, DesugaredAuxT);
+    if ( !PL_get_pointer(TypeT, (void **) &T))
+      return PL_warning("getCanonicalTypeUnqualified/2: "
+                        "instantiation fault on first arg");
+    const Type *Canonical = T->getCanonicalTypeUnqualified().getTypePtr();
+    return PL_unify_pointer(CanonicalT, (void *) Canonical);
   }
   
-  foreign_t pl_getResultType(term_t TypeT, term_t ResultT) {
+  foreign_t pl_getResultType(term_t FunctionT, term_t ResultT) {
     FunctionType *FT;
-    if (!PL_get_pointer(TypeT, (void **) &FT))
-      return PL_warning("getResultType/2: instantiation fault");
-    const Type *ResultAux = FT->getResultType().getTypePtr();
-    int Success;
-    term_t ResultAuxT = PL_new_term_ref();
-    Success = PL_put_pointer(ResultAuxT, (void *) ResultAux);
-    return PL_unify(ResultT, ResultAuxT);
+    if ( !PL_get_pointer(FunctionT, (void **) &FT))
+      return PL_warning("getResultType/2: instantiation fault on first arg");
+    const Type *Result = FT->getResultType().getTypePtr();
+    return PL_unify_pointer(ResultT, (void *) Result);
   }
   
-  foreign_t pl_getType(term_t ValueDeclT, term_t TypeT) {
+  foreign_t pl_getType(term_t ValueT, term_t TypeT) {
     ValueDecl *VD;
-    if ( !PL_get_pointer(ValueDeclT, (void **) &VD))
-      return PL_warning("getType/2: instantiation fault");
-    const Type *TypeAux = VD->getType().getTypePtr();
-    int Success;
-    term_t TypeAuxT = PL_new_term_ref();
-    Success = PL_put_pointer(TypeAuxT, (void *) TypeAux);
-    return PL_unify(TypeT, TypeAuxT);
+    if ( !PL_get_pointer(ValueT, (void **) &VD))
+      return PL_warning("getType/2: instantiation fault on first arg");
+    const Type *Type = VD->getType().getTypePtr();
+    return PL_unify_pointer(TypeT, (void *) Type);
   }
   
   foreign_t pl_getPresumedLoc(term_t DeclT, term_t FilenameT,
                               term_t LineT, term_t ColT) {
     const Decl *D;
     if ( !PL_get_pointer(DeclT, (void **) &D))
-      return PL_warning("getPresumedLoc/4: instantiation fault");
+      return PL_warning("getPresumedLoc/4: instantiation fault on first arg");
     const SourceManager &SM
       = getCompilationInfo()->CompilerInstance.getSourceManager();
     const PresumedLoc PL = SM.getPresumedLoc(D->getLocation());
