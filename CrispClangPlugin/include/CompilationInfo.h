@@ -20,15 +20,37 @@
 #ifndef CRISPCLANGPLUGIN_COMPILATIONINFO_H
 #define CRISPCLANGPLUGIN_COMPILATIONINFO_H
 
+#include "clang/AST/PrettyPrinter.h"
 #include "clang/Frontend/CompilerInstance.h"
 
 using namespace clang;
 
 namespace prolog {
 
-  struct CompilationInfo {
-    CompilationInfo(CompilerInstance &CI) : CompilerInstance(CI) {}
-    CompilerInstance &CompilerInstance;
+  class CompilationInfo {
+  public:
+    const CompilerInstance& getCompilerInstance() const;
+    
+    const LangOptions& getLangOpts() const;
+    
+    const PrintingPolicy& getPrintingPolicy() const;
+
+    const SourceManager& getSourceManager() const;
+
+    friend void newCompilationInfo(CompilerInstance &CI);
+
+  private:
+    CompilationInfo(CompilerInstance &CI)
+      : CompilerInstance(CI)
+      , LangOptions(CI.getLangOpts())
+      , PrintingPolicy(LangOptions)
+      , SourceManager(CI.getSourceManager()) {
+    }
+
+    const CompilerInstance &CompilerInstance;
+    const LangOptions &LangOptions;
+    const PrintingPolicy PrintingPolicy;
+    const SourceManager &SourceManager;
   };
 
   CompilationInfo* getCompilationInfo();
@@ -36,7 +58,22 @@ namespace prolog {
   void newCompilationInfo(CompilerInstance &CI);
 
   void deleteCompilationInfo();
-    
+
+  inline const CompilerInstance& CompilationInfo::getCompilerInstance() const {
+    return CompilerInstance;
+  }
+
+  inline const LangOptions& CompilationInfo::getLangOpts() const {
+    return LangOptions;
+  }
+
+  inline const PrintingPolicy& CompilationInfo::getPrintingPolicy() const {
+    return PrintingPolicy;
+  }
+
+  inline const SourceManager& CompilationInfo::getSourceManager() const {
+    return SourceManager;
+  }
 
 } // End of namespace prolog
 

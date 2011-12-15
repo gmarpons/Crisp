@@ -36,9 +36,6 @@ namespace prolog {
     return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
   }
 
-  // TODO: simplify the followin funcs using PL_unify_pointer insead
-  // of PL_put_pointer.
-  
   foreign_t pl_typeName(term_t TypeT, term_t NameT) {
     Type *T;
     if ( !PL_get_pointer(TypeT, (void **) &T))
@@ -52,7 +49,10 @@ namespace prolog {
       return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
     }
     // TODO: add all the other Type subclasses that have a getDecl() method
-    // TODO: add a special case for BuiltinType
+    else if (BuiltinType *BT = dyn_cast<BuiltinType>(T)) {
+      const PrintingPolicy &PP = getCompilationInfo()->getPrintingPolicy();
+      return PL_unify_atom_chars(NameT, BT->getName(PP));
+    }
     return FALSE;
   }
   
@@ -94,8 +94,7 @@ namespace prolog {
     const Decl *D;
     if ( !PL_get_pointer(DeclT, (void **) &D))
       return PL_warning("getPresumedLoc/4: instantiation fault on first arg");
-    const SourceManager &SM
-      = getCompilationInfo()->CompilerInstance.getSourceManager();
+    const SourceManager &SM = getCompilationInfo()->getSourceManager();
     const PresumedLoc PL = SM.getPresumedLoc(D->getLocation());
     if ( !PL_unify_atom_chars(FilenameT, PL.getFilename())) return FALSE;
     if ( !PL_unify_int64(LineT, (int64_t) PL.getLine())) return FALSE;
