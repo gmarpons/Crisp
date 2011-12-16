@@ -40,4 +40,6 @@ void plRegisterPredicates() {
                       (pl_function_t) &pl_getNameAsString, 0);
   PL_register_foreign("getType", 2
                       , (pl_function_t) &pl_getType, 0);
+  PL_register_foreign("mangleName", 2
+                      , (pl_function_t) &pl_mangleName, 0);
 }

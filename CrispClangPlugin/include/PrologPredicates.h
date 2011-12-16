@@ -82,6 +82,12 @@ extern "C" {
      */
     foreign_t pl_getType(term_t ValueT, term_t TypeT);
 
+    /** \param FunctionT +VarDecl or +FunctionDecl (not a
+        CXXConstructorDecl or CXXDestructorDecl 
+        \param MangledNameT Atom
+    */
+    foreign_t pl_mangleName(term_t FunctionT, term_t MangledNameT);
+
 #ifdef __cplusplus
   } /* End namespace prolog */
 }

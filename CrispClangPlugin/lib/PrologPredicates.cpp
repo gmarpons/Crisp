@@ -17,6 +17,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <string>
+// #include <iostream>
+
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
@@ -24,6 +27,7 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/CompilerInstance.h"
+#include "llvm/Support/raw_ostream.h"
 
 #include "CompilationInfo.h"
 #include "PrologPredicates.h"
@@ -103,6 +107,19 @@ namespace prolog {
     if ( !PL_get_pointer(ValueT, (void **) &VD))
       return PL_warning("getType/2: instantiation fault on first arg");
     return PL_unify_pointer(TypeT, VD->getType().getAsOpaquePtr());
+  }
+
+  foreign_t pl_mangleName(term_t FunctionT, term_t MangledNameT) {
+    const FunctionDecl *FD;
+    if ( !PL_get_pointer(FunctionT, (void **) &FD))
+      return PL_warning("mangleName/2: instantiation fault on first arg");
+    std::string StreamString, MangledName;
+    llvm::raw_string_ostream Stream(StreamString);
+    MangleContext *MC = getCompilationInfo()->getMangleContext();
+    MC->mangleName(FD, Stream);
+    MangledName = Stream.str();
+    // std::cout << "\n" << MangledName << "\n";
+    return PL_unify_atom_chars(MangledNameT, MangledName.c_str());
   }
 
 } // End namespace prolog

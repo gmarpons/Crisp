@@ -38,4 +38,8 @@ namespace prolog {
     if (CompilationInfoSingleton) delete CompilationInfoSingleton;
   }
 
+  CompilationInfo::~CompilationInfo() {
+    delete MangleContext;
+  }
+
 } // End of namespace prolog

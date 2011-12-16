@@ -20,6 +20,8 @@
 #ifndef CRISPCLANGPLUGIN_COMPILATIONINFO_H
 #define CRISPCLANGPLUGIN_COMPILATIONINFO_H
 
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/Mangle.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/Frontend/CompilerInstance.h"
 
@@ -37,20 +39,27 @@ namespace prolog {
 
     const SourceManager& getSourceManager() const;
 
+    MangleContext* getMangleContext();
+
     friend void newCompilationInfo(CompilerInstance &CI);
+    friend void deleteCompilationInfo();
 
   private:
     CompilationInfo(CompilerInstance &CI)
       : CompilerInstance(CI)
       , LangOptions(CI.getLangOpts())
       , PrintingPolicy(LangOptions)
-      , SourceManager(CI.getSourceManager()) {
+      , SourceManager(CI.getSourceManager())
+      , MangleContext(CI.getASTContext().createMangleContext()) {
     }
+
+    ~CompilationInfo();
 
     const CompilerInstance &CompilerInstance;
     const LangOptions &LangOptions;
     const PrintingPolicy PrintingPolicy;
     const SourceManager &SourceManager;
+    MangleContext *MangleContext;
   };
 
   CompilationInfo* getCompilationInfo();
@@ -73,6 +82,10 @@ namespace prolog {
 
   inline const SourceManager& CompilationInfo::getSourceManager() const {
     return SourceManager;
+  }
+
+  inline MangleContext* CompilationInfo::getMangleContext() {
+    return MangleContext;
   }
 
 } // End of namespace prolog
