@@ -46,6 +46,14 @@ extern "C" {
      */
     foreign_t pl_getCanonicalType(term_t TypeT, term_t CanonicalT);
 
+    /** \param TypeT +Type
+     */
+    foreign_t pl_isConstQualified(term_t TypeT);
+
+    /** \param FunctionProtoTypeT +FunctionProtoType
+     */
+    foreign_t pl_isConstFunctionProtoType(term_t FunctionProtoTypeT);
+
     /** \param PointerT +PointerType
         \param PointeeT Type
      */

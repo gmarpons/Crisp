@@ -47,6 +47,23 @@ namespace prolog {
                         "instantiation fault on first arg");
     return PL_unify_pointer(CanonicalT, QT.getCanonicalType().getAsOpaquePtr());
   }
+
+  foreign_t pl_isConstQualified(term_t TypeT) {
+    QualType QT;
+    if ( !PL_get_pointer(TypeT, (void **) &QT))
+      return PL_warning("isConstQualified/1: "
+                        "instantiation fault on first arg");
+    return QT.isConstQualified() ? TRUE : FALSE;
+  }
+
+  foreign_t pl_isConstFunctionProtoType(term_t FunctionProtoTypeT) {
+    const FunctionProtoType *FT;
+    if ( !PL_get_pointer(FunctionProtoTypeT, (void **) &FT))
+      return PL_warning("isConstFunctionProtoType/1: "
+                        "instantiation fault on first arg");
+    Qualifiers Q = Qualifiers::fromCVRMask(FT->getTypeQuals());
+    return Q.hasConst() ? TRUE : FALSE;
+  }
   
   foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT) {
     PointerType *PT;

@@ -26,6 +26,10 @@ void plRegisterPredicates() {
                       (pl_function_t) &pl_getAsString, 0);
   PL_register_foreign("getCanonicalType", 2
                       , (pl_function_t) &pl_getCanonicalType, 0);
+  PL_register_foreign("isConstQualified", 1
+                      , (pl_function_t) &pl_isConstQualified, 0);
+  PL_register_foreign("isConstFunctionProtoType", 1
+                      , (pl_function_t) &pl_isConstFunctionProtoType, 0);
   PL_register_foreign("getPointeeType", 2
                       , (pl_function_t) &pl_getPointeeType, 0);
   PL_register_foreign("getResultType", 2
