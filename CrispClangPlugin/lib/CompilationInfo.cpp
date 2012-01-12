@@ -1,6 +1,6 @@
 // CompilationInfo.cpp: Global data to be used by Prolog predicates. -*- C++ -*-
 
-// Copyright (C) 2011 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
+// Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
 // This file is part of Crisp.
 //
