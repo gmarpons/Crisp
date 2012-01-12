@@ -87,6 +87,9 @@ void CrispConsumer::VisitTypeFromTypesTable(Type *T) {
 }
 
 void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
+  DebugFlag = 1;                // FIXME: use a plugin option to
+                                // (de-)activate debug mode.
+
   DEBUG(dbgs() << "Handling translation unit!\n");
   int Success = plRunEngine(RulesFileName);
   
@@ -112,6 +115,9 @@ void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
     
     // Free global data
     deleteCompilationInfo();
+
+    DebugFlag = 0;              // FIXME: use a plugin option to
+                                // (de-)activate debug mode.
   }
   
   // FIXME: when Success (and debugging) nothing is printed on cout/cerr.
@@ -146,10 +152,7 @@ namespace {
 
   class CrispASTAction : public PluginASTAction {
   public:
-    CrispASTAction() {
-      DebugFlag = 1;            // FIXME: use a plugin option to
-                                // activate debug mode.
-    }
+    CrispASTAction() {}
     
   protected:
     virtual ASTConsumer* CreateASTConsumer(CompilerInstance& CI
