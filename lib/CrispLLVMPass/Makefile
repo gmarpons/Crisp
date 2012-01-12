@@ -1,9 +1,9 @@
-##===- projects/CrispLLVMPass/lib/Makefile --------------*- Makefile -*-===##
+##===- projects/Crisp/lib/CrispLLVMPass/Makefile -----------*- Makefile -*-===##
 
 #
 # Relative path to the top of the source tree.
 #
-LEVEL=..
+LEVEL=../..
 
 #
 # List all of the subdirectories that we will compile.

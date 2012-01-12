@@ -1,4 +1,4 @@
-##===- projects/CrispClangPlugin/Makefile ------------------*- Makefile -*-===##
+##===- projects/Crisp/Makefile -----------------------------*- Makefile -*-===##
 #
 # This is the main makefile for the "Crisp Clang Plugin project"
 #

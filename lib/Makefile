@@ -1,4 +1,4 @@
-##===- projects/CrispClangPlugin/tools/Makefile ---------*- Makefile -*-===##
+##===- projects/Crisp/lib/Makefile -------------------------*- Makefile -*-===##
 
 #
 # Relative path to the top of the source tree.
@@ -8,6 +8,6 @@ LEVEL=..
 #
 # List all of the subdirectories that we will compile.
 #
-DIRS=
+DIRS= CrispClangPlugin CrispLLVMPass
 
 include $(LEVEL)/Makefile.common

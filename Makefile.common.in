@@ -1,5 +1,5 @@
 # Set the name of the project here
-PROJECT_NAME := crispclang
+PROJECT_NAME := crisp
 PROJ_VERSION := 0.01
  
 # Set this variable to the top of the LLVM source tree.

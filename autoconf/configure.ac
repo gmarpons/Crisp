@@ -1,7 +1,7 @@
 dnl **************************************************************************
 dnl * Initialize
 dnl **************************************************************************
-AC_INIT([[[CRISPCLANG]]],[[[0.01]]],[gmarpons@babel.ls.fi.upm.es])
+AC_INIT([[[CRISP]]],[[[0.01]]],[gmarpons@babel.ls.fi.upm.es])
 
 dnl Identify where LLVM source tree is
 LLVM_SRC_ROOT="../.."
