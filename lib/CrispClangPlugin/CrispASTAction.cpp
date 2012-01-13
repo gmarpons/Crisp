@@ -34,6 +34,8 @@
 #include "llvm/Support/raw_ostream.h"
 
 #include "CompilationInfo.h"
+#include "PrologAssertClangFacts.h"
+#include "PrologRegisterPredicates.h"
 #include "SWIPrologInterface.h"
 
 using namespace llvm;
@@ -90,7 +92,8 @@ void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
   DebugFlag = 1;                // FIXME: use a plugin option to
                                 // (de-)activate debug mode.
 
-  DEBUG(dbgs() << "Handling translation unit!\n");
+  DEBUG(dbgs() << "Handling translation unit!" << "\n");
+  plRegisterPredicates();
   int Success = plRunEngine(RulesFileName);
   
   if (Success) {
@@ -115,15 +118,15 @@ void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
     
     // Free global data
     deleteCompilationInfo();
-
-    DebugFlag = 0;              // FIXME: use a plugin option to
-                                // (de-)activate debug mode.
   }
   
   // FIXME: when Success (and debugging) nothing is printed on cout/cerr.
   DEBUG(if (Success) dbgs() << "Translation unit analyzed.\n";
         else dbgs() << "Analysis aborted: Prolog engine failed.\n";);
   (void) plCleanUp(Success ? 0 : 1); // Return value ignored
+
+  DebugFlag = 0;                // FIXME: use a plugin option to
+                                // (de-)activate debug mode.
 }
     
 // Visit declarations

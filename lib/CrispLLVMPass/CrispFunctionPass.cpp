@@ -23,9 +23,13 @@
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetData.h"
 
+#include "SWIPrologInterface.h"
+
 using namespace llvm;
+using namespace prolog;
 
 STATISTIC(StNumFunctionsFun, "Number of functions analyzed by crisp-fun");
 
@@ -38,10 +42,13 @@ namespace {
   public:
     static char ID;
     CrispFunctionPass() : FunctionPass(ID) {}
-    virtual bool doInitialization(Module& M) { return false; }
+    virtual bool doInitialization(Module& M);
     virtual bool runOnFunction(Function& F);
     virtual void getAnalysisUsage(AnalysisUsage& AU) const;
     virtual void releaseMemory();
+    virtual bool doFinalization(Module& M);
+  private:
+    int Success;                // Prolog Engine status
   };                            // end of struct CrispFunctionPass
 
   char CrispFunctionPass::ID = 0;
@@ -52,9 +59,22 @@ namespace {
       true);                    // If true, analysis Pass
 }                               // end of anonymous namespace
 
+bool CrispFunctionPass::doInitialization(Module& M) {
+  DEBUG(dbgs() << "Initializing Crisp Function Pass.\n");
+  Success = plRunEngine("Simple.pl"); // FIXME: put a meaningful script name
+
+  DEBUG(if (Success) dbgs() << "Crisp Function Pass initialized.\n";
+        else dbgs() << "Analysis aborted: Prolog engine failed.\n";);
+
+  return false;                 // Module is not modified
+}
+
 bool CrispFunctionPass::runOnFunction(Function& F) {
-  ++NumFunctionsFun;
-  return false;
+  if (Success) {
+    ++NumFunctionsFun;
+  }
+
+  return false;                 // Function is not modified
 }
 
 // Analysis pass (it does not modify the program), but has some
@@ -66,6 +86,17 @@ void CrispFunctionPass::getAnalysisUsage(AnalysisUsage& AU) const {
 }
 
 void CrispFunctionPass::releaseMemory() {
-  StNumFunctionsFun = NumFunctionsFun;
   DEBUG(dbgs() << "Release memory for crisp-fun pass." << "\n");
+}
+
+bool CrispFunctionPass::doFinalization(Module& M) {
+  StNumFunctionsFun = NumFunctionsFun;
+
+  if (Success) {
+    // When debugging, open a PROLOG interactive session
+    DEBUG(Success = plInteractiveSession());
+  }
+  (void) plCleanUp(Success ? 0 : 1); // Return value ignored
+
+  return false;                 // Module is not modified
 }

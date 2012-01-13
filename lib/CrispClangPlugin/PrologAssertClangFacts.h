@@ -1,4 +1,4 @@
-// SWIPrologInterface.h: Embbedding a SWI Prolog engine. -*- C++ -*-
+// PrologAssertClangFacts.h. -*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
@@ -17,15 +17,18 @@
 // You should have received a copy of the GNU General Public License
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef SWIPROLOGINTERFACE_H
-#define SWIPROLOGINTERFACE_H
+#ifndef PROLOGASSERTCLANGFACTS_H
+#define PROLOGASSERTCLANGFACTS_H
 
 #include <string>
 
+#include "clang/AST/Decl.h"
+
+using namespace clang;
+
 namespace prolog {
-  int plRunEngine(const std::string &ScriptFileName);
-  int plCleanUp(int Status);
-  int plInteractiveSession();
+  int plAssertDeclIsA(Decl *Decl, const std::string &Sort);
+  int plAssertTypeIsA(Type *Type, const std::string &Sort);
 } // End prolog namespace
 
 #endif

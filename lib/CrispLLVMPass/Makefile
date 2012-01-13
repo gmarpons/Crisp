@@ -13,6 +13,7 @@ DIRS=
 LIBRARYNAME=crispllvm
 SHARED_LIBRARY=1
 LOADABLE_MODULE=1
+USEDLIBS=SWIPrologInterface.a
 
 include $(LEVEL)/Makefile.common
 
