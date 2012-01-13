@@ -8,6 +8,6 @@ LEVEL=..
 #
 # List all of the subdirectories that we will compile.
 #
-DIRS= CrispClangPlugin CrispLLVMPass
+DIRS= SWIPrologInterface CrispClangPlugin CrispLLVMPass
 
 include $(LEVEL)/Makefile.common

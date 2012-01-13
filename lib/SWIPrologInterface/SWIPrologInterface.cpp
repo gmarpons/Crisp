@@ -1,4 +1,4 @@
-// PrologEngine.cpp: Interface with the embbedded SWI Prolog engine. -*- C++ -*-
+// SWIPrologInterface.cpp: Embbedding a SWI Prolog engine. -*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
@@ -24,29 +24,28 @@
 #include "llvm/Support/raw_ostream.h"
 
 #include "PrologRegisterPredicates.h"
-#include "PrologEngine.h"
+#include "SWIPrologInterface.h"
 
 using namespace llvm;
-using namespace clang;
 
 namespace prolog {
 
-  static char *RulesFileNameCStr;
+  static char *ScriptFileNameCStr;
 
-  int plRunEngine(const std::string &RulesFileName) {
+  int plRunEngine(const std::string &ScriptFileName) {
     plRegisterPredicates();
 
     // FIXME: following dir as a configuration option.
     putenv((char *) "SWIPL=/usr/lib/swi-prolog");
-    RulesFileNameCStr
-      = (char *) malloc(sizeof(char) * (RulesFileName.size() + 1));
-    strcpy(RulesFileNameCStr, RulesFileName.c_str());
+    ScriptFileNameCStr
+      = (char *) malloc(sizeof(char) * (ScriptFileName.size() + 1));
+    strcpy(ScriptFileNameCStr, ScriptFileName.c_str());
     char *argv[] = {
       (char *) "oh-my"          // FIXME: how to find the name of the
                                 // executable from inside the plugin?
       // , (char *) "-q"           // Operate quietly
       , (char *) "-s"           // Load script
-      , RulesFileNameCStr
+      , ScriptFileNameCStr
       , (char *) "-g"           // Goal executed before entering top
                                 // level
       , (char *) "init_msg"
@@ -63,7 +62,7 @@ namespace prolog {
 
   int plCleanUp(int Status) {
     int Success = PL_cleanup(Status);
-    free(RulesFileNameCStr);
+    free(ScriptFileNameCStr);
     DEBUG(if ( !Success) dbgs() << "Prolog engine clean up failed.\n");
     return Success;
   }
@@ -114,11 +113,11 @@ namespace prolog {
     return Success;
   }
 
-  int plAssertDeclIsA(Decl *Decl, const std::string &Sort) {
+  int plAssertDeclIsA(clang::Decl *Decl, const std::string &Sort) {
     return plAssertIsA((void *) Decl, Sort);
   }
 
-  int plAssertTypeIsA(Type *Type, const std::string &Sort) {
+  int plAssertTypeIsA(clang::Type *Type, const std::string &Sort) {
     return plAssertIsA((void *) Type, Sort);
   }
 

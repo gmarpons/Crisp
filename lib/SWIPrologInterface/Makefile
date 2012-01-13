@@ -1,4 +1,4 @@
-##===- projects/Crisp/lib/CrispClangPlugin/Makefile --------*- Makefile -*-===##
+##===- projects/Crisp/lib/SWIPrologInterface/Makefile ------*- Makefile -*-===##
 
 #
 # Relative path to the top of the source tree.
@@ -10,10 +10,8 @@ LEVEL=../..
 #
 DIRS=
 
-LIBRARYNAME=crispclang
-SHARED_LIBRARY=1
-LOADABLE_MODULE=1
-USEDLIBS=SWIPrologInterface.a
+LIBRARYNAME=SWIPrologInterface
+BUILD_ARCHIVE=1
 
 include $(LEVEL)/Makefile.common
 

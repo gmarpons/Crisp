@@ -1,4 +1,4 @@
-// PrologEngine.h: Interface with the embbedded SWI Prolog engine. -*- C++ -*-
+// SWIPrologInterface.h: Embbedding a SWI Prolog engine. -*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
@@ -17,8 +17,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef CRISPCLANGPLUGIN_PROLOGENGINE_H
-#define CRISPCLANGPLUGIN_PROLOGENGINE_H
+#ifndef SWIPROLOGINTERFACE_H
+#define SWIPROLOGINTERFACE_H
 
 #include <SWI-Prolog.h>
 #include <string>

@@ -34,7 +34,7 @@
 #include "llvm/Support/raw_ostream.h"
 
 #include "CompilationInfo.h"
-#include "PrologEngine.h"
+#include "SWIPrologInterface.h"
 
 using namespace llvm;
 using namespace clang;
