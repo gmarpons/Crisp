@@ -42,4 +42,6 @@ aclocal -I $cwd/m4 || die "aclocal failed"
 echo "Regenerating configure with autoconf"
 autoconf --warnings=all -o ../configure configure.ac || die "autoconf failed"
 cd ..
+echo "Regenerating config.h.in with autoheader"
+autoheader --warnings=all -I autoconf -I autoconf/m4 autoconf/configure.ac || die "autoheader failed"
 exit 0
