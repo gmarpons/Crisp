@@ -27,6 +27,7 @@
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Basic/FileManager.h"
+#include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendPluginRegistry.h"
 #include "llvm/Support/Casting.h"
@@ -97,6 +98,13 @@ void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
   int Success = plRunEngine(RulesFileName);
   
   if (Success) {
+    // Assert main file name
+    SourceManager& SC(Context.getSourceManager());
+    FileID MainFileID = SC.getMainFileID();
+    const char* MainFileName = SC.getFileEntryForID(MainFileID)->getName();
+    DEBUG(dbgs() << "Main file name: " << MainFileName << "\n");
+    plAssertTranslationUnitMainFileName(MainFileName);
+
     // Traverse types in the translation unit
     b::for_each(b::make_iterator_range(Context.types_begin()
                                        , Context.types_end())

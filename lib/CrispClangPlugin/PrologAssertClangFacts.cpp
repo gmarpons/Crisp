@@ -34,7 +34,8 @@ namespace prolog {
     Success = PL_put_pointer(ElemT, Elem);
     if ( !Success) return Success;
     term_t SortA = PL_new_term_ref();
-    PL_put_atom_chars(SortA, Sort.c_str());
+    Success = PL_put_atom_chars(SortA, Sort.c_str());
+    if ( !Success) return Success;
     functor_t IsAF = PL_new_functor(PL_new_atom("isA"), 2);
     term_t IsAT = PL_new_term_ref();
     Success = PL_cons_functor(IsAT, IsAF, ElemT, SortA);
@@ -56,4 +57,28 @@ namespace prolog {
   int plAssertTypeIsA(Type *Type, const std::string &Sort) {
     return plAssertIsA((void *) Type, Sort);
   }
+
+  int plAssertTranslationUnitMainFileName(const char* FileName) {
+    int Success;
+    term_t FileNameA = PL_new_term_ref();
+    Success = PL_put_atom_chars(FileNameA, FileName);
+    if ( !Success) return Success;
+    functor_t TranslationUnitMainFileNameF
+      = PL_new_functor(PL_new_atom("translationUnitMainFileName"), 1);
+    term_t TranslationUnitMainFileNameT = PL_new_term_ref();
+    Success = PL_cons_functor(TranslationUnitMainFileNameT,
+                              TranslationUnitMainFileNameF,
+                              FileNameA);
+    if ( !Success) return Success;
+    functor_t AssertzF = PL_new_functor(PL_new_atom("assertz"), 1);
+    term_t AssertzT = PL_new_term_ref();
+    Success = PL_cons_functor(AssertzT, AssertzF, TranslationUnitMainFileNameT);
+    if ( !Success) return Success;
+    Success = PL_call(AssertzT, NULL);
+    DEBUG(if ( !Success) dbgs()
+                           << "Error asserting 'translationUnitMainFileName' "
+                           << "fact.\n");
+    return Success;
+  }
+
 }
