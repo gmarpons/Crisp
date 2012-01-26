@@ -675,6 +675,7 @@ NEATO
 FDP
 DOT
 GRAPHVIZ
+SWIPL
 BINPWD
 TAR
 SED
@@ -858,6 +859,7 @@ CXX
 CXXFLAGS
 CCC
 CPP
+SWIPL
 BOOST_ROOT'
 ac_subdirs_all='tools/polly'
 
@@ -1560,6 +1562,7 @@ Some influential environment variables:
   CXX         C++ compiler command
   CXXFLAGS    C++ compiler flags
   CPP         C preprocessor
+  SWIPL       Absolute path of the SWI-Prolog compiler (usually swipl)
   BOOST_ROOT  Location of Boost installation
 
 Use these variables to override the choices made by `configure' or to help
@@ -6186,6 +6189,57 @@ fi
 
 
 
+
+# Extract the first word of "swipl", so it can be a program name with args.
+set dummy swipl; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_path_SWIPL+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  case $SWIPL in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_SWIPL="$SWIPL" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_path_SWIPL="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+SWIPL=$ac_cv_path_SWIPL
+if test -n "$SWIPL"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $SWIPL" >&5
+$as_echo "$SWIPL" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+if test "$SWIPL" = ""; then
+   { $as_echo "$as_me:${as_lineno-$LINENO}: The SWI Prolog compiler (swipl) was not found!" >&5
+$as_echo "$as_me: The SWI Prolog compiler (swipl) was not found!" >&6;}
+   { $as_echo "$as_me:${as_lineno-$LINENO}: It should have been distributed as part of SWI Prolog." >&5
+$as_echo "$as_me: It should have been distributed as part of SWI Prolog." >&6;}
+   { $as_echo "$as_me:${as_lineno-$LINENO}: --> You can use configure variable SWIPL (see --help)." >&5
+$as_echo "$as_me: --> You can use configure variable SWIPL (see --help)." >&6;}
+   as_fn_error $? "SWI Prolog compiler is an essential dep: can't build and stop here!" "$LINENO" 5
+fi
+
 # Extract the first word of "Graphviz", so it can be a program name with args.
 set dummy Graphviz; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
@@ -9271,7 +9325,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9274 "configure"
+#line 9328 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10455,6 +10509,9 @@ fi
 if test $SWIPL_PREFIX_SET = 1 ; then
     SWIPL_CPPFLAGS="-I${with_swipl_prefix}/include"
   SWIPL_LDFLAGS="-L${with_swipl_prefix}/lib"
+  SWIPL_PREFIX="${with_swipl_prefix}"
+else
+    SWIPL_PREFIX="/usr/lib/swi-prolog"
 fi
 
 # Check whether --with-swipl-libs was given.
@@ -10550,11 +10607,17 @@ $as_echo "$as_me: --> You might want to use '--with-swipl-*=PATH'" >&6;}
   fi
   { $as_echo "$as_me:${as_lineno-$LINENO}: " >&5
 $as_echo "$as_me: " >&6;}
-  as_fn_error $? "SWI Prolog is an essential dependency: cannot build and stop here!" "$LINENO" 5
+  as_fn_error $? "SWI Prolog is an essential dep: cannot build and stop here!" "$LINENO" 5
 fi
 LDFLAGS=$OLD_LDFLAGS
 
 SWIPL_LIBS=-lswipl
+
+
+cat >>confdefs.h <<_ACEOF
+#define SWIPL_BASE_DIR $SWIPL_PREFIX
+_ACEOF
+
 
 
 
@@ -13457,7 +13520,10 @@ fi
 
 
 
-ac_config_headers="$ac_config_headers include/config.h"
+
+ac_config_headers="$ac_config_headers include/crisp/Config/config.h"
+
+
 
 
 ac_config_files="$ac_config_files Makefile.common"
@@ -13466,6 +13532,9 @@ ac_config_files="$ac_config_files Makefile.llvm.config"
 
 
 ac_config_commands="$ac_config_commands Makefile"
+
+
+ac_config_commands="$ac_config_commands Makefile.crisp.rules"
 
 
 ac_config_commands="$ac_config_commands lib/Makefile"
@@ -14196,10 +14265,11 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "setup") CONFIG_COMMANDS="$CONFIG_COMMANDS setup" ;;
-    "include/config.h") CONFIG_HEADERS="$CONFIG_HEADERS include/config.h" ;;
+    "include/crisp/Config/config.h") CONFIG_HEADERS="$CONFIG_HEADERS include/crisp/Config/config.h" ;;
     "Makefile.common") CONFIG_FILES="$CONFIG_FILES Makefile.common" ;;
     "Makefile.llvm.config") CONFIG_FILES="$CONFIG_FILES Makefile.llvm.config" ;;
     "Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS Makefile" ;;
+    "Makefile.crisp.rules") CONFIG_COMMANDS="$CONFIG_COMMANDS Makefile.crisp.rules" ;;
     "lib/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/Makefile" ;;
     "tools/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS tools/Makefile" ;;
 
@@ -14759,6 +14829,8 @@ $as_echo "$as_me: executing $ac_file commands" >&6;}
   case $ac_file$ac_mode in
     "Makefile":C) ${srcdir}/autoconf/mkinstalldirs `dirname Makefile`
    ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/Makefile Makefile ;;
+    "Makefile.crisp.rules":C) ${srcdir}/autoconf/mkinstalldirs `dirname Makefile.crisp.rules`
+   ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/Makefile.crisp.rules Makefile.crisp.rules ;;
     "lib/Makefile":C) ${srcdir}/autoconf/mkinstalldirs `dirname lib/Makefile`
    ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/Makefile lib/Makefile ;;
     "tools/Makefile":C) ${srcdir}/autoconf/mkinstalldirs `dirname tools/Makefile`

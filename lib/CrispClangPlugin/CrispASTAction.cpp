@@ -37,7 +37,7 @@
 #include "CompilationInfo.h"
 #include "PrologAssertClangFacts.h"
 #include "PrologRegisterPredicates.h"
-#include "SWIPrologInterface.h"
+#include "crisp/SWIPrologInterface.h"
 
 using namespace llvm;
 using namespace clang;
@@ -95,7 +95,8 @@ void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
 
   DEBUG(dbgs() << "Handling translation unit!" << "\n");
   plRegisterPredicates();
-  int Success = plRunEngine(RulesFileName);
+  // FIXME: RulesFileName is ignored at the moment
+  int Success = plRunEngine("PrologBootForCrispClangPlugin.sh");
   
   if (Success) {
     // Assert main file name

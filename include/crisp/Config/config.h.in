@@ -1,4 +1,7 @@
-/* include/config.h.in.  Generated from autoconf/configure.ac by autoheader.  */
+/* include/crisp/Config/config.h.in.  Generated from autoconf/configure.ac by autoheader.  */
+
+#ifndef CONFIG_H
+#define CONFIG_H
 
 /* Define if building universal (internal helper macro) */
 #undef AC_APPLE_UNIVERSAL_BUILD
@@ -675,6 +678,9 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* Base dir for SWI Prolog instalation. */
+#undef SWIPL_BASE_DIR
+
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #undef TIME_WITH_SYS_TIME
 
@@ -713,3 +719,5 @@
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
+
+#endif

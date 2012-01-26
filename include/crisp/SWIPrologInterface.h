@@ -23,7 +23,7 @@
 #include <string>
 
 namespace prolog {
-  int plRunEngine(const std::string &ScriptFileName);
+  int plRunEngine(const std::string &BootFileName);
   int plCleanUp(int Status);
   int plInteractiveSession();
 } // End prolog namespace

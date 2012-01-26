@@ -26,7 +26,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetData.h"
 
-#include "SWIPrologInterface.h"
+#include "crisp/SWIPrologInterface.h"
 
 using namespace llvm;
 using namespace prolog;

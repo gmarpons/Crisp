@@ -843,6 +843,16 @@ AC_PATH_PROG(SED,  [sed],  [sed])
 AC_PATH_PROG(TAR,  [tar],  [gtar])
 AC_PATH_PROG(BINPWD,[pwd],  [pwd])
 
+dnl Check for SWI Prolog compiler and set SWIPL for use in Makefiles
+AC_ARG_VAR(SWIPL, [Absolute path of the SWI-Prolog compiler (usually swipl)])
+AC_PATH_PROG(SWIPL, [swipl])
+if test "$SWIPL" = ""; then
+   AC_MSG_NOTICE([The SWI Prolog compiler (swipl) was not found!])
+   AC_MSG_NOTICE([It should have been distributed as part of SWI Prolog.])
+   AC_MSG_NOTICE([--> You can use configure variable SWIPL (see --help).])
+   AC_MSG_ERROR([SWI Prolog compiler is an essential dep: can't build and stop here!])
+fi
+
 dnl Looking for misc. graph plotting software
 AC_PATH_PROG(GRAPHVIZ, [Graphviz], [echo Graphviz])
 if test "$GRAPHVIZ" != "echo Graphviz" ; then
@@ -1158,6 +1168,10 @@ if test $SWIPL_PREFIX_SET = 1 ; then
   dnl Extend the compiler and linker flags according to the path set
   SWIPL_CPPFLAGS="-I${with_swipl_prefix}/include"
   SWIPL_LDFLAGS="-L${with_swipl_prefix}/lib"
+  SWIPL_PREFIX="${with_swipl_prefix}"
+else
+  dnl Set SWIPL_PREFIX with a standard path
+  SWIPL_PREFIX="/usr/lib/swi-prolog"
 fi
 AC_ARG_WITH([swipl-libs],
   [AS_HELP_STRING([--with-swipl-libs=PATH],
@@ -1193,13 +1207,19 @@ if test $FOUND_SWIPL_LIBS != 1; then
     AC_MSG_NOTICE([--> You might want to use '--with-swipl-*=PATH'])
   fi
   AC_MSG_NOTICE([])
-  AC_MSG_ERROR([SWI Prolog is an essential dependency: cannot build and stop here!])
+  AC_MSG_ERROR([SWI Prolog is an essential dep: cannot build and stop here!])
 fi
 dnl Reset original LDFLAGS
 LDFLAGS=$OLD_LDFLAGS
 dnl Set SWIPL_LDFLAGS and SWIPL_LIBS for use in Makefiles
 AC_SUBST(SWIPL_LDFLAGS)
-AC_SUBST(SWIPL_LIBS,[-lswipl])
+AC_SUBST(SWIPL_LIBS, [-lswipl])
+dnl Define C Preprocessor symbol SWIPL_BASE_DIR
+AC_DEFINE_UNQUOTED([SWIPL_BASE_DIR], [$SWIPL_PREFIX],
+                   [Base dir for SWI Prolog instalation.])
+dnl FIXME: some file (e.g. boot32.prc or boot64.prc) should be searched
+dnl in SWIPL_PREFIX.
+
 
 dnl===-----------------------------------------------------------------------===
 dnl===
@@ -1646,6 +1666,7 @@ else
 fi
 AC_SUBST(RDYNAMIC)
 
+
 dnl===-----------------------------------------------------------------------===
 dnl===
 dnl=== SECTION 10: Specify the output files and generate it
@@ -1657,7 +1678,10 @@ dnl End LLVM configure.ac Import
 dnl **************************************************************************
 
 dnl Configure header files
-AC_CONFIG_HEADERS([include/config.h])
+AC_CONFIG_HEADERS([include/crisp/Config/config.h])
+AH_TOP([#ifndef CONFIG_H
+#define CONFIG_H])
+AH_BOTTOM([#endif])
 
 dnl Configure a common Makefile
 AC_CONFIG_FILES(Makefile.common)
@@ -1666,6 +1690,7 @@ AC_CONFIG_FILES(Makefile.llvm.config)
 dnl Configure project makefiles
 dnl List every Makefile that exists within your source tree
 AC_CONFIG_MAKEFILE(Makefile)
+AC_CONFIG_MAKEFILE(Makefile.crisp.rules)
 AC_CONFIG_MAKEFILE(lib/Makefile)
 AC_CONFIG_MAKEFILE(tools/Makefile)
 
