@@ -6,3 +6,5 @@ autom4te.cache/
 /GRTAGS
 /GSYMS
 /GTAGS
+/docs/doxygen.cfg.in.bak
+/docs/doxygen.cfg.old

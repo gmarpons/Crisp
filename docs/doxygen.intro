@@ -1,0 +1,10 @@
+/// @mainpage Crisp
+///
+/// @section main_intro Introduction
+/// Welcome to the Crisp project.
+///
+/// This documentation describes the @b internal software that makes 
+/// up Crisp, not the @b external use of Crisp. There are no instructions
+/// here on how to use Crisp, only the APIs that make up the software. For 
+/// usage instructions, please see the README file distributed with the 
+/// software.

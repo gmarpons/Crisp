@@ -13537,6 +13537,9 @@ ac_config_commands="$ac_config_commands Makefile"
 ac_config_commands="$ac_config_commands Makefile.crisp.rules"
 
 
+ac_config_commands="$ac_config_commands docs/Makefile"
+
+
 ac_config_commands="$ac_config_commands lib/Makefile"
 
 
@@ -14270,6 +14273,7 @@ do
     "Makefile.llvm.config") CONFIG_FILES="$CONFIG_FILES Makefile.llvm.config" ;;
     "Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS Makefile" ;;
     "Makefile.crisp.rules") CONFIG_COMMANDS="$CONFIG_COMMANDS Makefile.crisp.rules" ;;
+    "docs/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS docs/Makefile" ;;
     "lib/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/Makefile" ;;
     "tools/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS tools/Makefile" ;;
 
@@ -14831,6 +14835,8 @@ $as_echo "$as_me: executing $ac_file commands" >&6;}
    ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/Makefile Makefile ;;
     "Makefile.crisp.rules":C) ${srcdir}/autoconf/mkinstalldirs `dirname Makefile.crisp.rules`
    ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/Makefile.crisp.rules Makefile.crisp.rules ;;
+    "docs/Makefile":C) ${srcdir}/autoconf/mkinstalldirs `dirname docs/Makefile`
+   ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/docs/Makefile docs/Makefile ;;
     "lib/Makefile":C) ${srcdir}/autoconf/mkinstalldirs `dirname lib/Makefile`
    ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/Makefile lib/Makefile ;;
     "tools/Makefile":C) ${srcdir}/autoconf/mkinstalldirs `dirname tools/Makefile`
