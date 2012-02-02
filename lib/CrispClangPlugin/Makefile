@@ -1,4 +1,4 @@
-##===- projects/Crisp/lib/CrispClangPlugin/Makefile --------*- Makefile -*-===##
+## lib/CrispClangPlugin/Makefile --------------------------------*- Makefile -*-
 
 #
 # Relative path to the top of the source tree.

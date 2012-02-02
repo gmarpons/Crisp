@@ -1,4 +1,4 @@
-#===-- Makefile.crisp.rules - Common make rules for Crisp --*- Makefile -*--===#
+## Makefile.crisp.rules - Common make rules for Crisp -----------*- Makefile -*-
 
 # TODO: Check that dependence on this Makefile is correctly handled by
 # build system.

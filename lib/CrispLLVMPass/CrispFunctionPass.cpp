@@ -1,4 +1,4 @@
-// CrispFunctionPass.cpp: Crisp LLVM Function pass entry point. -*- C++ -*-
+// CrispFunctionPass.cpp ---------------------------------------------*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
@@ -16,6 +16,9 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
+
+/// \file
+/// Crisp LLVM Function pass entry point.
 
 #define DEBUG_TYPE "crisp"
 

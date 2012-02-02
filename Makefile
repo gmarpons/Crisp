@@ -1,8 +1,4 @@
-##===- projects/Crisp/Makefile -----------------------------*- Makefile -*-===##
-#
-# This is the main makefile for the "Crisp Clang Plugin project"
-#
-##===----------------------------------------------------------------------===##
+## Makefile - Main makefile for the Crisp Project ---------------*- Makefile -*-
 
 #
 # Indicates our relative path to the top of the project's root directory.

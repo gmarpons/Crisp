@@ -1,4 +1,4 @@
-/* PrologRegisterPredicates.h: Prolog predicate registering func. -*- C -*- */
+/* PrologRegisterPredicates.h ---------------------------------------*- C -*- */
 
 /* Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 
@@ -18,6 +18,10 @@
    along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/** \file
+ *  Prolog predicate registering function.
+ */
+
 #ifndef CRISPCLANGPLUGIN_PROLOGREGISTERPREDICATES_H
 #define CRISPCLANGPLUGIN_PROLOGREGISTERPREDICATES_H
 
@@ -31,6 +35,6 @@ extern "C" {
 
 #ifdef __cplusplus
 }
-#endif
+#endif  /* __cplusplus */
 
-#endif
+#endif  /* ifndef CRISPCLANGPLUGIN_PROLOGREGISTERPREDICATES_H */

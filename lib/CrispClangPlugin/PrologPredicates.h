@@ -1,4 +1,4 @@
-/* PrologPredicates.h: External predicates to be used from Prolog. -*- C -*- */
+/* PrologPredicates.h -----------------------------------------------*- C -*- */
 
 /* Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 
@@ -18,6 +18,10 @@
    along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/** \file
+ *  External predicates to be used from Prolog.
+ */
+
 #ifndef CRISPCLANGPLUGIN_PROLOGPREDICATES_H
 #define CRISPCLANGPLUGIN_PROLOGPREDICATES_H
 
@@ -28,7 +32,7 @@ extern "C" {
   namespace prolog {
 #endif
 
-    /** If parameter types are not respected when calling one of the
+    /*  If parameter types are not respected when calling one of the
         following predicates from Prolog, a runtime error is
         raised.
 
@@ -37,12 +41,12 @@ extern "C" {
     */
 
     /** \param TypeT +Type
-        \param NameT Atom
+     *  \param NameT Atom
      */
     foreign_t pl_getAsString(term_t TypeT, term_t NameT);
 
     /** \param TypeT +Type
-        \param CanonicalT Type
+     *  \param CanonicalT Type
      */
     foreign_t pl_getCanonicalType(term_t TypeT, term_t CanonicalT);
 
@@ -55,37 +59,37 @@ extern "C" {
     foreign_t pl_isConstFunctionProtoType(term_t FunctionProtoTypeT);
 
     /** \param PointerT +PointerType
-        \param PointeeT Type
+     *  \param PointeeT Type
      */
     foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT);
 
     /** \param FunctionT +FunctionType
-        \param ResultT Type
+     *  \param ResultT Type
      */
     foreign_t pl_getResultType(term_t FunctionT, term_t ResultT);
 
     /** \param DeclT +Decl
-        \param FilenameT Atom
-        \param LineT an Integer
-        \param ColT an Integer
+     *  \param FilenameT Atom
+     *  \param LineT an Integer
+     *  \param ColT an Integer
      */
     foreign_t pl_getPresumedLoc(term_t DeclT, term_t FilenameT,
                                 term_t LineT, term_t ColT);
 
     /** \param NamedDeclT +NamedDecl
-        \param NameT Atom
+     *  \param NameT Atom
      */
     foreign_t pl_getNameAsString(term_t NamedDeclT, term_t NameT);
 
     /** \param ValueT +ValueDecl
-        \param TypeT Type
+     *  \param TypeT Type
      */
     foreign_t pl_getType(term_t ValueT, term_t TypeT);
 
     /** \param FunctionT +VarDecl or +FunctionDecl (not a
-        CXXConstructorDecl or CXXDestructorDecl 
-        \param MangledNameT Atom
-    */
+     *  CXXConstructorDecl or CXXDestructorDecl 
+     *  \param MangledNameT Atom
+     */
     foreign_t pl_mangleName(term_t FunctionT, term_t MangledNameT);
 
 #ifdef __cplusplus

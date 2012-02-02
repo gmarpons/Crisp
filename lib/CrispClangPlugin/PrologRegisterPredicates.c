@@ -1,4 +1,4 @@
-/* PrologRegisterPredicates.cpp: Prolog predicate registering func. -*- C -*- */
+/* PrologRegisterPredicates.c ---------------------------------------*- C -*- */
 
 /* Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 

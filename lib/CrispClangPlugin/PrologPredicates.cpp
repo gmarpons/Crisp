@@ -1,4 +1,4 @@
-// PrologPredicates.cpp: External predicates to be used from Prolog. -*- C++ -*-
+// PrologPredicates.cpp ----------------------------------------------*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
@@ -17,8 +17,11 @@
 // You should have received a copy of the GNU General Public License
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
+/** \file
+ *  External predicates to be used from Prolog.
+ */
+
 #include <string>
-// #include <iostream>
 
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"

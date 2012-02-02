@@ -1,4 +1,4 @@
-// CompilationInfo.cpp: Global data to be used by Prolog predicates. -*- C++ -*-
+// CompilationInfo.cpp -----------------------------------------------*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //

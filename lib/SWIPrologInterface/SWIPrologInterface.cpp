@@ -1,4 +1,4 @@
-// SWIPrologInterface.cpp: Embbedding a SWI Prolog engine. -*- C++ -*-
+// SWIPrologInterface.cpp --------------------------------------------*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //

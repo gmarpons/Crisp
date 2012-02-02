@@ -1,4 +1,4 @@
-##===- projects/Crisp/lib/CrispLLVMPass/Makefile -----------*- Makefile -*-===##
+## lib/CrispLLVMPass/Makefile -----------------------------------*- Makefile -*-
 
 #
 # Relative path to the top of the source tree.

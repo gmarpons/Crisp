@@ -1,4 +1,4 @@
-##===- projects/Crisp/lib/SWIPrologInterface/Makefile ------*- Makefile -*-===##
+## lib/SWIPrologInterface/Makefile ------------------------------*- Makefile -*-
 
 #
 # Relative path to the top of the source tree.

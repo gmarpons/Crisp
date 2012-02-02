@@ -1,4 +1,4 @@
-##===- projects/Crisp/lib/Makefile -------------------------*- Makefile -*-===##
+## lib/Makefile -------------------------------------------------*- Makefile -*-
 
 #
 # Relative path to the top of the source tree.

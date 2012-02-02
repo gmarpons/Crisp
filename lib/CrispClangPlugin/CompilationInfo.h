@@ -1,4 +1,4 @@
-// CompilationInfo.h: Global data to be used by Prolog predicates. -*- C++ -*-
+// CompilationInfo.h -------------------------------------------------*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
@@ -16,6 +16,9 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
+
+/// \file
+/// Global data to be used by Prolog predicates.
 
 #ifndef CRISPCLANGPLUGIN_COMPILATIONINFO_H
 #define CRISPCLANGPLUGIN_COMPILATIONINFO_H

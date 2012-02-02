@@ -1,4 +1,4 @@
-// PrologAssertClangFacts.h. -*- C++ -*-
+// PrologAssertClangFacts.h ------------------------------------------*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
@@ -17,8 +17,11 @@
 // You should have received a copy of the GNU General Public License
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef PROLOGASSERTCLANGFACTS_H
-#define PROLOGASSERTCLANGFACTS_H
+/// \file
+/// Functions to assert Prolog facts about C/C++ code.
+
+#ifndef CRISPCLANGPLUGIN_PROLOGASSERTCLANGFACTS_H
+#define CRISPCLANGPLUGIN_PROLOGASSERTCLANGFACTS_H
 
 #include <string>
 
