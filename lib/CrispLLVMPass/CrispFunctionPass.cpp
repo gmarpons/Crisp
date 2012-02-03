@@ -32,8 +32,8 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetData.h"
 
-#include "crisp/SWIPrologInterface.h"
-#include "PrologAssertLLVMFacts.h"
+#include "crisp/RunPrologEngine.h"
+#include "LLVMPrologQueries.h"
 
 using namespace llvm;
 using namespace prolog;
@@ -60,7 +60,7 @@ namespace {
 
   char CrispFunctionPass::ID = 0;
 
-  static RegisterPass<CrispFunctionPass> 
+  static RegisterPass<CrispFunctionPass>
   Fun("crisp-fun", "Data extraction function pass for CRISP",
       false,                    // If true, only looks at CFG
       true);                    // If true, analysis Pass

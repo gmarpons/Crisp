@@ -1,4 +1,4 @@
-// PrologPredicates.cpp ----------------------------------------------*- C++ -*-
+// ClangPrologPredicates.cpp -----------------------------------------*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
@@ -17,10 +17,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
-/** \file
- *  External predicates to be used from Prolog.
- */
-
 #include <string>
 
 #include "clang/AST/Decl.h"
@@ -33,7 +29,7 @@
 #include "llvm/Support/raw_ostream.h"
 
 #include "CompilationInfo.h"
-#include "PrologPredicates.h"
+#include "ClangPrologPredicates.h"
 
 using namespace clang;
 
@@ -71,21 +67,21 @@ namespace prolog {
     Qualifiers Q = Qualifiers::fromCVRMask(FT->getTypeQuals());
     return Q.hasConst() ? TRUE : FALSE;
   }
-  
+
   foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT) {
     PointerType *PT;
     if ( !PL_get_pointer(PointerT, (void **) &PT))
       return PL_warning("getPointeeType/2: instantiation fault on first arg");
     return PL_unify_pointer(PointeeT, PT->getPointeeType().getAsOpaquePtr());
   }
-  
+
   foreign_t pl_getResultType(term_t FunctionT, term_t ResultT) {
     FunctionType *FT;
     if ( !PL_get_pointer(FunctionT, (void **) &FT))
       return PL_warning("getResultType/2: instantiation fault on first arg");
     return PL_unify_pointer(ResultT, FT->getResultType().getAsOpaquePtr());
   }
-  
+
   foreign_t pl_getPresumedLoc(term_t DeclT, term_t FilenameT,
                               term_t LineT, term_t ColT) {
     const Decl *D;
@@ -96,7 +92,7 @@ namespace prolog {
     if ( !PL_unify_atom_chars(FilenameT, PL.getFilename())) return FALSE;
     if ( !PL_unify_int64(LineT, (int64_t) PL.getLine())) return FALSE;
     return PL_unify_int64(ColT, (int64_t) PL.getColumn());
-  }     
+  }
 
   foreign_t pl_getNameAsString(term_t NamedDeclT, term_t NameT) {
     NamedDecl *ND;

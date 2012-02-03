@@ -1,29 +1,32 @@
-/* PrologPredicates.h -----------------------------------------------*- C -*- */
+/* ClangPrologPredicates.h ------------------------------------------*- C -*- */
 
 /* Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 
    This file is part of Crisp.
-   
+
    Crisp is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
-   
+
    Crisp is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /** \file
- *  \brief External Prolog predicates implemented in C++.
+ *  \brief External (Clang) predicates to be used from Prolog.
+ *
+ *  This file contains C++ functions implementing Prolog predicates,
+ *  to be called during Crisp Clang plugin execution.
  */
 
-#ifndef CRISPCLANGPLUGIN_PROLOGPREDICATES_H
-#define CRISPCLANGPLUGIN_PROLOGPREDICATES_H
+#ifndef CRISPCLANGPLUGIN_CLANGPROLOGPREDICATES_H
+#define CRISPCLANGPLUGIN_CLANGPROLOGPREDICATES_H
 
 #include <SWI-Prolog.h>
 
@@ -87,7 +90,7 @@ extern "C" {
     foreign_t pl_getType(term_t ValueT, term_t TypeT);
 
     /** \param FunctionT +VarDecl or +FunctionDecl (not a
-     *  CXXConstructorDecl or CXXDestructorDecl 
+     *  CXXConstructorDecl or CXXDestructorDecl
      *  \param MangledNameT Atom
      */
     foreign_t pl_mangleName(term_t FunctionT, term_t MangledNameT);
@@ -97,4 +100,4 @@ extern "C" {
 }
 #endif
 
-#endif
+#endif  /* #ifndef CRISPCLANGPLUGIN_CLANGPROLOGPREDICATES_H */

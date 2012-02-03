@@ -18,7 +18,7 @@
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
 /// \file
-/// Crisp Clang plugin entry point.
+/// \brief Crisp Clang plugin entry point.
 
 #include <string>
 #include <vector>
@@ -37,10 +37,10 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 
-#include "crisp/SWIPrologInterface.h"
+#include "crisp/RunPrologEngine.h"
+#include "ClangPrologQueries.h"
+#include "ClangPrologPredicateRegistration.h"
 #include "CompilationInfo.h"
-#include "PrologAssertClangFacts.h"
-#include "PrologRegisterPredicates.h"
 
 using namespace llvm;
 using namespace clang;
@@ -81,11 +81,11 @@ namespace {
 CrispConsumer::~CrispConsumer() {
   delete FactsOutputStream;
 }
-    
+
 raw_ostream & CrispConsumer::facts() {
   return *FactsOutputStream;
 }
-    
+
 void CrispConsumer::VisitTypeFromTypesTable(Type *T) {
   std::string TypeClassName(T->getTypeClassName());
   std::string Sort(TypeClassName + "Type");
@@ -100,7 +100,7 @@ void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
   plRegisterPredicates();
   // FIXME: RulesFileName is ignored at the moment
   int Success = plRunEngine("PrologBootForCrispClangPlugin.sh");
-  
+
   if (Success) {
     // Get main file name
     SourceManager& SC(Context.getSourceManager());
@@ -115,11 +115,11 @@ void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
                           , this
                           , l::_1)
                 );
-    
+
     // Traverse AST to visit declarations and statements
     TraverseDecl(Context.getTranslationUnitDecl());
     DEBUG(dbgs() << "Traversing of the AST done!\n");
-    
+
     // Set some global data to be accessed from Prolog (var
     // CompilationInfo defined in CompilationInfo.h).
     newCompilationInfo(CompilerInstance);
@@ -133,7 +133,7 @@ void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
     // Free global data
     deleteCompilationInfo();
   }
-  
+
   DEBUG(if (Success) dbgs() << "Translation unit analyzed.\n";
         else dbgs() << "Translation unit analysis aborted: "
                     << "Prolog engine failed.\n";);
@@ -142,12 +142,12 @@ void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
   DebugFlag = 0;                // FIXME: use a plugin option to
                                 // (de-)activate debug mode.
 }
-    
+
 // Visit declarations
 
 // TODO: handle Prolog errors when visiting AST (now return values of
 // pl* funcs are ignored).
-    
+
 bool CrispConsumer::VisitDecl(Decl *D) {
   // FIXME: the following code is inefficient (uses string
   // concatenation a lot of times). Specific Visit* methods should be
@@ -170,13 +170,13 @@ namespace {
   class CrispASTAction : public PluginASTAction {
   public:
     CrispASTAction() {}
-    
+
   protected:
     virtual ASTConsumer* CreateASTConsumer(CompilerInstance& CI
                                            , StringRef) {
       return new CrispConsumer(CI, RulesFileName);
     }
-    
+
     virtual bool ParseArgs(const CompilerInstance &CI
                            , const std::vector<std::string> &Args);
   private:

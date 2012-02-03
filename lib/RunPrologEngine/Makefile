@@ -1,4 +1,4 @@
-## lib/SWIPrologInterface/Makefile ------------------------------*- Makefile -*-
+## lib/RunPrologEngine/Makefile ---------------------------------*- Makefile -*-
 
 #
 # Relative path to the top of the source tree.
@@ -10,7 +10,7 @@ LEVEL=../..
 #
 DIRS=
 
-LIBRARYNAME=SWIPrologInterface
+LIBRARYNAME=RunPrologEngine
 BUILD_ARCHIVE=1
 
 include $(LEVEL)/Makefile.common

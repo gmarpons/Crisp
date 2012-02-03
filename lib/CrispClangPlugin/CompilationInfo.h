@@ -18,7 +18,7 @@
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
 /// \file
-/// Global data to be used by Prolog predicates.
+/// \brief Global data to be used by Prolog predicates implemented in C++.
 
 #ifndef CRISPCLANGPLUGIN_COMPILATIONINFO_H
 #define CRISPCLANGPLUGIN_COMPILATIONINFO_H
@@ -35,9 +35,9 @@ namespace prolog {
   class CompilationInfo {
   public:
     const CompilerInstance& getCompilerInstance() const;
-    
+
     const LangOptions& getLangOpts() const;
-    
+
     const PrintingPolicy& getPrintingPolicy() const;
 
     const SourceManager& getSourceManager() const;

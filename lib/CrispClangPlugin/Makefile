@@ -13,7 +13,7 @@ DIRS=
 LIBRARYNAME=crispclang
 SHARED_LIBRARY=1
 LOADABLE_MODULE=1
-USEDLIBS=SWIPrologInterface.a
+USEDLIBS=RunPrologEngine.a
 
 include $(LEVEL)/Makefile.common
 

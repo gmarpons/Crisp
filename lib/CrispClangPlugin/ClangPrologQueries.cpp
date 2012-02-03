@@ -1,4 +1,4 @@
-// PrologAssertClangFacts.cpp ----------------------------------------*- C++ -*-
+// ClangPrologQueries.cpp --------------------------------------------*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
@@ -21,7 +21,7 @@
 
 #include "llvm/Support/Debug.h"
 
-#include "PrologAssertClangFacts.h"
+#include "ClangPrologQueries.h"
 
 using namespace llvm;
 using namespace clang;
@@ -45,7 +45,7 @@ namespace prolog {
     Success = PL_cons_functor(AssertzT, AssertzF, IsAT);
     if ( !Success) return Success;
     Success = PL_call(AssertzT, NULL);
-    DEBUG(if ( !Success) dbgs() << "Error asserting 'isA " 
+    DEBUG(if ( !Success) dbgs() << "Error asserting 'isA "
                                 << Sort << "' fact.\n");
     return Success;
   }

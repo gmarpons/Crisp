@@ -1,4 +1,4 @@
-// SWIPrologInterface.cpp --------------------------------------------*- C++ -*-
+// RunPrologEngine.cpp -----------------------------------------------*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
@@ -27,7 +27,7 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/raw_ostream.h"
 
-#include "crisp/SWIPrologInterface.h"
+#include "crisp/RunPrologEngine.h"
 
 // Stringify environment variables
 #define XSTR(s) STR(s)
@@ -89,16 +89,6 @@ namespace prolog {
     int Success = PL_cleanup(Status);
     free(BootFileAbsNameCStr);
     DEBUG(if ( !Success) dbgs() << "Prolog engine clean up failed.\n");
-    return Success;
-  }
-
-  int plRunAnalysis() {
-    int Success;
-    functor_t RunAnalysisF = PL_new_functor(PL_new_atom("runAnalysis"), 0);
-    term_t RunAnalysisT = PL_new_term_ref();
-    Success = PL_cons_functor(RunAnalysisT, RunAnalysisF);
-    if ( !Success) return Success;
-    Success = PL_call(RunAnalysisT, NULL);
     return Success;
   }
 

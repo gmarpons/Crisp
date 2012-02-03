@@ -1,28 +1,28 @@
-/* PrologRegisterPredicates.c ---------------------------------------*- C -*- */
+/* ClangPrologPredicateRegistration.c -------------------------------*- C -*- */
 
 /* Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 
    This file is part of Crisp.
-   
+
    Crisp is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
-   
+
    Crisp is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "PrologPredicates.h"
-#include "PrologRegisterPredicates.h"
+#include "ClangPrologPredicates.h"
+#include "ClangPrologPredicateRegistration.h"
 
 void plRegisterPredicates() {
-  PL_register_foreign("getAsString", 2, 
+  PL_register_foreign("getAsString", 2,
                       (pl_function_t) &pl_getAsString, 0);
   PL_register_foreign("getCanonicalType", 2
                       , (pl_function_t) &pl_getCanonicalType, 0);
@@ -36,7 +36,7 @@ void plRegisterPredicates() {
                       , (pl_function_t) &pl_getResultType, 0);
   PL_register_foreign("getPresumedLoc", 4,
                       (pl_function_t) &pl_getPresumedLoc, 0);
-  PL_register_foreign("getNameAsString", 2, 
+  PL_register_foreign("getNameAsString", 2,
                       (pl_function_t) &pl_getNameAsString, 0);
   PL_register_foreign("getType", 2
                       , (pl_function_t) &pl_getType, 0);

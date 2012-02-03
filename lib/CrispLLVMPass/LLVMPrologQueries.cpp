@@ -1,4 +1,4 @@
-// PrologAssertLLVMFacts.cpp -----------------------------------------*- C++ -*-
+// LLVMPrologQueries.cpp ---------------------------------------------*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
@@ -22,7 +22,7 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 
-#include "PrologAssertLLVMFacts.h"
+#include "LLVMPrologQueries.h"
 
 using namespace llvm;
 

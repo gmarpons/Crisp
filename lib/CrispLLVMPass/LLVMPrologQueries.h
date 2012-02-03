@@ -1,4 +1,4 @@
-// PrologAssertLLVMFacts.h -------------------------------------------*- C++ -*-
+// LLVMPrologQueries.h -----------------------------------------------*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
@@ -18,10 +18,10 @@
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
 /// \file
-/// Functions to assert Prolog facts about LLVM code.
+/// \brief Functions to query Prolog and assert facts from Crisp LLVM Pass.
 
-#ifndef CRISPLLVMPASS_PROLOGASSERTLLVMFACTS_H
-#define CRISPLLVMPASS_PROLOGASSERTLLVMFACTS_H
+#ifndef CRISPLLVMPASS_LLVMPROLOGQUERIES_H
+#define CRISPLLVMPASS_LLVMPROLOGQUERIES_H
 
 namespace prolog {
   int plReadModuleFacts(const char* FileName);

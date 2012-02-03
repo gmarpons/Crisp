@@ -1,4 +1,4 @@
-// include/crisp/SWIPrologInterface.h --------------------------------*- C++ -*-
+// include/crisp/RunPrologEngine.h -----------------------------------*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
@@ -18,10 +18,13 @@
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
 /// \file
-/// An isolation layer between Crisp and the SWI Prolog C interface.
+/// \brief An isolation layer between Crisp and the SWI Prolog C interface.
+///
+/// Functions necessary to run and clean up a Prolog Engine, and start
+/// an interactive session.
 
-#ifndef SWIPROLOGINTERFACE_H
-#define SWIPROLOGINTERFACE_H
+#ifndef RUNPROLOGENGINE_H
+#define RUNPROLOGENGINE_H
 
 #include <string>
 
@@ -29,7 +32,6 @@
 namespace prolog {
   int plRunEngine(const std::string &BootFileName);
   int plCleanUp(int Status);
-  int plRunAnalysis();
   int plInteractiveSession();
 } // End prolog namespace
 
