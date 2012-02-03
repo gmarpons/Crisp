@@ -28,26 +28,19 @@ using namespace llvm;
 
 namespace prolog {
 
-  int plAssertLLVMModuleFileName(const char* FileName) {
+  int plReadModuleFacts(const char* FileName) {
     int Success;
     term_t FileNameA = PL_new_term_ref();
     Success = PL_put_atom_chars(FileNameA, FileName);
     if ( !Success) return Success;
-    functor_t LLVMModuleFileNameF
-      = PL_new_functor(PL_new_atom("llvmModuleFileName"), 1);
-    term_t LLVMModuleFileNameT = PL_new_term_ref();
-    Success = PL_cons_functor(LLVMModuleFileNameT,
-                              LLVMModuleFileNameF,
-                              FileNameA);
+    functor_t ReadModuleFactsF
+      = PL_new_functor(PL_new_atom("readModuleFacts"), 1);
+    term_t ReadModuleFactsT = PL_new_term_ref();
+    Success = PL_cons_functor(ReadModuleFactsT, ReadModuleFactsF, FileNameA);
     if ( !Success) return Success;
-    functor_t AssertzF = PL_new_functor(PL_new_atom("assertz"), 1);
-    term_t AssertzT = PL_new_term_ref();
-    Success = PL_cons_functor(AssertzT, AssertzF, LLVMModuleFileNameT);
-    if ( !Success) return Success;
-    Success = PL_call(AssertzT, NULL);
-    DEBUG(if ( !Success) dbgs()
-                           << "Error asserting 'llvmModuleFileName' "
-                           << "fact.\n");
+    Success = PL_call(ReadModuleFactsT, NULL);
+    DEBUG(if ( !Success) dbgs() << "Error calling 'readModuleFacts/1'."
+                                << "\n");
     return Success;
   }
 

@@ -32,7 +32,7 @@ using namespace clang;
 namespace prolog {
   int plAssertDeclIsA(Decl *Decl, const std::string &Sort);
   int plAssertTypeIsA(Type *Type, const std::string &Sort);
-  int plAssertTranslationUnitMainFileName(const char* FileName);
+  int plRunTranslationUnitAnalysis(const char* FileName);
 } // End prolog namespace
 
 #endif

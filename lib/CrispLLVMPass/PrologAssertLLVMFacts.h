@@ -24,7 +24,7 @@
 #define CRISPLLVMPASS_PROLOGASSERTLLVMFACTS_H
 
 namespace prolog {
-  int plAssertLLVMModuleFileName(const char* FileName);
+  int plReadModuleFacts(const char* FileName);
 } // End prolog namespace
 
 #endif

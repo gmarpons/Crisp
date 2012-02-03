@@ -18,7 +18,7 @@
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
 /// \file
-/// Crisp LLVM Function pass plugin entry point.
+/// \brief Crisp LLVM Function pass plugin entry point.
 
 #define DEBUG_TYPE "crisp"
 
@@ -73,10 +73,11 @@ bool CrispFunctionPass::doInitialization(Module& M) {
   Success = plRunEngine("PrologBootForCrispLLVMPass.sh");
 
   if (Success) {
-    // Assert module name
+    // Read clang Prolog facts about the module
     const std::string& ModuleId(M.getModuleIdentifier());
     DEBUG(dbgs() << "LLVM Module name: " << ModuleId << "\n");
-    plAssertLLVMModuleFileName(ModuleId.c_str());
+
+    plReadModuleFacts(ModuleId.c_str());
   }
 
   DEBUG(if (Success) dbgs() << "Crisp Function Pass initialized.\n";

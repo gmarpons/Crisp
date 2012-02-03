@@ -92,6 +92,16 @@ namespace prolog {
     return Success;
   }
 
+  int plRunAnalysis() {
+    int Success;
+    functor_t RunAnalysisF = PL_new_functor(PL_new_atom("runAnalysis"), 0);
+    term_t RunAnalysisT = PL_new_term_ref();
+    Success = PL_cons_functor(RunAnalysisT, RunAnalysisF);
+    if ( !Success) return Success;
+    Success = PL_call(RunAnalysisT, NULL);
+    return Success;
+  }
+
   int plInteractiveSession() {
     return PL_toplevel();
   }

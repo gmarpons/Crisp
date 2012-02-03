@@ -19,7 +19,7 @@
 */
 
 /** \file
- *  External predicates to be used from Prolog.
+ *  \brief External Prolog predicates implemented in C++.
  */
 
 #ifndef CRISPCLANGPLUGIN_PROLOGPREDICATES_H

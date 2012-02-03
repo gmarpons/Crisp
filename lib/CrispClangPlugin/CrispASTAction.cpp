@@ -102,12 +102,11 @@ void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
   int Success = plRunEngine("PrologBootForCrispClangPlugin.sh");
   
   if (Success) {
-    // Assert main file name
+    // Get main file name
     SourceManager& SC(Context.getSourceManager());
     FileID MainFileID = SC.getMainFileID();
     const char* MainFileName = SC.getFileEntryForID(MainFileID)->getName();
     DEBUG(dbgs() << "Main source file name: " << MainFileName << "\n");
-    plAssertTranslationUnitMainFileName(MainFileName);
 
     // Traverse types in the translation unit
     b::for_each(b::make_iterator_range(Context.types_begin()
@@ -125,9 +124,12 @@ void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
     // CompilationInfo defined in CompilationInfo.h).
     newCompilationInfo(CompilerInstance);
 
+    // Main Prolog analysis
+    Success = plRunTranslationUnitAnalysis(MainFileName);
+
     // When debugging, open a PROLOG interactive session
-    DEBUG(Success = plInteractiveSession());
-    
+    if (Success) DEBUG(Success = plInteractiveSession());
+
     // Free global data
     deleteCompilationInfo();
   }

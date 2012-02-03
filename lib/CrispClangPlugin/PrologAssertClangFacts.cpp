@@ -58,26 +58,20 @@ namespace prolog {
     return plAssertIsA((void *) Type, Sort);
   }
 
-  int plAssertTranslationUnitMainFileName(const char* FileName) {
+  int plRunTranslationUnitAnalysis(const char* FileName) {
     int Success;
     term_t FileNameA = PL_new_term_ref();
     Success = PL_put_atom_chars(FileNameA, FileName);
     if ( !Success) return Success;
-    functor_t TranslationUnitMainFileNameF
-      = PL_new_functor(PL_new_atom("translationUnitMainFileName"), 1);
-    term_t TranslationUnitMainFileNameT = PL_new_term_ref();
-    Success = PL_cons_functor(TranslationUnitMainFileNameT,
-                              TranslationUnitMainFileNameF,
-                              FileNameA);
+    functor_t RunAnalysisF
+      = PL_new_functor(PL_new_atom("runTranslationUnitAnalysis"), 1);
+    term_t RunAnalysisT = PL_new_term_ref();
+    Success = PL_cons_functor(RunAnalysisT, RunAnalysisF, FileNameA);
     if ( !Success) return Success;
-    functor_t AssertzF = PL_new_functor(PL_new_atom("assertz"), 1);
-    term_t AssertzT = PL_new_term_ref();
-    Success = PL_cons_functor(AssertzT, AssertzF, TranslationUnitMainFileNameT);
-    if ( !Success) return Success;
-    Success = PL_call(AssertzT, NULL);
+    Success = PL_call(RunAnalysisT, NULL);
     DEBUG(if ( !Success) dbgs()
-                           << "Error asserting 'translationUnitMainFileName' "
-                           << "fact.\n");
+                           << "Error calling 'runTranslationUnitAnalysis/1'."
+                           << "\n");
     return Success;
   }
 
