@@ -23,11 +23,16 @@
 #ifndef CRISPLLVMPASS_LLVMPROLOGQUERIES_H
 #define CRISPLLVMPASS_LLVMPROLOGQUERIES_H
 
+#include "llvm/Function.h"
+
+using namespace llvm;
+
 namespace crisp {
 
   namespace prolog {
 
     int plReadModuleFacts(const char* FileName);
+    int plAssertLLVMFunction(Function *F);
 
   } // End namespace crisp::prolog
 

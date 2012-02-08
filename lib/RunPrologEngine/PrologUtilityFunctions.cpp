@@ -1,4 +1,4 @@
-// LLVMPrologQueries.cpp ---------------------------------------------*- C++ -*-
+// PrlogUtilityFunctions.cpp -----------------------------------------*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
@@ -23,7 +23,6 @@
 #include "llvm/Support/raw_ostream.h"
 
 #include "crisp/PrologUtilityFunctions.h"
-#include "LLVMPrologQueries.h"
 
 using namespace llvm;
 
@@ -31,24 +30,26 @@ namespace crisp {
 
   namespace prolog {
 
-    int plReadModuleFacts(const char* FileName) {
+    int plAssertIsA(void *Elem, const std::string &Sort) {
       int Success;
-      term_t FileNameA = PL_new_term_ref();
-      Success = PL_put_atom_chars(FileNameA, FileName);
+      term_t ElemT = PL_new_term_ref();
+      Success = PL_put_pointer(ElemT, Elem);
       if ( !Success) return Success;
-      functor_t ReadModuleFactsF
-        = PL_new_functor(PL_new_atom("readModuleFacts"), 1);
-      term_t ReadModuleFactsT = PL_new_term_ref();
-      Success = PL_cons_functor(ReadModuleFactsT, ReadModuleFactsF, FileNameA);
+      term_t SortA = PL_new_term_ref();
+      Success = PL_put_atom_chars(SortA, Sort.c_str());
       if ( !Success) return Success;
-      Success = PL_call(ReadModuleFactsT, NULL);
-      DEBUG(if ( !Success) dbgs() << "Error calling 'readModuleFacts/1'."
-                                  << "\n");
+      functor_t IsAF = PL_new_functor(PL_new_atom("isA"), 2);
+      term_t IsAT = PL_new_term_ref();
+      Success = PL_cons_functor(IsAT, IsAF, ElemT, SortA);
+      if ( !Success) return Success;
+      functor_t AssertzF = PL_new_functor(PL_new_atom("assertz"), 1);
+      term_t AssertzT = PL_new_term_ref();
+      Success = PL_cons_functor(AssertzT, AssertzF, IsAT);
+      if ( !Success) return Success;
+      Success = PL_call(AssertzT, NULL);
+      DEBUG(if ( !Success) dbgs() << "Error asserting 'isA "
+                                  << Sort << "' fact.\n");
       return Success;
-    }
-
-    int plAssertLLVMFunction(Function *F) {
-      return plAssertIsA((void *) F, std::string("LLVMFunction"));
     }
 
   } // End namespace crisp::prolog

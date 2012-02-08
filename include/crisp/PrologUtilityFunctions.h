@@ -1,4 +1,4 @@
-// include/crisp/RunPrologEngine.h -----------------------------------*- C++ -*-
+// include/crisp/Prologutilityfunctions.h ----------------------------*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
@@ -17,28 +17,23 @@
 // You should have received a copy of the GNU General Public License
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
-/// \file
-/// \brief An isolation layer between Crisp and the SWI Prolog C interface.
-///
-/// Functions necessary to run and clean up a Prolog Engine, and start
-/// an interactive session.
+/// \file \brief Utility functions to implement Prolog query functions
+/// of both Clang and LLVM plugins.
 
-#ifndef RUNPROLOGENGINE_H
-#define RUNPROLOGENGINE_H
+#ifndef PROLOGUTILITYFUNCTIONS_H
+#define PROLOGUTILITYFUNCTIONS_H
 
 #include <string>
 
 namespace crisp {
 
-  /// Interface with Prolog Engine.
   namespace prolog {
 
-    int plRunEngine(const std::string &BootFileName);
-    int plCleanUp(int Status);
-    int plInteractiveSession();
+    int plAssertIsA(void *Elem, const std::string &Sort);
 
   } // End namespace crisp::prolog
 
 } // End namespace crisp
 
 #endif
+

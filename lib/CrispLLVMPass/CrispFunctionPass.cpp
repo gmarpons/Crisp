@@ -64,7 +64,7 @@ namespace crisp {
   Fun("crisp-fun", "Data extraction function pass for CRISP",
       false,                    // If true, only looks at CFG
       true);                    // If true, analysis Pass
-                               // end of anonymous namespace
+                                // end of anonymous namespace
 
   bool CrispFunctionPass::doInitialization(Module& M) {
     DEBUG(dbgs() << "Initializing Crisp Function Pass.\n");
@@ -90,6 +90,8 @@ namespace crisp {
     if (Success) {
       ++NumFunctionsFun;
       DEBUG(dbgs() << "Processing function: " << F.getName() << "\n");
+
+      (void) plAssertLLVMFunction(&F);
     }
 
     return false;                 // F is not modified
