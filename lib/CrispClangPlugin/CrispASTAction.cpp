@@ -44,11 +44,13 @@
 
 using namespace llvm;
 using namespace clang;
-using namespace prolog;
+using namespace crisp::prolog;
 namespace b = boost;
 namespace l = boost::lambda;
 
-namespace {
+/// \brief Main namespace for Crisp types and functions, including
+/// Clang and LLVM plugins.
+namespace crisp {
 
   class CrispConsumer : public ASTConsumer
                       , public RecursiveASTVisitor<CrispConsumer> {
@@ -76,96 +78,92 @@ namespace {
     std::string RulesFileName;
   };
 
-}
-
-CrispConsumer::~CrispConsumer() {
-  delete FactsOutputStream;
-}
-
-raw_ostream & CrispConsumer::facts() {
-  return *FactsOutputStream;
-}
-
-void CrispConsumer::VisitTypeFromTypesTable(Type *T) {
-  std::string TypeClassName(T->getTypeClassName());
-  std::string Sort(TypeClassName + "Type");
-  (void) plAssertTypeIsA(T, Sort); // Return value ignored
-}
-
-void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
-  DebugFlag = 1;                // FIXME: use a plugin option to
-                                // (de-)activate debug mode.
-
-  DEBUG(dbgs() << "Handling translation unit." << "\n");
-  plRegisterPredicates();
-  // FIXME: RulesFileName is ignored at the moment
-  int Success = plRunEngine("PrologBootForCrispClangPlugin.sh");
-
-  if (Success) {
-    // Get main file name
-    SourceManager& SC(Context.getSourceManager());
-    FileID MainFileID = SC.getMainFileID();
-    const char* MainFileName = SC.getFileEntryForID(MainFileID)->getName();
-    DEBUG(dbgs() << "Main source file name: " << MainFileName << "\n");
-
-    // Traverse types in the translation unit
-    b::for_each(b::make_iterator_range(Context.types_begin()
-                                       , Context.types_end())
-                , l::bind(&CrispConsumer::VisitTypeFromTypesTable
-                          , this
-                          , l::_1)
-                );
-
-    // Traverse AST to visit declarations and statements
-    TraverseDecl(Context.getTranslationUnitDecl());
-    DEBUG(dbgs() << "Traversing of the AST done!\n");
-
-    // Set some global data to be accessed from Prolog (var
-    // CompilationInfo defined in CompilationInfo.h).
-    newCompilationInfo(CompilerInstance);
-
-    // Main Prolog analysis
-    Success = plRunTranslationUnitAnalysis(MainFileName);
-
-    // When debugging, open a PROLOG interactive session
-    if (Success) DEBUG(Success = plInteractiveSession());
-
-    // Free global data
-    deleteCompilationInfo();
+  CrispConsumer::~CrispConsumer() {
+    delete FactsOutputStream;
   }
 
-  DEBUG(if (Success) dbgs() << "Translation unit analyzed.\n";
-        else dbgs() << "Translation unit analysis aborted: "
-                    << "Prolog engine failed.\n";);
-  (void) plCleanUp(Success ? 0 : 1); // Return value ignored
+  raw_ostream & CrispConsumer::facts() {
+    return *FactsOutputStream;
+  }
 
-  DebugFlag = 0;                // FIXME: use a plugin option to
-                                // (de-)activate debug mode.
-}
+  void CrispConsumer::VisitTypeFromTypesTable(Type *T) {
+    std::string TypeClassName(T->getTypeClassName());
+    std::string Sort(TypeClassName + "Type");
+    (void) plAssertTypeIsA(T, Sort); // Return value ignored
+  }
 
-// Visit declarations
+  void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
+    DebugFlag = 1;                // FIXME: use a plugin option to
+                                  // (de-)activate debug mode.
 
-// TODO: handle Prolog errors when visiting AST (now return values of
-// pl* funcs are ignored).
+    DEBUG(dbgs() << "Handling translation unit." << "\n");
+    plRegisterPredicates();
+    // FIXME: RulesFileName is ignored at the moment
+    int Success = plRunEngine("PrologBootForCrispClangPlugin.sh");
 
-bool CrispConsumer::VisitDecl(Decl *D) {
-  // FIXME: the following code is inefficient (uses string
-  // concatenation a lot of times). Specific Visit* methods should be
-  // written instead.
-  std::string DeclKindName(D->getDeclKindName());
-  std::string Sort(DeclKindName + "Decl");
-  (void) plAssertDeclIsA(D, Sort); // Return value ignored
+    if (Success) {
+      // Get main file name
+      SourceManager& SC(Context.getSourceManager());
+      FileID MainFileID = SC.getMainFileID();
+      const char* MainFileName = SC.getFileEntryForID(MainFileID)->getName();
+      DEBUG(dbgs() << "Main source file name: " << MainFileName << "\n");
 
-  return true;
-}
+      // Traverse types in the translation unit
+      b::for_each(b::make_iterator_range(Context.types_begin()
+                                         , Context.types_end())
+                  , l::bind(&CrispConsumer::VisitTypeFromTypesTable
+                            , this
+                            , l::_1)
+                  );
 
-// bool CrispConsumer::VisitCXXMethodDecl(Decl *D) {
-//   std::string Sort("CXXMethodDecl");
-//   (void) plAssertDeclIsA(D, Sort); // Return value ignored
-//   return true;
-// }
+      // Traverse AST to visit declarations and statements
+      TraverseDecl(Context.getTranslationUnitDecl());
+      DEBUG(dbgs() << "Traversing of the AST done!\n");
 
-namespace {
+      // Set some global data to be accessed from Prolog (var
+      // CompilationInfo defined in CompilationInfo.h).
+      newCompilationInfo(CompilerInstance);
+
+      // Main Prolog analysis
+      Success = plRunTranslationUnitAnalysis(MainFileName);
+
+      // When debugging, open a PROLOG interactive session
+      if (Success) DEBUG(Success = plInteractiveSession());
+
+      // Free global data
+      deleteCompilationInfo();
+    }
+
+    DEBUG(if (Success) dbgs() << "Translation unit analyzed.\n";
+          else dbgs() << "Translation unit analysis aborted: "
+                      << "Prolog engine failed.\n";);
+    (void) plCleanUp(Success ? 0 : 1); // Return value ignored
+
+    DebugFlag = 0;                // FIXME: use a plugin option to
+                                  // (de-)activate debug mode.
+  }
+
+  // Visit declarations
+
+  // TODO: handle Prolog errors when visiting AST (now return values of
+  // pl* funcs are ignored).
+
+  bool CrispConsumer::VisitDecl(Decl *D) {
+    // FIXME: the following code is inefficient (uses string
+    // concatenation a lot of times). Specific Visit* methods should be
+    // written instead.
+    std::string DeclKindName(D->getDeclKindName());
+    std::string Sort(DeclKindName + "Decl");
+    (void) plAssertDeclIsA(D, Sort); // Return value ignored
+
+    return true;
+  }
+
+  // bool CrispConsumer::VisitCXXMethodDecl(Decl *D) {
+  //   std::string Sort("CXXMethodDecl");
+  //   (void) plAssertDeclIsA(D, Sort); // Return value ignored
+  //   return true;
+  // }
 
   class CrispASTAction : public PluginASTAction {
   public:
@@ -182,21 +180,22 @@ namespace {
   private:
     std::string RulesFileName;
   };
-}
 
-bool CrispASTAction::ParseArgs(const CompilerInstance &CI
-                               , const std::vector<std::string> &Args) {
-  // One argument needed: rules file name.
-  if (Args.size() != 1) {
-    DiagnosticsEngine &DE = CI.getDiagnostics();
-    std::string DiagMsg = "rules file missing";
-    unsigned DiagId = DE.getCustomDiagID(DiagnosticsEngine::Error, DiagMsg);
-    DE.Report(DiagId);
-    return false;
+  bool CrispASTAction::ParseArgs(const CompilerInstance &CI
+                                 , const std::vector<std::string> &Args) {
+    // One argument needed: rules file name.
+    if (Args.size() != 1) {
+      DiagnosticsEngine &DE = CI.getDiagnostics();
+      std::string DiagMsg = "rules file missing";
+      unsigned DiagId = DE.getCustomDiagID(DiagnosticsEngine::Error, DiagMsg);
+      DE.Report(DiagId);
+      return false;
+    }
+    RulesFileName = Args[0];
+    return true;
   }
-  RulesFileName = Args[0];
-  return true;
-}
 
-static FrontendPluginRegistry::Add<CrispASTAction>
-X("crisp-clang", "Data extraction clang plugin for CRISP");
+  static FrontendPluginRegistry::Add<CrispASTAction>
+  X("crisp-clang", "Data extraction clang plugin for CRISP");
+
+} // End namespace crisp

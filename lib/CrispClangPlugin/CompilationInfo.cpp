@@ -21,25 +21,29 @@
 
 using namespace clang;
 
-namespace prolog {
+namespace crisp {
 
-  static CompilationInfo *CompilationInfoSingleton;
+  namespace prolog {
 
-  CompilationInfo* getCompilationInfo() {
-    return CompilationInfoSingleton;
-  }
+    static CompilationInfo *CompilationInfoSingleton;
 
-  void newCompilationInfo(CompilerInstance &CI) {
-    if (CompilationInfoSingleton) delete CompilationInfoSingleton;
-    CompilationInfoSingleton = new CompilationInfo(CI);
-  }
+    CompilationInfo* getCompilationInfo() {
+      return CompilationInfoSingleton;
+    }
 
-  void deleteCompilationInfo() {
-    if (CompilationInfoSingleton) delete CompilationInfoSingleton;
-  }
+    void newCompilationInfo(CompilerInstance &CI) {
+      if (CompilationInfoSingleton) delete CompilationInfoSingleton;
+      CompilationInfoSingleton = new CompilationInfo(CI);
+    }
 
-  CompilationInfo::~CompilationInfo() {
-    delete MangleContext;
-  }
+    void deleteCompilationInfo() {
+      if (CompilationInfoSingleton) delete CompilationInfoSingleton;
+    }
 
-} // End of namespace prolog
+    CompilationInfo::~CompilationInfo() {
+      delete MangleContext;
+    }
+
+  } // End namespace crisp::prolog
+
+} // End namespace crisp

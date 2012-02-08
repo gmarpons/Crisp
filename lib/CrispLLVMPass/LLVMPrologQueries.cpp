@@ -26,22 +26,26 @@
 
 using namespace llvm;
 
-namespace prolog {
+namespace crisp {
 
-  int plReadModuleFacts(const char* FileName) {
-    int Success;
-    term_t FileNameA = PL_new_term_ref();
-    Success = PL_put_atom_chars(FileNameA, FileName);
-    if ( !Success) return Success;
-    functor_t ReadModuleFactsF
-      = PL_new_functor(PL_new_atom("readModuleFacts"), 1);
-    term_t ReadModuleFactsT = PL_new_term_ref();
-    Success = PL_cons_functor(ReadModuleFactsT, ReadModuleFactsF, FileNameA);
-    if ( !Success) return Success;
-    Success = PL_call(ReadModuleFactsT, NULL);
-    DEBUG(if ( !Success) dbgs() << "Error calling 'readModuleFacts/1'."
-                                << "\n");
-    return Success;
-  }
+  namespace prolog {
 
-}
+    int plReadModuleFacts(const char* FileName) {
+      int Success;
+      term_t FileNameA = PL_new_term_ref();
+      Success = PL_put_atom_chars(FileNameA, FileName);
+      if ( !Success) return Success;
+      functor_t ReadModuleFactsF
+        = PL_new_functor(PL_new_atom("readModuleFacts"), 1);
+      term_t ReadModuleFactsT = PL_new_term_ref();
+      Success = PL_cons_functor(ReadModuleFactsT, ReadModuleFactsF, FileNameA);
+      if ( !Success) return Success;
+      Success = PL_call(ReadModuleFactsT, NULL);
+      DEBUG(if ( !Success) dbgs() << "Error calling 'readModuleFacts/1'."
+                                  << "\n");
+      return Success;
+    }
+
+  } // End namespace crisp::prolog
+
+} // End namespace crisp

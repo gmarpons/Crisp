@@ -29,10 +29,16 @@
 
 using namespace clang;
 
-namespace prolog {
-  int plAssertDeclIsA(Decl *Decl, const std::string &Sort);
-  int plAssertTypeIsA(Type *Type, const std::string &Sort);
-  int plRunTranslationUnitAnalysis(const char* FileName);
-} // End prolog namespace
+namespace crisp {
+
+  namespace prolog {
+
+    int plAssertDeclIsA(Decl *Decl, const std::string &Sort);
+    int plAssertTypeIsA(Type *Type, const std::string &Sort);
+    int plRunTranslationUnitAnalysis(const char* FileName);
+
+  } // End namespace crisp::prolog
+
+} // End namespace crisp
 
 #endif

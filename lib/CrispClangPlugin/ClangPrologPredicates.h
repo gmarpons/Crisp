@@ -32,72 +32,77 @@
 
 #ifdef __cplusplus
 extern "C" {
-  namespace prolog {
+  namespace crisp {
+
+    namespace prolog {
 #endif
 
-    /*  If parameter types are not respected when calling one of the
-        following predicates from Prolog, a runtime error is
-        raised.
+      /*  If parameter types are not respected when calling one of the
+          following predicates from Prolog, a runtime error is
+          raised.
 
-        Every place where a 'Type' argument is used, methods of
-        'QualType' can also be used.
-    */
+          Every place where a 'Type' argument is used, methods of
+          'QualType' can also be used.
+      */
 
-    /** \param TypeT +Type
-     *  \param NameT Atom
-     */
-    foreign_t pl_getAsString(term_t TypeT, term_t NameT);
+      /** \param TypeT +Type
+       *  \param NameT Atom
+       */
+      foreign_t pl_getAsString(term_t TypeT, term_t NameT);
 
-    /** \param TypeT +Type
-     *  \param CanonicalT Type
-     */
-    foreign_t pl_getCanonicalType(term_t TypeT, term_t CanonicalT);
+      /** \param TypeT +Type
+       *  \param CanonicalT Type
+       */
+      foreign_t pl_getCanonicalType(term_t TypeT, term_t CanonicalT);
 
-    /** \param TypeT +Type
-     */
-    foreign_t pl_isConstQualified(term_t TypeT);
+      /** \param TypeT +Type
+       */
+      foreign_t pl_isConstQualified(term_t TypeT);
 
-    /** \param FunctionProtoTypeT +FunctionProtoType
-     */
-    foreign_t pl_isConstFunctionProtoType(term_t FunctionProtoTypeT);
+      /** \param FunctionProtoTypeT +FunctionProtoType
+       */
+      foreign_t pl_isConstFunctionProtoType(term_t FunctionProtoTypeT);
 
-    /** \param PointerT +PointerType
-     *  \param PointeeT Type
-     */
-    foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT);
+      /** \param PointerT +PointerType
+       *  \param PointeeT Type
+       */
+      foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT);
 
-    /** \param FunctionT +FunctionType
-     *  \param ResultT Type
-     */
-    foreign_t pl_getResultType(term_t FunctionT, term_t ResultT);
+      /** \param FunctionT +FunctionType
+       *  \param ResultT Type
+       */
+      foreign_t pl_getResultType(term_t FunctionT, term_t ResultT);
 
-    /** \param DeclT +Decl
-     *  \param FilenameT Atom
-     *  \param LineT an Integer
-     *  \param ColT an Integer
-     */
-    foreign_t pl_getPresumedLoc(term_t DeclT, term_t FilenameT,
-                                term_t LineT, term_t ColT);
+      /** \param DeclT +Decl
+       *  \param FilenameT Atom
+       *  \param LineT an Integer
+       *  \param ColT an Integer
+       */
+      foreign_t pl_getPresumedLoc(term_t DeclT, term_t FilenameT,
+                                  term_t LineT, term_t ColT);
 
-    /** \param NamedDeclT +NamedDecl
-     *  \param NameT Atom
-     */
-    foreign_t pl_getNameAsString(term_t NamedDeclT, term_t NameT);
+      /** \param NamedDeclT +NamedDecl
+       *  \param NameT Atom
+       */
+      foreign_t pl_getNameAsString(term_t NamedDeclT, term_t NameT);
 
-    /** \param ValueT +ValueDecl
-     *  \param TypeT Type
-     */
-    foreign_t pl_getType(term_t ValueT, term_t TypeT);
+      /** \param ValueT +ValueDecl
+       *  \param TypeT Type
+       */
+      foreign_t pl_getType(term_t ValueT, term_t TypeT);
 
-    /** \param FunctionT +VarDecl or +FunctionDecl (not a
-     *  CXXConstructorDecl or CXXDestructorDecl
-     *  \param MangledNameT Atom
-     */
-    foreign_t pl_mangleName(term_t FunctionT, term_t MangledNameT);
+      /** \param FunctionT +VarDecl or +FunctionDecl (not a
+       *  CXXConstructorDecl or CXXDestructorDecl
+       *  \param MangledNameT Atom
+       */
+      foreign_t pl_mangleName(term_t FunctionT, term_t MangledNameT);
 
 #ifdef __cplusplus
-  } /* End namespace prolog */
-}
+    } /* End namespace crisp::prolog */
+
+  }   /* End namespace crisp  */
+
+} /* End "extern" C */
 #endif
 
 #endif  /* #ifndef CRISPCLANGPLUGIN_CLANGPROLOGPREDICATES_H */

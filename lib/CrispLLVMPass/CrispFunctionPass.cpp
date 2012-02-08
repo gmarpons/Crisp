@@ -36,15 +36,15 @@
 #include "LLVMPrologQueries.h"
 
 using namespace llvm;
-using namespace prolog;
+using namespace crisp::prolog;
 
 STATISTIC(StNumFunctionsFun, "Number of functions analyzed by crisp-fun");
 
-namespace {
+namespace crisp {
   unsigned NumFunctionsFun = 0;
-}
 
-namespace {
+  /// \brief Class implementing a function pass to analyze LLVM IR
+  /// code for Crisp.
   class CrispFunctionPass : public FunctionPass {
   public:
     static char ID;
@@ -64,59 +64,61 @@ namespace {
   Fun("crisp-fun", "Data extraction function pass for CRISP",
       false,                    // If true, only looks at CFG
       true);                    // If true, analysis Pass
-}                               // end of anonymous namespace
+                               // end of anonymous namespace
 
-bool CrispFunctionPass::doInitialization(Module& M) {
-  DEBUG(dbgs() << "Initializing Crisp Function Pass.\n");
-  DEBUG(dbgs() << "Handling LLVM Module.\n");
-  // TODO: plRegisterPredicates();
-  Success = plRunEngine("PrologBootForCrispLLVMPass.sh");
+  bool CrispFunctionPass::doInitialization(Module& M) {
+    DEBUG(dbgs() << "Initializing Crisp Function Pass.\n");
+    DEBUG(dbgs() << "Handling LLVM Module.\n");
+    // TODO: plRegisterPredicates();
+    Success = plRunEngine("PrologBootForCrispLLVMPass.sh");
 
-  if (Success) {
-    // Read clang Prolog facts about the module
-    const std::string& ModuleId(M.getModuleIdentifier());
-    DEBUG(dbgs() << "LLVM Module name: " << ModuleId << "\n");
+    if (Success) {
+      // Read clang Prolog facts about the module
+      const std::string& ModuleId(M.getModuleIdentifier());
+      DEBUG(dbgs() << "LLVM Module name: " << ModuleId << "\n");
 
-    plReadModuleFacts(ModuleId.c_str());
+      plReadModuleFacts(ModuleId.c_str());
+    }
+
+    DEBUG(if (Success) dbgs() << "Crisp Function Pass initialized.\n";
+          else dbgs() << "Analysis aborted: Prolog engine failed.\n";);
+
+    return false;                 // M is not modified
   }
 
-  DEBUG(if (Success) dbgs() << "Crisp Function Pass initialized.\n";
-        else dbgs() << "Analysis aborted: Prolog engine failed.\n";);
+  bool CrispFunctionPass::runOnFunction(Function& F) {
+    if (Success) {
+      ++NumFunctionsFun;
+      DEBUG(dbgs() << "Processing function: " << F.getName() << "\n");
+    }
 
-  return false;                 // M is not modified
-}
-
-bool CrispFunctionPass::runOnFunction(Function& F) {
-  if (Success) {
-    ++NumFunctionsFun;
-    DEBUG(dbgs() << "Processing function: " << F.getName() << "\n");
+    return false;                 // F is not modified
   }
 
-  return false;                 // F is not modified
-}
-
-// Analysis pass (it does not modify the program), but has some
-// prerequisites.
-void CrispFunctionPass::getAnalysisUsage(AnalysisUsage& AU) const {
-  AU.setPreservesAll();
-  AU.addRequired<AliasAnalysis>();
-  AU.addRequired<TargetData>(); // Necessary to get location sizes
-}
-
-void CrispFunctionPass::releaseMemory() {
-}
-
-bool CrispFunctionPass::doFinalization(Module& M) {
-  StNumFunctionsFun = NumFunctionsFun;
-
-  if (Success) {
-    // When debugging, open a PROLOG interactive session
-    DEBUG(Success = plInteractiveSession());
+  // Analysis pass (it does not modify the program), but has some
+  // prerequisites.
+  void CrispFunctionPass::getAnalysisUsage(AnalysisUsage& AU) const {
+    AU.setPreservesAll();
+    AU.addRequired<AliasAnalysis>();
+    AU.addRequired<TargetData>(); // Necessary to get location sizes
   }
-  DEBUG(if (Success) dbgs() << "LLVM Module analyzed.\n";
-        else dbgs() << "LLVM Module analysis aborted: "
-                    << "Prolog engine failed.\n";);
-  (void) plCleanUp(Success ? 0 : 1); // Return value ignored
 
-  return false;                 // M is not modified
-}
+  void CrispFunctionPass::releaseMemory() {
+  }
+
+  bool CrispFunctionPass::doFinalization(Module& M) {
+    StNumFunctionsFun = NumFunctionsFun;
+
+    if (Success) {
+      // When debugging, open a PROLOG interactive session
+      DEBUG(Success = plInteractiveSession());
+    }
+    DEBUG(if (Success) dbgs() << "LLVM Module analyzed.\n";
+          else dbgs() << "LLVM Module analysis aborted: "
+                      << "Prolog engine failed.\n";);
+    (void) plCleanUp(Success ? 0 : 1); // Return value ignored
+
+    return false;                 // M is not modified
+  }
+
+} // End namespace crisp

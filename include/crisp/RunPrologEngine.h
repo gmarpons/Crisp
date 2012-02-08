@@ -28,11 +28,15 @@
 
 #include <string>
 
-/// Interface with Prolog Engine.
-namespace prolog {
-  int plRunEngine(const std::string &BootFileName);
-  int plCleanUp(int Status);
-  int plInteractiveSession();
-} // End prolog namespace
+namespace crisp {
+
+  /// Interface with Prolog Engine.
+  namespace prolog {
+    int plRunEngine(const std::string &BootFileName);
+    int plCleanUp(int Status);
+    int plInteractiveSession();
+  } // End namespace crisp::prolog
+
+} // End namespace crisp
 
 #endif

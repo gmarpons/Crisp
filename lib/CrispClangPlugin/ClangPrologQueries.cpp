@@ -26,53 +26,57 @@
 using namespace llvm;
 using namespace clang;
 
-namespace prolog {
+namespace crisp {
 
-  int plAssertIsA(void *Elem, const std::string &Sort) {
-    int Success;
-    term_t ElemT = PL_new_term_ref();
-    Success = PL_put_pointer(ElemT, Elem);
-    if ( !Success) return Success;
-    term_t SortA = PL_new_term_ref();
-    Success = PL_put_atom_chars(SortA, Sort.c_str());
-    if ( !Success) return Success;
-    functor_t IsAF = PL_new_functor(PL_new_atom("isA"), 2);
-    term_t IsAT = PL_new_term_ref();
-    Success = PL_cons_functor(IsAT, IsAF, ElemT, SortA);
-    if ( !Success) return Success;
-    functor_t AssertzF = PL_new_functor(PL_new_atom("assertz"), 1);
-    term_t AssertzT = PL_new_term_ref();
-    Success = PL_cons_functor(AssertzT, AssertzF, IsAT);
-    if ( !Success) return Success;
-    Success = PL_call(AssertzT, NULL);
-    DEBUG(if ( !Success) dbgs() << "Error asserting 'isA "
-                                << Sort << "' fact.\n");
-    return Success;
-  }
+  namespace prolog {
 
-  int plAssertDeclIsA(Decl *Decl, const std::string &Sort) {
-    return plAssertIsA((void *) Decl, Sort);
-  }
+    int plAssertIsA(void *Elem, const std::string &Sort) {
+      int Success;
+      term_t ElemT = PL_new_term_ref();
+      Success = PL_put_pointer(ElemT, Elem);
+      if ( !Success) return Success;
+      term_t SortA = PL_new_term_ref();
+      Success = PL_put_atom_chars(SortA, Sort.c_str());
+      if ( !Success) return Success;
+      functor_t IsAF = PL_new_functor(PL_new_atom("isA"), 2);
+      term_t IsAT = PL_new_term_ref();
+      Success = PL_cons_functor(IsAT, IsAF, ElemT, SortA);
+      if ( !Success) return Success;
+      functor_t AssertzF = PL_new_functor(PL_new_atom("assertz"), 1);
+      term_t AssertzT = PL_new_term_ref();
+      Success = PL_cons_functor(AssertzT, AssertzF, IsAT);
+      if ( !Success) return Success;
+      Success = PL_call(AssertzT, NULL);
+      DEBUG(if ( !Success) dbgs() << "Error asserting 'isA "
+                                  << Sort << "' fact.\n");
+      return Success;
+    }
 
-  int plAssertTypeIsA(Type *Type, const std::string &Sort) {
-    return plAssertIsA((void *) Type, Sort);
-  }
+    int plAssertDeclIsA(Decl *Decl, const std::string &Sort) {
+      return plAssertIsA((void *) Decl, Sort);
+    }
 
-  int plRunTranslationUnitAnalysis(const char* FileName) {
-    int Success;
-    term_t FileNameA = PL_new_term_ref();
-    Success = PL_put_atom_chars(FileNameA, FileName);
-    if ( !Success) return Success;
-    functor_t RunAnalysisF
-      = PL_new_functor(PL_new_atom("runTranslationUnitAnalysis"), 1);
-    term_t RunAnalysisT = PL_new_term_ref();
-    Success = PL_cons_functor(RunAnalysisT, RunAnalysisF, FileNameA);
-    if ( !Success) return Success;
-    Success = PL_call(RunAnalysisT, NULL);
-    DEBUG(if ( !Success) dbgs()
-                           << "Error calling 'runTranslationUnitAnalysis/1'."
-                           << "\n");
-    return Success;
-  }
+    int plAssertTypeIsA(Type *Type, const std::string &Sort) {
+      return plAssertIsA((void *) Type, Sort);
+    }
 
-}
+    int plRunTranslationUnitAnalysis(const char* FileName) {
+      int Success;
+      term_t FileNameA = PL_new_term_ref();
+      Success = PL_put_atom_chars(FileNameA, FileName);
+      if ( !Success) return Success;
+      functor_t RunAnalysisF
+        = PL_new_functor(PL_new_atom("runTranslationUnitAnalysis"), 1);
+      term_t RunAnalysisT = PL_new_term_ref();
+      Success = PL_cons_functor(RunAnalysisT, RunAnalysisF, FileNameA);
+      if ( !Success) return Success;
+      Success = PL_call(RunAnalysisT, NULL);
+      DEBUG(if ( !Success) dbgs()
+                             << "Error calling 'runTranslationUnitAnalysis/1'."
+                             << "\n");
+      return Success;
+    }
+
+  } // End namespace crisp::prolog
+
+} // End namespace crisp

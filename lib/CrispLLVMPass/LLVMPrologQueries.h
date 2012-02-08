@@ -23,8 +23,14 @@
 #ifndef CRISPLLVMPASS_LLVMPROLOGQUERIES_H
 #define CRISPLLVMPASS_LLVMPROLOGQUERIES_H
 
-namespace prolog {
-  int plReadModuleFacts(const char* FileName);
-} // End prolog namespace
+namespace crisp {
+
+  namespace prolog {
+
+    int plReadModuleFacts(const char* FileName);
+
+  } // End namespace crisp::prolog
+
+} // End namespace crisp
 
 #endif

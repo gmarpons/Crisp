@@ -30,67 +30,72 @@
 
 using namespace clang;
 
-namespace prolog {
+namespace crisp {
 
-  class CompilationInfo {
-  public:
-    const CompilerInstance& getCompilerInstance() const;
+  namespace prolog {
 
-    const LangOptions& getLangOpts() const;
+    class CompilationInfo {
+    public:
+      const CompilerInstance& getCompilerInstance() const;
 
-    const PrintingPolicy& getPrintingPolicy() const;
+      const LangOptions& getLangOpts() const;
 
-    const SourceManager& getSourceManager() const;
+      const PrintingPolicy& getPrintingPolicy() const;
 
-    MangleContext* getMangleContext();
+      const SourceManager& getSourceManager() const;
 
-    friend void newCompilationInfo(CompilerInstance &CI);
-    friend void deleteCompilationInfo();
+      MangleContext* getMangleContext();
 
-  private:
-    CompilationInfo(CompilerInstance &CI)
-      : CompilerInstance(CI)
-      , LangOptions(CI.getLangOpts())
-      , PrintingPolicy(LangOptions)
-      , SourceManager(CI.getSourceManager())
-      , MangleContext(CI.getASTContext().createMangleContext()) {
+      friend void newCompilationInfo(CompilerInstance &CI);
+      friend void deleteCompilationInfo();
+
+    private:
+      CompilationInfo(CompilerInstance &CI)
+        : CompilerInstance(CI)
+        , LangOptions(CI.getLangOpts())
+        , PrintingPolicy(LangOptions)
+        , SourceManager(CI.getSourceManager())
+        , MangleContext(CI.getASTContext().createMangleContext()) {
+      }
+
+      ~CompilationInfo();
+
+      const CompilerInstance &CompilerInstance;
+      const LangOptions &LangOptions;
+      const PrintingPolicy PrintingPolicy;
+      const SourceManager &SourceManager;
+      MangleContext *MangleContext;
+    };
+
+    CompilationInfo* getCompilationInfo();
+
+    void newCompilationInfo(CompilerInstance &CI);
+
+    void deleteCompilationInfo();
+
+    inline const CompilerInstance&
+    CompilationInfo::getCompilerInstance() const {
+      return CompilerInstance;
     }
 
-    ~CompilationInfo();
+    inline const LangOptions& CompilationInfo::getLangOpts() const {
+      return LangOptions;
+    }
 
-    const CompilerInstance &CompilerInstance;
-    const LangOptions &LangOptions;
-    const PrintingPolicy PrintingPolicy;
-    const SourceManager &SourceManager;
-    MangleContext *MangleContext;
-  };
+    inline const PrintingPolicy& CompilationInfo::getPrintingPolicy() const {
+      return PrintingPolicy;
+    }
 
-  CompilationInfo* getCompilationInfo();
+    inline const SourceManager& CompilationInfo::getSourceManager() const {
+      return SourceManager;
+    }
 
-  void newCompilationInfo(CompilerInstance &CI);
+    inline MangleContext* CompilationInfo::getMangleContext() {
+      return MangleContext;
+    }
 
-  void deleteCompilationInfo();
+  } // End namespace crisp::prolog
 
-  inline const CompilerInstance& CompilationInfo::getCompilerInstance() const {
-    return CompilerInstance;
-  }
-
-  inline const LangOptions& CompilationInfo::getLangOpts() const {
-    return LangOptions;
-  }
-
-  inline const PrintingPolicy& CompilationInfo::getPrintingPolicy() const {
-    return PrintingPolicy;
-  }
-
-  inline const SourceManager& CompilationInfo::getSourceManager() const {
-    return SourceManager;
-  }
-
-  inline MangleContext* CompilationInfo::getMangleContext() {
-    return MangleContext;
-  }
-
-} // End of namespace prolog
+} // End namespace crisp
 
 #endif
