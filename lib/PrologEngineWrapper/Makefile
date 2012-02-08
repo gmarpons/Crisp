@@ -1,4 +1,4 @@
-## lib/RunPrologEngine/Makefile ---------------------------------*- Makefile -*-
+## lib/PrologEngineWrapper/Makefile -----------------------------*- Makefile -*-
 
 #
 # Relative path to the top of the source tree.
@@ -10,7 +10,7 @@ LEVEL=../..
 #
 DIRS=
 
-LIBRARYNAME=RunPrologEngine
+LIBRARYNAME=PrologEngineWrapper
 BUILD_ARCHIVE=1
 
 include $(LEVEL)/Makefile.common

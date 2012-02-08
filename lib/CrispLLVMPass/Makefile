@@ -13,7 +13,7 @@ DIRS=
 LIBRARYNAME=crispllvm
 SHARED_LIBRARY=1
 LOADABLE_MODULE=1
-USEDLIBS=RunPrologEngine.a
+USEDLIBS=PrologEngineWrapper.a
 
 include $(LEVEL)/Makefile.common
 
