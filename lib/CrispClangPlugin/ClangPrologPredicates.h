@@ -21,8 +21,9 @@
 /** \file
  *  \brief External (Clang) predicates to be used from Prolog.
  *
- *  This file contains C++ functions implementing Prolog predicates,
- *  to be called during Crisp Clang plugin execution.
+ *  This file contains C++ functions (with ISO-C headers) implementing
+ *  Prolog predicates, to be called during Crisp Clang plugin
+ *  execution.
  */
 
 #ifndef CRISPCLANGPLUGIN_CLANGPROLOGPREDICATES_H

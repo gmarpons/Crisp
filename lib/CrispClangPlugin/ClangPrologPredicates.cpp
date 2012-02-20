@@ -100,7 +100,8 @@ namespace crisp {
     foreign_t pl_getNameAsString(term_t NamedDeclT, term_t NameT) {
       NamedDecl *ND;
       if ( !PL_get_pointer(NamedDeclT, (void **) &ND))
-        return PL_warning("declName/2: instantiation fault on first arg");
+        return PL_warning("getNameAsString/2: "
+                          "instantiation fault on first arg");
       return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
     }
 
