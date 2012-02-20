@@ -47,6 +47,10 @@ namespace crisp {
       return Success;
     }
 
+    int plAssertModule(Module *M) {
+      return plAssertIsA((void *) M, std::string("Module"));
+    }
+
     int plAssertLLVMFunction(Function *F) {
       return plAssertIsA((void *) F, std::string("LLVMFunction"));
     }

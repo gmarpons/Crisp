@@ -32,6 +32,7 @@ namespace crisp {
   namespace prolog {
 
     int plReadModuleFacts(const char* FileName);
+    int plAssertModule(Module *M);
     int plAssertLLVMFunction(Function *F);
 
   } // End namespace crisp::prolog

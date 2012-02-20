@@ -22,29 +22,34 @@ readAllViolationCandidates(FileName) :-
 %% FIXME: the following code doesn't belongs here
 
 violation('HICPP 3.4.2', [Func]) :-
-        violationCandidate('HICPP 3.4.2', [Func]),
-        hasArgument(Func, This), % Uses an iterator
-        hasName(This, "this"),
-        hasInstruction(Func, StoreThis), % Uses an iterator
+        violationCandidate('HICPP 3.4.2', [FuncName]),
+        isA(Module, 'Module'),
+                                % 'violationCandidate' guarantees that
+                                % 'FuncName' is the name of an
+                                % LLVMFunction.
+        getFunction(Module, FuncName, Func),
+        containsArgument(Func, This), % Uses an iterator
+        getName(This, "this"),
+        containsInstruction(Func, StoreThis), % Uses an iterator
         isA(StoreThis, 'StoreInst'),
         getValueOperand(StoreThis, This),
         getPointerOperand(StoreThis, ThisAddr),
-        hasIntruction(Func, LoadThis),
+        containsIntruction(Func, LoadThis), % Uses an iterator
         isA(LoadThis, 'LoadInst'),
         getPointerOperand(LoadThis, ThisAddr),
-        hasInstruction(Func, OffsetFromThis),
+        containsInstruction(Func, OffsetFromThis), % Uses an iterator
         ( isA(OffsetFromThis, 'GetElementPtrInst'),
           getPointerOperand(OffsetFromThis, LoadThis)
         ; isA(OffsetFromThis, 'BitCastInst'),
-          hasOperand(OffsetFromThis, LoadThis) % Uses an iterator
+          containsOp(OffsetFromThis, LoadThis) % Uses an iterator
         ),
                                 % OffsetFromThis has necessarily
                                 % pointer type, so it has a location.
-        hasLocation(OffsetFromThis, OffsetFromThisLoc),
-        hasInstruction(Func, Return),
+        getLocation(OffsetFromThis, OffsetFromThisLoc),
+        containsInstruction(Func, Return), % Uses an iterator
         isA(Return, 'ReturnInst'),
-                                % That Func returns pointer (Clang
-                                % knows) guarantees there is a
-                                % location for 'Return'
-        hasLocation(Return, ReturnLoc),
+                                % 'violationCandidate' guarantees that
+                                % Func returns a pointer, so there is
+                                % a location for 'Return'
+        getLocation(Return, ReturnLoc),
         aliasLessThan(ReturnLoc, OffsetFromThisLoc, 'NoAlias').
