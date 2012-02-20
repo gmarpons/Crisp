@@ -22,8 +22,13 @@
 #include "LLVMPrologPredicateRegistration.h"
 
 void plRegisterPredicates() {
+  PL_register_foreign("getName", 2, pl_getName, 0);
   PL_register_foreign("containsArgument", 2, pl_containsArgument,
                       PL_FA_NONDETERMINISTIC);
-  PL_register_foreign("getName", 2, pl_getName, 0);
+  PL_register_foreign("containsInstruction", 2, pl_containsInstruction,
+                      PL_FA_NONDETERMINISTIC);
+  PL_register_foreign("containsOp", 2, pl_containsOp,
+                      PL_FA_NONDETERMINISTIC);
+  PL_register_foreign("get", 2, pl_get, 0);
   PL_register_foreign("getFunction", 3, pl_getFunction, 0);
 }

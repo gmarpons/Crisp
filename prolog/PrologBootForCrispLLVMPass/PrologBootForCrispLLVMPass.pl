@@ -41,7 +41,8 @@ violation('HICPP 3.4.2', [Func]) :-
         ( isA(OffsetFromThis, 'GetElementPtrInst'),
           getPointerOperand(OffsetFromThis, LoadThis)
         ; isA(OffsetFromThis, 'BitCastInst'),
-          containsOp(OffsetFromThis, LoadThis) % Uses an iterator
+          containsOp(OffsetFromThis, Use), % Uses an iterator
+          get(Use, LoadThis)               % Something to hide in Crisp
         ),
                                 % OffsetFromThis has necessarily
                                 % pointer type, so it has a location.

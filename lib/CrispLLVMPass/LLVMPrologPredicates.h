@@ -47,11 +47,27 @@ extern "C" {
        */
       foreign_t pl_getName(term_t ValueT, term_t NameT);
 
-      /** \param FunctionT +Function
-       *  \param ArgumentT Argument
+      /** \param FuncT +Function
+       *  \param ArgT Argument
        */
       foreign_t pl_containsArgument(term_t FuncT, term_t ArgT,
                                     control_t Handle);
+
+      /** \param FuncT +Function
+       *  \param InstT Instruction
+       */
+      foreign_t pl_containsInstruction(term_t FuncT, term_t InstT,
+                                       control_t Handle);
+
+      /** \param UserT +User
+       *  \param UseT Use
+       */
+      foreign_t pl_containsOp(term_t UserT, term_t UseT, control_t Handle);
+
+      /** \param UseT +Use
+       *  \param ValueT Value
+       */
+      foreign_t pl_get(term_t UseT, term_t ValueT);
 
       /** \param ModuleT +Module
        *  \param NameT +Atom
