@@ -47,6 +47,11 @@ extern "C" {
        */
       foreign_t pl_getName(term_t ValueT, term_t NameT);
 
+      /** \param InstT +Instruction
+       *  \param SortT Sort
+       */
+      foreign_t pl_isA_computed(term_t InstT, term_t SortT);
+
       /** \param FuncT +Function
        *  \param ArgT Argument
        */

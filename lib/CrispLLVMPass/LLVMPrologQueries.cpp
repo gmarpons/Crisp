@@ -51,9 +51,9 @@ namespace crisp {
       return plAssertIsA((void *) M, std::string("Module"));
     }
 
-    int plAssertLLVMFunction(Function *F) {
-      return plAssertIsA((void *) F, std::string("LLVMFunction"));
-    }
+    // int plAssertLLVMFunction(Function *F) {
+    //   return plAssertIsA((void *) F, std::string("LLVMFunction"));
+    // }
 
   } // End namespace crisp::prolog
 

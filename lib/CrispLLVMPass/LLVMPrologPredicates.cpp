@@ -21,6 +21,7 @@
 
 #include "llvm/Argument.h"
 #include "llvm/Function.h"
+#include "llvm/Instruction.h"
 #include "llvm/Instructions.h"
 #include "llvm/Module.h"
 #include "llvm/Support/InstIterator.h"
@@ -39,6 +40,90 @@ namespace crisp {
       if ( !PL_get_pointer(ValueT, (void **) &V))
         return PL_warning("getName/2: instantiation fault on first arg");
       return PL_unify_atom_chars(NameT, V->getName().str().c_str());
+    }
+
+    const char* getSortName(unsigned OpCode) {
+      switch (OpCode) {
+      // Terminators
+      case Instruction::Ret:    return "RetInst";
+      case Instruction::Br:     return "BranchInst";
+      case Instruction::Switch: return "SwitchInst";
+      case Instruction::IndirectBr: return "IndirectBrInst";
+      case Instruction::Invoke: return "InvokeInst";
+      case Instruction::Resume: return "ResumeInst";
+      case Instruction::Unreachable: return "UnreachableInst";
+
+      // Standard binary operators...
+      // BinaryOperator is a subclass of Instruction, AddOperator is a
+      // subclass of Operator, etc.
+      case Instruction::Add: return "BinaryOperator-AddOperator";
+      // No specific Operator subclass for 'fadd'
+      case Instruction::FAdd: return "BinaryOperator-fadd";
+      case Instruction::Sub: return "BinaryOperator-SubOperator";
+      case Instruction::FSub: return "BinaryOperator-fsub";
+      case Instruction::Mul: return "BinaryOperator-MulOperator";
+      case Instruction::FMul: return "BinaryOperator-fmul";
+      case Instruction::UDiv: return "BinaryOperator-UDivOperator";
+      case Instruction::SDiv: return "BinaryOperator-SDivOperator";
+      case Instruction::FDiv: return "BinaryOperator-fdiv";
+      case Instruction::URem: return "urem";
+      case Instruction::SRem: return "srem";
+      case Instruction::FRem: return "frem";
+
+      // Logical operators...
+      case Instruction::And: return "and";
+      case Instruction::Or : return "or";
+      case Instruction::Xor: return "xor";
+
+      // Memory instructions...
+      case Instruction::Alloca:        return "AllocaInst";
+      case Instruction::Load:          return "LoadInst";
+      case Instruction::Store:         return "StoreInst";
+      case Instruction::AtomicCmpXchg: return "CmpXchgInst";
+      case Instruction::AtomicRMW:     return "AtomicRMWInst";
+      case Instruction::Fence:         return "FenceInst";
+      case Instruction::GetElementPtr: return "GetElementPtrInst";
+
+      // Convert instructions...
+      case Instruction::Trunc:     return "TruncInst";
+      case Instruction::ZExt:      return "ZExtInst";
+      case Instruction::SExt:      return "SExtInst";
+      case Instruction::FPTrunc:   return "FPTruncInst";
+      case Instruction::FPExt:     return "FPExtInst";
+      case Instruction::FPToUI:    return "FPToUIInst";
+      case Instruction::FPToSI:    return "FPToSIInst";
+      case Instruction::UIToFP:    return "UIToFPInst";
+      case Instruction::SIToFP:    return "SIToFPInst";
+      case Instruction::IntToPtr:  return "IntToPtrInst";
+      case Instruction::PtrToInt:  return "PtrToIntInst";
+      case Instruction::BitCast:   return "BitCastInst";
+
+      // Other instructions...
+      case Instruction::ICmp:           return "ICmpInst";
+      case Instruction::FCmp:           return "FCmpInst";
+      case Instruction::PHI:            return "PHINode";
+      case Instruction::Select:         return "SelectInst";
+      case Instruction::Call:           return "CallInst";
+      case Instruction::Shl:            return "ShlInst";
+      case Instruction::LShr:           return "BinaryOperator-LShrOperator";
+      case Instruction::AShr:           return "BinaryOperator-AShrOperator";
+      case Instruction::VAArg:          return "VAArgInst";
+      case Instruction::ExtractElement: return "ExtractElementInst";
+      case Instruction::InsertElement:  return "InsertElementInst";
+      case Instruction::ShuffleVector:  return "ShuffleVectorInst";
+      case Instruction::ExtractValue:   return "ExtractValueInst";
+      case Instruction::InsertValue:    return "InsertValueInst";
+      case Instruction::LandingPad:     return "LandingPadInst";
+
+      default: return "<Invalid operator>";
+      }
+    }
+
+    foreign_t pl_isA_computed(term_t InstT, term_t SortT) {
+      Instruction *I;
+      if ( !PL_get_pointer(InstT, (void **) &I))
+        return PL_warning("isA/2: instantiation fault on first arg");
+      return PL_unify_atom_chars(SortT, getSortName(I->getOpcode()));
     }
 
     /// \param PredicateName <doc>
