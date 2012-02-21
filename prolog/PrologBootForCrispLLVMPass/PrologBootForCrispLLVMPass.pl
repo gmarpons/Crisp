@@ -28,6 +28,19 @@ isA_(Entity, Sort) :-
         ; isA_computed(Entity, Sort) % At time being, only for Instructions
         ).
 
+%% Pre: +Value has PointerType.
+getLocation(Value, Location) :-
+        (  containsUse(Value, User),
+           ( isA_(User, 'StoreInst')
+           ; isA_(User, 'LoadInst')
+           )
+        -> (  isA_(User, 'StoreInst')
+           -> getLocationFromStoreUser(User, Location)
+           ;  getLocationFromLoadUser(User, Location)
+           )
+        ;  createLocation(Value, Location)
+        ).
+
 %% FIXME: the following code doesn't belongs here
 
 violation('HICPP 3.4.2', [Func]) :-

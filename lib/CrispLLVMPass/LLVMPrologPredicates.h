@@ -47,10 +47,25 @@ extern "C" {
        */
       foreign_t pl_getName(term_t ValueT, term_t NameT);
 
+      /** \param ValueT +Value
+       *  \param UserT User
+       */
+      foreign_t pl_containsUse(term_t ValueT, term_t UserT, control_t Handle);
+
       /** \param InstT +Instruction
        *  \param SortT Sort
        */
       foreign_t pl_isA_computed(term_t InstT, term_t SortT);
+
+      /** \param InstT +StoreInst or +LoadInst
+       *  \param OpT Value
+       */
+      foreign_t pl_getPointerOperand(term_t InstT, term_t OpT);
+
+      /** \param StoreT +StoreInst
+       *  \param OpT Value
+       */
+      foreign_t pl_getValueOperand(term_t StoreT, term_t OpT);
 
       /** \param FuncT +Function
        *  \param ArgT Argument

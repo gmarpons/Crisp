@@ -23,7 +23,11 @@
 
 void plRegisterPredicates() {
   PL_register_foreign("getName", 2, pl_getName, 0);
+  PL_register_foreign("containsUse", 2, pl_containsUse,
+                      PL_FA_NONDETERMINISTIC);
   PL_register_foreign("isA_computed", 2, pl_isA_computed, 0);
+  PL_register_foreign("getPointerOperand", 2, pl_getPointerOperand, 0);
+  PL_register_foreign("getValueOperand", 2, pl_getValueOperand, 0);
   PL_register_foreign("containsArgument", 2, pl_containsArgument,
                       PL_FA_NONDETERMINISTIC);
   PL_register_foreign("containsInstruction", 2, pl_containsInstruction,
