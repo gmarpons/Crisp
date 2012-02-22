@@ -33,6 +33,7 @@
 #include "llvm/Target/TargetData.h"
 
 #include "crisp/RunPrologEngine.h"
+#include "LLVMCompilationInfo.h"
 #include "LLVMPrologPredicateRegistration.h"
 #include "LLVMPrologQueries.h"
 
@@ -76,19 +77,23 @@ namespace crisp {
       const std::string& ModuleId(M.getModuleIdentifier());
       DEBUG(dbgs() << "LLVM Module name: " << ModuleId << "\n");
 
-      plReadModuleFacts(ModuleId.c_str());
-    }
+      Success = plReadModuleFacts(ModuleId.c_str());
 
-    // Action
-    DEBUG(if (Success) dbgs() << "Crisp Module Pass initialized.\n";
-          else dbgs() << "Analysis aborted: Prolog engine failed.\n";);
-    if (Success) {
-      DEBUG(dbgs() << "Processing module: " << M.getModuleIdentifier()
-                   << "\n");
-      (void) plAssertModule(&M);
+      if (Success) {
+        DEBUG(dbgs() << "Processing module: " << M.getModuleIdentifier()
+              << "\n");
+        (void) plAssertModule(&M);
 
-      // When debugging, open a PROLOG interactive session
-      DEBUG(Success = plInteractiveSession());
+        // Set some global data to be accessed from Prolog (var
+        // CompilationInfo defined in CompilationInfo.h).
+        newLLVMCompilationInfo(*this);
+
+        // When debugging, open a PROLOG interactive session
+        DEBUG(Success = plInteractiveSession());
+
+        // Free global data
+        deleteLLVMCompilationInfo();
+      }
     }
 
     // Finalization
@@ -99,7 +104,7 @@ namespace crisp {
                       << "Prolog engine failed.\n";);
     (void) plCleanUp(Success ? 0 : 1); // Return value ignored
 
-    return false;                 // F is not modified
+    return false;                 // M is not modified
   }
 
   // Analysis pass (it does not modify the program), but has some
