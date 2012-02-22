@@ -23,10 +23,10 @@ readAllViolationCandidates(FileName) :-
 %% 1. (Module, 'Module')
 %% 2. (Instruction+, Sort)
 %% 'Sort' is an atom.
-isA_(Entity, Sort) :-
-        ( isA(Entity, Sort)          % Only for Modules
-        ; isA_computed(Entity, Sort) % At time being, only for Instructions
-        ).
+isA_(Module, Sort) :-
+        isA(Module, Sort), !.
+isA_(Instruction, Sort) :-
+        isA_computed(Instruction, Sort).
 
 %% Pre: +Value has PointerType.
 getLocation(Value, Location) :-
@@ -56,7 +56,7 @@ violation('HICPP 3.4.2', [Func]) :-
         isA_(StoreThis, 'StoreInst'),
         getValueOperand(StoreThis, This),
         getPointerOperand(StoreThis, ThisAddr),
-        containsIntruction(Func, LoadThis), % Uses an iterator
+        containsInstruction(Func, LoadThis), % Uses an iterator
         isA_(LoadThis, 'LoadInst'),
         getPointerOperand(LoadThis, ThisAddr),
         containsInstruction(Func, OffsetFromThis), % Uses an iterator
