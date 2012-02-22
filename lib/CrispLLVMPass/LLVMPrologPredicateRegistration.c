@@ -34,6 +34,6 @@ void plRegisterPredicates() {
                       PL_FA_NONDETERMINISTIC);
   PL_register_foreign("containsOp", 2, pl_containsOp,
                       PL_FA_NONDETERMINISTIC);
-  PL_register_foreign("get", 2, pl_get, 0);
+  PL_register_foreign("get_", 2, pl_get_, 0);
   PL_register_foreign("getFunction", 3, pl_getFunction, 0);
 }

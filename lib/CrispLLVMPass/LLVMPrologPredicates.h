@@ -87,7 +87,7 @@ extern "C" {
       /** \param UseT +Use
        *  \param ValueT Value
        */
-      foreign_t pl_get(term_t UseT, term_t ValueT);
+      foreign_t pl_get_(term_t UseT, term_t ValueT);
 
       /** \param ModuleT +Module
        *  \param NameT +Atom

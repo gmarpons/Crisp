@@ -376,10 +376,10 @@ namespace crisp {
         ("containsOp", UserT, UseT, Handle);
     }
 
-    foreign_t pl_get(term_t UseT, term_t ValueT) {
+    foreign_t pl_get_(term_t UseT, term_t ValueT) {
       const Use *U;
       if ( !PL_get_pointer(UseT, (void **) &U))
-        return PL_warning("get/2: instantiation fault on first arg");
+        return PL_warning("get_/2: instantiation fault on first arg");
       return PL_unify_pointer(ValueT, U->get());
     }
 
