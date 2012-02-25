@@ -43,36 +43,28 @@ getLocation(Value, Location) :-
 
 %% FIXME: the following code doesn't belongs here
 
-violation('HICPP 3.4.2', [Func]) :-
+violation('HICPP 3.4.2', [FuncName], AliasResult) :-
         violationCandidate('HICPP 3.4.2', [FuncName]),
         isA_(Module, 'Module'),
-                                % 'violationCandidate' guarantees that
-                                % 'FuncName' is the name of an
-                                % LLVMFunction.
         getFunction(Module, FuncName, Func),
-        containsArgument(Func, This), % Uses an iterator
+        containsArgument(Func, This),
         getName(This, 'this'),
-        containsInstruction(Func, StoreThis), % Uses an iterator
+        containsInstruction(Func, StoreThis),
         isA_(StoreThis, 'StoreInst'),
         getValueOperand(StoreThis, This),
         getPointerOperand(StoreThis, ThisAddr),
-        containsInstruction(Func, LoadThis), % Uses an iterator
+        containsInstruction(Func, LoadThis),
         isA_(LoadThis, 'LoadInst'),
         getPointerOperand(LoadThis, ThisAddr),
-        containsInstruction(Func, OffsetFromThis), % Uses an iterator
+        containsInstruction(Func, OffsetFromThis),
         ( isA_(OffsetFromThis, 'GetElementPtrInst'),
           getPointerOperand(OffsetFromThis, LoadThis)
         ; isA_(OffsetFromThis, 'BitCastInst'),
-          containsOp(OffsetFromThis, Use), % Uses an iterator
-          get_(Use, LoadThis)   % Something to hide in Crisp
+          containsOp(OffsetFromThis, LoadThis)
         ),
-                                % OffsetFromThis has necessarily
-                                % pointer type, so it has a location.
         getLocation(OffsetFromThis, OffsetFromThisLoc),
-        containsInstruction(Func, Return), % Uses an iterator
+        containsInstruction(Func, Return),
         isA_(Return, 'ReturnInst'),
-                                % 'violationCandidate' guarantees that
-                                % Func returns a pointer, so there is
-                                % a location for 'Return'
-        getLocation(Return, ReturnLoc),
-        aliasLessThan(ReturnLoc, OffsetFromThisLoc, 'NoAlias').
+        containsOp(Return, UsedByReturn),
+        getLocation(UsedByReturn, ReturnLoc),
+        alias(OffsetFromThisLoc, ReturnLoc, AliasResult).
