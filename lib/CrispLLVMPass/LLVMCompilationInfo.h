@@ -23,7 +23,7 @@
 #ifndef CRISPLLVMPASS_LLVMCOMPILATIONINFO_H
 #define CRISPLLVMPASS_LLVMCOMPILATIONINFO_H
 
-#include <vector>
+#include <list>
 
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Pass.h"
@@ -41,7 +41,7 @@ namespace crisp {
       // const AliasAnalysis& getAliasAnalysis() const;
       const Pass& getPass() const;
 
-      std::vector<Location>& getLocations();
+      std::list<Location>& getLocations();
 
       friend void newLLVMCompilationInfo(Pass &CI);
       friend void deleteLLVMCompilationInfo();
@@ -54,7 +54,16 @@ namespace crisp {
       ~LLVMCompilationInfo();
 
       const Pass &Pass;
-      std::vector<Location> Locations;
+
+      // TODO: see if a more efficient data structure than a linked
+      // list can be found for Locations. We need that pointers to
+      // Locations remain meaningful after new insertions. Related
+      // with that is the question if it is convenient to reuse
+      // previously computed locations. Different choices:
+      // - map
+      // - set
+      // - rely on some kind of tabling on Prolog side
+      std::list<Location> Locations;
     };
 
     LLVMCompilationInfo* getLLVMCompilationInfo();
@@ -67,7 +76,7 @@ namespace crisp {
       return Pass;
     }
 
-    inline std::vector<Location>& LLVMCompilationInfo::getLocations() {
+    inline std::list<Location>& LLVMCompilationInfo::getLocations() {
       return Locations;
     }
 
