@@ -17,8 +17,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <boost/lambda/bind.hpp>
+#include <boost/lambda/construct.hpp>
+#include <boost/lambda/control_structures.hpp>
+#include <boost/lambda/lambda.hpp>
 #include <string>
 
+#include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Argument.h"
 #include "llvm/Function.h"
 #include "llvm/Instruction.h"
@@ -26,10 +31,15 @@
 #include "llvm/Module.h"
 #include "llvm/Support/InstIterator.h"
 #include "llvm/Use.h"
+#include "llvm/Target/TargetData.h"
+#include "llvm/Type.h"
 
+#include "LLVMCompilationInfo.h"
 #include "LLVMPrologPredicates.h"
 
 using namespace llvm;
+namespace b = boost;
+namespace l = boost::lambda;
 
 namespace crisp {
 
@@ -38,7 +48,7 @@ namespace crisp {
     const char* getSortName(unsigned OpCode) {
       switch (OpCode) {
       // Terminators
-      case Instruction::Ret:    return "RetInst";
+      case Instruction::Ret:    return "ReturnInst";
       case Instruction::Br:     return "BranchInst";
       case Instruction::Switch: return "SwitchInst";
       case Instruction::IndirectBr: return "IndirectBrInst";
@@ -112,203 +122,110 @@ namespace crisp {
       }
     }
 
-    // Version of the template \c contains where begin and end are
-    // ordinary functions.
     template< typename ContainerType,
-              typename ElemType,
-              typename IteratorType,
-              IteratorType (* BeginFunc) (ContainerType *),
-              IteratorType (* EndFunc) (ContainerType *)
+              typename IterType,
+              typename ContextType,
+              typename IterFuncType,
+              typename Iter2ElemFuncType,
+              typename NewContextFuncType,
+              typename DeleteContextFuncType,
+              typename Context2IterFuncType,
+              typename Iter2ContextFuncType
               >
-    foreign_t contains(const char* PredicateName,
-                       term_t ContainerT, term_t ElemT, control_t Handle) {
-      ContainerType *C;         // SWI-Prolog API doesn't support constness
-      IteratorType *Context;
-      IteratorType It;
+    foreign_t contains(term_t ContainerT, term_t ElemT, control_t Handle,
+                       IterFuncType BeginIt, IterFuncType EndIt,
+                       Iter2ElemFuncType Iter2Elem,
+                       NewContextFuncType NewContext,
+                       DeleteContextFuncType DeleteContext,
+                       Context2IterFuncType Context2Iter,
+                       Iter2ContextFuncType Iter2Context) {
+      ContainerType *Container;
+      IterType It;
+      ContextType Context;
 
       switch (PL_foreign_control(Handle)) {
-      case PL_FIRST_CALL:
-        // Get container
-        if ( !PL_get_pointer(ContainerT, (void **) &C)) {
-          std::string WarningStr(PredicateName);
-          WarningStr += "/2 instantiation fault on first arg";
-          return PL_warning(WarningStr.c_str());
-        }
+      case PL_FIRST_CALL: case PL_REDO:       // Get Container
+        if ( !PL_get_pointer(ContainerT, (void **) &Container))
+          return PL_warning("contains/2 instantiation fault on first arg");
+      }
 
-        // Get first contained element
-        It = BeginFunc(C);
-
-        // Return next contained element (when exists)
-        if (It == EndFunc(C)) {
-          return FALSE;
-        } else {
-          // Discard return value as unification is going to succeed
-          (void) PL_unify_pointer(ElemT, (void *) &(*It));
-          Context = new IteratorType(It);
-          PL_retry_address((void *) Context);
-        }
-      case PL_REDO:
-        // Get container
-        if ( !PL_get_pointer(ContainerT, (void **) &C)) {
-          std::string WarningStr(PredicateName);
-          WarningStr += "/2 instantiation fault on first arg";
-          return PL_warning(WarningStr.c_str());
-        }
-
-        // Get next contained element
-        Context = (IteratorType *) PL_foreign_context_address(Handle);
-        It = *Context;
-        ++It;
-
-        // Return next contained element (when exists)
-        if (It == EndFunc(C)) {
-          return FALSE;
-        } else {
-          // Discard return value as unification is going to succeed
-          (void) PL_unify_pointer(ElemT, (void *) &(*It));
-          *Context = It;
-          PL_retry_address((void *) Context);
-        }
+      switch (PL_foreign_control(Handle)) {
+      case PL_FIRST_CALL:                     // Get first elem
+        It = l::bind(BeginIt, Container) ();
+        Context = NewContext(It);
+        break;
+      case PL_REDO:                           // Get next elem
+        Context = (ContextType) PL_foreign_context_address(Handle);
+        Context2Iter(Context, It); ++It; Iter2Context(It, Context);
+        break;
       case PL_PRUNED:
-        Context = (IteratorType *) PL_foreign_context_address(Handle);
-        if (Context) delete Context;
+        Context = (ContextType) PL_foreign_context_address(Handle);
+      }
+
+      switch (PL_foreign_control(Handle)) {
+      case PL_FIRST_CALL: case PL_REDO:       // Return first/next (when exists)
+        if (It == l::bind(EndIt, Container) ()) return FALSE;
+        else {
+          (void) PL_unify_pointer(ElemT, (void *) Iter2Elem(It));
+          PL_retry_address((void *) Context);
+        }
+      case PL_PRUNED:                         // Clean context
+        DeleteContext(Context);
       default:
         return TRUE;
       }
     }
 
-    // Version of the template \c contains where begin and end are
-    // member functions.
     template< typename ContainerType,
-              typename ElemType,
-              typename IteratorType,
-              IteratorType (ContainerType::* BeginFunc) (),
-              IteratorType (ContainerType::* EndFunc) ()
+              typename IterType,
+              typename Iter2ElemFuncType
               >
-    foreign_t contains(const char* PredicateName,
-                       term_t ContainerT, term_t ElemT, control_t Handle) {
-      ContainerType *C;         // SWI-Prolog API doesn't support constness
-      IteratorType *Context;
-      IteratorType It;
-
-      switch (PL_foreign_control(Handle)) {
-      case PL_FIRST_CALL:
-        // Get container
-        if ( !PL_get_pointer(ContainerT, (void **) &C)) {
-          std::string WarningStr(PredicateName);
-          WarningStr += "/2 instantiation fault on first arg";
-          return PL_warning(WarningStr.c_str());
-        }
-
-        // Get first contained element
-        It = (C ->* BeginFunc)();
-
-        // Return next contained element (when exists)
-        if (It == (C ->* EndFunc)()) {
-          return FALSE;
-        } else {
-          // Discard return value as unification is going to succeed
-          (void) PL_unify_pointer(ElemT, (void *) *It);
-          Context = new IteratorType(It);
-          PL_retry_address((void *) Context);
-        }
-      case PL_REDO:
-        // Get container
-        if ( !PL_get_pointer(ContainerT, (void **) &C)) {
-          std::string WarningStr(PredicateName);
-          WarningStr += "/2 instantiation fault on first arg";
-          return PL_warning(WarningStr.c_str());
-        }
-
-        // Get next contained element
-        Context = (IteratorType *) PL_foreign_context_address(Handle);
-        It = *Context;
-        ++It;
-
-        // Return next contained element (when exists)
-        if (It == (C ->* EndFunc)()) {
-          return FALSE;
-        } else {
-          // Discard return value as unification is going to succeed
-          (void) PL_unify_pointer(ElemT, (void *) *It);
-          *Context = It;
-          PL_retry_address((void *) Context);
-        }
-      case PL_PRUNED:
-        Context = (IteratorType *) PL_foreign_context_address(Handle);
-        if (Context) delete Context;
-      default:
-        return TRUE;
-      }
+    foreign_t contains(term_t ContainerT, term_t ElemT, control_t Handle,
+                       IterType (ContainerType::* BeginIt) (),
+                       IterType (ContainerType::* EndIt) (),
+                       Iter2ElemFuncType Iter2Elem) {
+      return contains<ContainerType, IterType, IterType *>
+        (ContainerT, ElemT, Handle, BeginIt, EndIt, Iter2Elem,
+         l::new_ptr<IterType>(), l::delete_ptr(),
+         l::_2 = *l::_1, *l::_2 =  l::_1);
     }
 
-    // FIXME: Merge all contains* templates and use
-    // overloading/specialization to get the needed diversity of
-    // implementations under one single name.
-
-    /// \param PredicateName <doc>
-    /// \param ContainerT <doc>
-    /// \param ElemT <doc>
-    /// \param Handle <doc>
-    /// \return <doc>
-    // Template specialization for the case that \c IteratorType is
-    // implemented as a plain pointer, thus dynamic memory allocation
-    // is not needed.
     template< typename ContainerType,
-              typename ElemType,
-              typename IteratorType,
-              ilist_iterator<ElemType> (ContainerType::* BeginFunc) (),
-              ilist_iterator<ElemType> (ContainerType::* EndFunc) ()
+              typename IterType,
+              typename Iter2ElemFuncType
               >
-    foreign_t contains2(const char* PredicateName, term_t ContainerT,
-                       term_t ElemT, control_t Handle) {
-      ContainerType *C;         // SWI-Prolog API doesn't support constness
-      IteratorType It;
+    foreign_t contains(term_t ContainerT, term_t ElemT, control_t Handle,
+                       IterType (* BeginIt) (ContainerType *),
+                       IterType (* EndIt) (ContainerType *),
+                       Iter2ElemFuncType Iter2Elem) {
+      return contains<ContainerType, IterType, IterType *>
+        (ContainerT, ElemT, Handle, BeginIt, EndIt, Iter2Elem,
+         l::new_ptr<IterType>(),
+         l::if_then(l::_1, l::bind(l::delete_ptr(), l::_1)),
+         l::_2 = *l::_1, *l::_2 = l::_1);
+    }
 
-      switch (PL_foreign_control(Handle)) {
-      case PL_FIRST_CALL:
-        // Get container
-        if ( !PL_get_pointer(ContainerT, (void **) &C)) {
-          std::string WarningStr(PredicateName);
-          WarningStr += "/2 instantiation fault on first arg";
-          return PL_warning(WarningStr.c_str());
-        }
+    foreign_t pl_containsUse(term_t ValueT, term_t UserT, control_t Handle) {
+      return contains< Value, Value::use_iterator >
+        (ValueT, UserT, Handle, &Value::use_begin, &Value::use_end,
+         l::ret<User *>(*l::_1));
+    }
 
-        // Get first contained element
-        It = (C ->* BeginFunc)();
+    foreign_t pl_containsArgument(term_t FuncT, term_t ArgT, control_t Handle) {
+      return contains< Function, Function::arg_iterator >
+        (FuncT, ArgT, Handle, &Function::arg_begin, &Function::arg_end, l::_1);
+    }
 
-        // Return next contained element (when exists)
-        if (It == (C ->* EndFunc)()) {
-          return FALSE;
-        } else {
-          // Discard return value as unification is going to succeed
-          (void) PL_unify_pointer(ElemT, (void *) It);
-          PL_retry_address((void *) It);
-        }
-      case PL_REDO:
-        // Get container
-        if ( !PL_get_pointer(ContainerT, (void **) &C)) {
-          std::string WarningStr(PredicateName);
-          WarningStr += "/2 instantiation fault on first arg";
-          return PL_warning(WarningStr.c_str());
-        }
+    foreign_t pl_containsInstruction(term_t FuncT, term_t InstT,
+                                     control_t Handle) {
+      return contains< Function, inst_iterator >
+        (FuncT, InstT, Handle, &inst_begin, &inst_end, &(*l::_1));
+    }
 
-        // Get next contained element
-        It = (ElemType *) PL_foreign_context_address(Handle);
-        ++It;
-
-        // Return next contained element (when exists)
-        if (It == (C ->* EndFunc)()) {
-          return FALSE;
-        } else {
-          // Discard return value as unification is going to succeed
-          (void) PL_unify_pointer(ElemT, (void *) It);
-          PL_retry_address((void *) It);
-        }
-      case PL_PRUNED:           // Nothing needs to be cleaned up
-      default:
-        return TRUE;
-      }
+    foreign_t pl_containsOp(term_t UserT, term_t ValueT, control_t Handle) {
+      return contains< User, User::op_iterator >
+        (UserT, ValueT, Handle, &User::op_begin, &User::op_end,
+         l::bind<Value *>(&Use::get, l::_1));
     }
 
     foreign_t pl_getName(term_t ValueT, term_t NameT) {
@@ -316,12 +233,6 @@ namespace crisp {
       if ( !PL_get_pointer(ValueT, (void **) &V))
         return PL_warning("getName/2: instantiation fault on first arg");
       return PL_unify_atom_chars(NameT, V->getName().str().c_str());
-    }
-
-    foreign_t pl_containsUse(term_t ValueT, term_t UserT, control_t Handle) {
-      return contains< Value, User, Value::use_iterator,
-                       &Value::use_begin, &Value::use_end >
-        ("containsUse", ValueT, UserT, Handle);
     }
 
     foreign_t pl_isA_computed(term_t InstT, term_t SortT) {
@@ -342,10 +253,12 @@ namespace crisp {
         return PL_unify_pointer(OpT, (void *) SI->getPointerOperand());
       } else if (const LoadInst *LI = dyn_cast<LoadInst>(I)) {
         return PL_unify_pointer(OpT, (void *) LI->getPointerOperand());
+      } else if (const GetElementPtrInst *GI = dyn_cast<GetElementPtrInst>(I)) {
+        return PL_unify_pointer(OpT, (void *) GI->getPointerOperand());
       }
+      // TODO:
       // else: llvm::AtomicCmpXchgInst, llvm::AtomicRMWInst,
-      // llvm::GetElementPtrInst, llvm::VAArgInst, llvm::GEPOperator,
-      // llvm::VAArgInst
+      // llvm::VAArgInst, llvm::GEPOperator, llvm::VAArgInst
       return FALSE;
     }
 
@@ -357,30 +270,86 @@ namespace crisp {
       return PL_unify_pointer(OpT, (void *) I->getValueOperand());
     }
 
-    foreign_t pl_containsArgument(term_t FuncT, term_t ArgT, control_t Handle) {
-      return contains2< Function, Argument, Function::arg_iterator,
-                       &Function::arg_begin, &Function::arg_end >
-        ("containsArgument", FuncT, ArgT, Handle);
+    // FIXME: comparison (unification) with existing locations makes
+    // no sense
+    foreign_t pl_getLocationFromStoreUser(term_t StoreT, term_t LocationT) {
+      const StoreInst *I;
+      if ( !PL_get_pointer(StoreT, (void **) &I))
+        return PL_warning("getLocationFromStoreUser/2: "
+                          "instantiation fault on first arg");
+      const Pass &P = getLLVMCompilationInfo()->getPass();
+      Location L = P.getAnalysis<AliasAnalysis>().getLocation(I);
+      std::list<Location> &LS = getLLVMCompilationInfo()->getLocations();
+      LS.push_back(L);
+      return PL_unify_pointer(LocationT, &LS.back());
     }
 
-    foreign_t pl_containsInstruction(term_t FuncT, term_t InstT,
-                                     control_t Handle) {
-      return contains< Function, Instruction, inst_iterator,
-                       &inst_begin, &inst_end >
-        ("containsInstruction", FuncT, InstT, Handle);
+    // FIXME: comparison (unification) with existing locations makes
+    // no sense
+    foreign_t pl_getLocationFromLoadUser(term_t LoadT, term_t LocationT) {
+      const LoadInst *I;
+      if ( !PL_get_pointer(LoadT, (void **) &I))
+        return PL_warning("getLocationFromLoadUser/2: "
+                          "instantiation fault on first arg");
+      const Pass &P = getLLVMCompilationInfo()->getPass();
+      Location L = P.getAnalysis<AliasAnalysis>().getLocation(I);
+      std::list<Location> &LS = getLLVMCompilationInfo()->getLocations();
+      LS.push_back(L);
+      return PL_unify_pointer(LocationT, &LS.back());
     }
 
-    foreign_t pl_containsOp(term_t UserT, term_t UseT, control_t Handle) {
-      return contains< User, Use, User::op_iterator,
-                       &User::op_begin, &User::op_end >
-        ("containsOp", UserT, UseT, Handle);
+    // FIXME: comparison (unification) with existing locations makes
+    // no sense
+    foreign_t pl_createLocation(term_t ValueT, term_t LocationT) {
+      const Value* V;
+      if ( !PL_get_pointer(ValueT, (void **) &V))
+        return PL_warning("createLocation/2: "
+                          "instantiation fault on first arg");
+      const Type* TypeOfV = V->getType();
+      assert(TypeOfV && "Value 'V'has no type!");
+      assert(TypeOfV->isPointerTy() && "Type of 'V' is not a pointer type!");
+      Type* ElementTypeOfV = (cast<PointerType>(TypeOfV))->getElementType();
+
+      const Pass &P = getLLVMCompilationInfo()->getPass();
+      Location L;
+      if (ElementTypeOfV->isSized()) {
+        TargetData& TD = P.getAnalysis<TargetData>();
+        uint64_t Size = TD.getTypeAllocSize(ElementTypeOfV);
+        L = Location(V, Size);
+      } else {
+        L = Location(V);
+      }
+      std::list<Location> &LS = getLLVMCompilationInfo()->getLocations();
+      LS.push_back(L);
+      return PL_unify_pointer(LocationT, &LS.back());
     }
 
-    foreign_t pl_get_(term_t UseT, term_t ValueT) {
-      const Use *U;
-      if ( !PL_get_pointer(UseT, (void **) &U))
-        return PL_warning("get_/2: instantiation fault on first arg");
-      return PL_unify_pointer(ValueT, U->get());
+    foreign_t pl_aliasLessThanNoAlias(term_t LocationT1, term_t LocationT2) {
+      Location *L1, *L2;
+      if ( !PL_get_pointer(LocationT1, (void **) &L1))
+        return PL_warning("aliasLessThanNoAlias/2: "
+                          "instantiation fault on first arg");
+      if ( !PL_get_pointer(LocationT2, (void **) &L2))
+        return PL_warning("aliasLessThanNoAlias/2: "
+                          "instantiation fault on second arg");
+      const Pass &P = getLLVMCompilationInfo()->getPass();
+      AliasAnalysis::AliasResult Res
+        = P.getAnalysis<AliasAnalysis>().alias(*L1, *L2);
+      return (Res == AliasAnalysis::NoAlias ? FALSE : TRUE);
+    }
+
+    foreign_t pl_alias(term_t LocationT1, term_t LocationT2, term_t AliasT) {
+      Location *L1, *L2;
+      if ( !PL_get_pointer(LocationT1, (void **) &L1))
+        return PL_warning("alias/2: "
+                          "instantiation fault on first arg");
+      if ( !PL_get_pointer(LocationT2, (void **) &L2))
+        return PL_warning("alias/2: "
+                          "instantiation fault on second arg");
+      const Pass &P = getLLVMCompilationInfo()->getPass();
+      AliasAnalysis::AliasResult Res
+        = P.getAnalysis<AliasAnalysis>().alias(*L1, *L2);
+      return PL_unify_int64(AliasT, Res);
     }
 
     foreign_t pl_getFunction(term_t ModuleT, term_t NameT,

@@ -28,12 +28,19 @@ void plRegisterPredicates() {
   PL_register_foreign("isA_computed", 2, pl_isA_computed, 0);
   PL_register_foreign("getPointerOperand", 2, pl_getPointerOperand, 0);
   PL_register_foreign("getValueOperand", 2, pl_getValueOperand, 0);
+  PL_register_foreign("getLocationFromStoreUser", 2,
+                      pl_getLocationFromStoreUser, 0);
+  PL_register_foreign("getLocationFromLoadUser", 2,
+                      pl_getLocationFromLoadUser, 0);
+  PL_register_foreign("createLocation", 2, pl_createLocation, 0);
+  PL_register_foreign("aliasLessThanNoAlias", 2,
+                      pl_aliasLessThanNoAlias, 0);
+  PL_register_foreign("alias", 3, pl_alias, 0);
   PL_register_foreign("containsArgument", 2, pl_containsArgument,
                       PL_FA_NONDETERMINISTIC);
   PL_register_foreign("containsInstruction", 2, pl_containsInstruction,
                       PL_FA_NONDETERMINISTIC);
   PL_register_foreign("containsOp", 2, pl_containsOp,
                       PL_FA_NONDETERMINISTIC);
-  PL_register_foreign("get_", 2, pl_get_, 0);
   PL_register_foreign("getFunction", 3, pl_getFunction, 0);
 }

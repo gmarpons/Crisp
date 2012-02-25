@@ -67,6 +67,32 @@ extern "C" {
        */
       foreign_t pl_getValueOperand(term_t StoreT, term_t OpT);
 
+      /** \param StoreT +StoreInst
+       *  \param LocationT -AliasAnalysis::Location
+       */
+      foreign_t pl_getLocationFromStoreUser(term_t StoreT, term_t LocationT);
+
+      /** \param LoadT +LoadInst
+       *  \param LocationT -AliasAnalysis::Location
+       */
+      foreign_t pl_getLocationFromLoadUser(term_t LoadT, term_t LocationT);
+
+      /** \param ValueT +Value that has pointer type
+       *  \param LocationT -AliasAnalysis::Location
+       */
+      foreign_t pl_createLocation(term_t ValueT, term_t LocationT);
+
+      /** \param LocationT1 +Location
+       *  \param LocationT2 +Location
+       */
+      foreign_t pl_aliasLessThanNoAlias(term_t LocationT1, term_t LocationT2);
+
+      /** \param LocationT1 +Location
+       *  \param LocationT2 +Location
+       *  \param AliasT integer
+       */
+      foreign_t pl_alias(term_t LocationT1, term_t LocationT2, term_t AliasT);
+
       /** \param FuncT +Function
        *  \param ArgT Argument
        */
@@ -80,14 +106,9 @@ extern "C" {
                                        control_t Handle);
 
       /** \param UserT +User
-       *  \param UseT Use
-       */
-      foreign_t pl_containsOp(term_t UserT, term_t UseT, control_t Handle);
-
-      /** \param UseT +Use
        *  \param ValueT Value
        */
-      foreign_t pl_get_(term_t UseT, term_t ValueT);
+      foreign_t pl_containsOp(term_t UserT, term_t ValueT, control_t Handle);
 
       /** \param ModuleT +Module
        *  \param NameT +Atom
