@@ -122,6 +122,7 @@ namespace crisp {
       }
     }
 
+    /// Most general version of \c contains.
     template< typename ContainerType,
               typename IterType,
               typename ContextType,
@@ -130,8 +131,7 @@ namespace crisp {
               typename NewContextFuncType,
               typename DeleteContextFuncType,
               typename Context2IterFuncType,
-              typename Iter2ContextFuncType
-              >
+              typename Iter2ContextFuncType >
     foreign_t contains(term_t ContainerT, term_t ElemT, control_t Handle,
                        IterFuncType BeginIt, IterFuncType EndIt,
                        Iter2ElemFuncType Iter2Elem,
@@ -167,7 +167,7 @@ namespace crisp {
         if (It == l::bind(EndIt, Container) ()) return FALSE;
         else {
           (void) PL_unify_pointer(ElemT, (void *) Iter2Elem(It));
-          PL_retry_address((void *) Context);
+          PL_retry_address(Context);
         }
       case PL_PRUNED:                         // Clean context
         DeleteContext(Context);
@@ -176,29 +176,56 @@ namespace crisp {
       }
     }
 
+    /// Overloading of \c contains for the case in which \c BeginIt
+    /// and \c EndIt are member functions of \c ContainerType, and we
+    /// need to store iterators on the heap.
     template< typename ContainerType,
               typename IterType,
-              typename Iter2ElemFuncType
-              >
+              typename Iter2ElemFuncType >
     foreign_t contains(term_t ContainerT, term_t ElemT, control_t Handle,
                        IterType (ContainerType::* BeginIt) (),
                        IterType (ContainerType::* EndIt) (),
                        Iter2ElemFuncType Iter2Elem) {
-      return contains<ContainerType, IterType, IterType *>
+      return contains< ContainerType, IterType, IterType * >
         (ContainerT, ElemT, Handle, BeginIt, EndIt, Iter2Elem,
          l::new_ptr<IterType>(), l::delete_ptr(),
          l::_2 = *l::_1, *l::_2 =  l::_1);
     }
 
+    /// Overloading of \c contains for the case in which \c BeginIt
+    /// and \c EndIt are member functions of \c ContainerType, and
+    /// their returned iterator is implemented with an \c
+    /// llvm::ilist_iterator. As \c ilist_iterator 's are in fact
+    /// smart pointers, we don't need dynamic memory allocation. This
+    /// \c contains overload is more specialized and efficient than
+    /// the previous one, and should be used whenever possible.
+    template< typename ContainerType,
+              typename ElemType >
+              // template < typename > class ilist_iterator >
+    foreign_t contains(term_t ContainerT, term_t ElemT, control_t Handle,
+                       ilist_iterator< ElemType > (ContainerType::* BeginIt) (),
+                       ilist_iterator< ElemType > (ContainerType::* EndIt) ()) {
+      typedef ilist_iterator< ElemType > IterType;
+      return contains< ContainerType, ilist_iterator< ElemType >, ElemType * >
+        (ContainerT, ElemT, Handle, BeginIt, EndIt,
+         l::_1,                       // Iter2Elem
+         l::_1,                       // NewContext
+         l::_1 = l::_1,               // DeleteContext, do nothing
+         l::_2 = l::_1,               // Context2Iter
+         l::_2 = l::_1);              // Iter2Context
+    }
+
+    /// Overloading of \c contains for the case in which \c BeginIt
+    /// and \c EndIt are ordinary functions of \c ContainerType, and
+    /// we need to store iterators on the heap.
     template< typename ContainerType,
               typename IterType,
-              typename Iter2ElemFuncType
-              >
+              typename Iter2ElemFuncType >
     foreign_t contains(term_t ContainerT, term_t ElemT, control_t Handle,
                        IterType (* BeginIt) (ContainerType *),
                        IterType (* EndIt) (ContainerType *),
                        Iter2ElemFuncType Iter2Elem) {
-      return contains<ContainerType, IterType, IterType *>
+      return contains< ContainerType, IterType, IterType * >
         (ContainerT, ElemT, Handle, BeginIt, EndIt, Iter2Elem,
          l::new_ptr<IterType>(),
          l::if_then(l::_1, l::bind(l::delete_ptr(), l::_1)),
@@ -212,8 +239,8 @@ namespace crisp {
     }
 
     foreign_t pl_containsArgument(term_t FuncT, term_t ArgT, control_t Handle) {
-      return contains< Function, Function::arg_iterator >
-        (FuncT, ArgT, Handle, &Function::arg_begin, &Function::arg_end, l::_1);
+      return contains< Function, Argument >
+        (FuncT, ArgT, Handle, &Function::arg_begin, &Function::arg_end);
     }
 
     foreign_t pl_containsInstruction(term_t FuncT, term_t InstT,
