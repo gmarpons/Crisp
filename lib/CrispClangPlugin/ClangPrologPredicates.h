@@ -46,6 +46,13 @@ extern "C" {
           'QualType' can also be used.
       */
 
+      /* Automatically generated function declaration. */
+
+#include "crisp/PrologPredicateAutomaticDeclarationMacros.h"
+#include "ClangFunctions.inc"
+
+      /* Manual function declaration. */
+
       /** \param TypeT +Type
        *  \param NameT Atom
        */
@@ -58,11 +65,12 @@ extern "C" {
 
       /** \param TypeT +Type
        */
-      foreign_t pl_isConstQualified(term_t TypeT);
+      /* foreign_t pl_isConstQualified(term_t TypeT); */
 
       /** \param FunctionProtoTypeT +FunctionProtoType
        */
-      foreign_t pl_isConstFunctionProtoType(term_t FunctionProtoTypeT);
+      foreign_t
+      pl_FunctionProtoType_isConstQualified(term_t FunctionProtoTypeT);
 
       /** \param PointerT +PointerType
        *  \param PointeeT Type

@@ -1,0 +1,6 @@
+pl_get_one(declContext, Decl, const DeclContext*, getDeclContext)
+pl_get_one(nonClosureContext, Decl, const DeclContext*, getNonClosureContext)
+pl_get_one(ASTContext, Decl, ASTContext&, getASTContext)
+pl_get_one(declKindName, Decl, const char *, getDeclKindName)
+pl_get_one(translationUnitDecl, ASTContext, TranslationUnitDecl*, getTranslationUnitDecl)
+pl_check_property(constQualified, QualType, isConstQualified)

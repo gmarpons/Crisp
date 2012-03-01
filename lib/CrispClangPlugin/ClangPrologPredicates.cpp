@@ -19,6 +19,7 @@
 
 #include <string>
 
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
@@ -26,8 +27,10 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/CompilerInstance.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Support/raw_ostream.h"
 
+#include "crisp/PrologPredicatesBaseTemplates.h"
 #include "CompilationInfo.h"
 #include "ClangPrologPredicates.h"
 
@@ -37,52 +40,93 @@ namespace crisp {
 
   namespace prolog {
 
-    foreign_t pl_getAsString(term_t TypeT, term_t NameT) {
-      const QualType QT;
-      if ( !PL_get_pointer(TypeT, (void **) &QT))
-        return PL_warning("getAsString/2: "
-                          "instantiation fault on first arg");
-      return PL_unify_atom_chars(NameT, QT.getAsString().c_str());
+    // Automatically generated function definition.
+
+#include "crisp/PrologPredicateAutomaticDefinitionMacros.h"
+#include "ClangFunctions.inc"
+
+    // Manual function definition.
+
+    // foreign_t pl_getDeclContext(term_t ArgumentT, term_t ResultT) {
+    //   return getOne<Decl, const DeclContext*, &Decl::getDeclContext>
+    //     (ArgumentT, ResultT, "declContext/2");
+    // }
+
+    // foreign_t pl_getNonClosureContext(term_t ArgumentT, term_t ResultT) {
+    //   return getOne<Decl, const DeclContext*, &Decl::getNonClosureContext>
+    //     (ArgumentT, ResultT, "nonClosureContext/2");
+    // }
+
+    // foreign_t pl_getASTContext(term_t ArgumentT, term_t ResultT) {
+    //   return getOne<Decl, ASTContext&, &Decl::getASTContext>
+    //     (ArgumentT, ResultT, "ASTContext/2");
+    // }
+
+    // foreign_t pl_getDeclKindName(term_t ArgumentT, term_t ResultT) {
+    //   return getOne<Decl, const char *, &Decl::getDeclKindName>
+    //     (ArgumentT, ResultT, "declKindName/2");
+    // }
+
+    // foreign_t pl_getTranslationUnitDecl(term_t ArgumentT, term_t ResultT) {
+    //   return getOne<ASTContext, TranslationUnitDecl*,
+    //                 &ASTContext::getTranslationUnitDecl>
+    //     (ArgumentT, ResultT, "translationUnitDecl/2");
+    // }
+
+    foreign_t pl_getAsString(term_t ArgumentT, term_t ResultT) {
+      return getOne<QualType, std::string, &QualType::getAsString>
+        (ArgumentT, ResultT, "asString/2");
     }
 
-    foreign_t pl_getCanonicalType(term_t TypeT, term_t CanonicalT) {
-      QualType QT;
-      if ( !PL_get_pointer(TypeT, (void **) &QT))
-        return PL_warning("getCanonicalType/2: "
-                          "instantiation fault on first arg");
-      return PL_unify_pointer(CanonicalT,
-                              QT.getCanonicalType().getAsOpaquePtr());
+    foreign_t pl_getCanonicalType(term_t ArgumentT, term_t ResultT) {
+      return getOne<QualType, QualType, &QualType::getCanonicalType>
+        (ArgumentT, ResultT, "canonicalType/2");
     }
 
-    foreign_t pl_isConstQualified(term_t TypeT) {
-      QualType QT;
-      if ( !PL_get_pointer(TypeT, (void **) &QT))
-        return PL_warning("isConstQualified/1: "
-                          "instantiation fault on first arg");
-      return QT.isConstQualified() ? TRUE : FALSE;
+    // foreign_t pl_isConstQualified(term_t ArgumentT) {
+    //   return checkProperty<QualType, &QualType::isConstQualified>
+    //     (ArgumentT, "constQualified/1");
+    // }
+
+    foreign_t pl_FunctionProtoType_isConstQualified(term_t ArgumentT) {
+      Retrieve<FunctionProtoType>::argument_type Argument;
+      if ( !Retrieve<FunctionProtoType>::
+           _(ArgumentT, &Argument, "FunctionProtoType_constQualified/1"))
+        return FALSE;
+      Qualifiers Q = Qualifiers::fromCVRMask(Argument->getTypeQuals());
+      return Check<Qualifiers, &Qualifiers::hasConst>::_(Q);
     }
 
-    foreign_t pl_isConstFunctionProtoType(term_t FunctionProtoTypeT) {
-      const FunctionProtoType *FT;
-      if ( !PL_get_pointer(FunctionProtoTypeT, (void **) &FT))
-        return PL_warning("isConstFunctionProtoType/1: "
-                          "instantiation fault on first arg");
-      Qualifiers Q = Qualifiers::fromCVRMask(FT->getTypeQuals());
-      return Q.hasConst() ? TRUE : FALSE;
+    foreign_t pl_getPointeeType(term_t ArgumentT, term_t ResultT) {
+      return getOne<PointerType, QualType, &PointerType::getPointeeType>
+        (ArgumentT, ResultT, "pointeeType/2");
     }
 
-    foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT) {
-      PointerType *PT;
-      if ( !PL_get_pointer(PointerT, (void **) &PT))
-        return PL_warning("getPointeeType/2: instantiation fault on first arg");
-      return PL_unify_pointer(PointeeT, PT->getPointeeType().getAsOpaquePtr());
+    foreign_t pl_getResultType(term_t ArgumentT, term_t ResultT) {
+      return getOne<FunctionType, QualType, &FunctionType::getResultType>
+        (ArgumentT, ResultT, "resultType/2");
     }
 
-    foreign_t pl_getResultType(term_t FunctionT, term_t ResultT) {
-      FunctionType *FT;
-      if ( !PL_get_pointer(FunctionT, (void **) &FT))
-        return PL_warning("getResultType/2: instantiation fault on first arg");
-      return PL_unify_pointer(ResultT, FT->getResultType().getAsOpaquePtr());
+    foreign_t pl_getNameAsString(term_t ArgumentT, term_t ResultT) {
+      return getOne<NamedDecl, std::string, &NamedDecl::getNameAsString>
+        (ArgumentT, ResultT, "nameAsString/2");
+    }
+
+    foreign_t pl_getType(term_t ArgumentT, term_t ResultT) {
+      return getOne<ValueDecl, QualType, &ValueDecl::getType>
+        (ArgumentT, ResultT, "getType/2");
+    }
+
+    foreign_t pl_mangleName(term_t ArgumentT, term_t ResultT) {
+      Retrieve<FunctionDecl>::argument_type Argument;
+      if ( !Retrieve<FunctionDecl>::
+           _(ArgumentT, &Argument, "FunctionDecl_mangleName/2")) return FALSE;
+      std::string StreamString, Result;
+      llvm::raw_string_ostream Stream(StreamString);
+      MangleContext *MC = getCompilationInfo()->getMangleContext();
+      MC->mangleName(Argument, Stream);
+      Result = Stream.str();
+      return Unify<std::string>::_(ResultT, Result);
     }
 
     foreign_t pl_getPresumedLoc(term_t DeclT, term_t FilenameT,
@@ -95,34 +139,6 @@ namespace crisp {
       if ( !PL_unify_atom_chars(FilenameT, PL.getFilename())) return FALSE;
       if ( !PL_unify_int64(LineT, (int64_t) PL.getLine())) return FALSE;
       return PL_unify_int64(ColT, (int64_t) PL.getColumn());
-    }
-
-    foreign_t pl_getNameAsString(term_t NamedDeclT, term_t NameT) {
-      NamedDecl *ND;
-      if ( !PL_get_pointer(NamedDeclT, (void **) &ND))
-        return PL_warning("getNameAsString/2: "
-                          "instantiation fault on first arg");
-      return PL_unify_atom_chars(NameT, ND->getNameAsString().c_str());
-    }
-
-    foreign_t pl_getType(term_t ValueT, term_t TypeT) {
-      const ValueDecl *VD;
-      if ( !PL_get_pointer(ValueT, (void **) &VD))
-        return PL_warning("getType/2: instantiation fault on first arg");
-      return PL_unify_pointer(TypeT, VD->getType().getAsOpaquePtr());
-    }
-
-    foreign_t pl_mangleName(term_t FunctionT, term_t MangledNameT) {
-      const FunctionDecl *FD;
-      if ( !PL_get_pointer(FunctionT, (void **) &FD))
-        return PL_warning("mangleName/2: instantiation fault on first arg");
-      std::string StreamString, MangledName;
-      llvm::raw_string_ostream Stream(StreamString);
-      MangleContext *MC = getCompilationInfo()->getMangleContext();
-      MC->mangleName(FD, Stream);
-      MangledName = Stream.str();
-      // std::cout << "\n" << MangledName << "\n";
-      return PL_unify_atom_chars(MangledNameT, MangledName.c_str());
     }
 
   } // End namespace crisp::prolog

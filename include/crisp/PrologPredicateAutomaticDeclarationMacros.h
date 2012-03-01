@@ -1,4 +1,4 @@
-/* ClangPrologPredicateRegistration.h -------------------------------*- C -*- */
+/* PrologPredicateAutomaticDeclarationMacros.h ----------------------*- C -*- */
 
 /* Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 
@@ -18,23 +18,17 @@
    along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/** \file
- *  \brief Prolog predicate registering function for Clang Plugin.
+/** \file \brief Preprocessor macro definitions to \e declare
+ *  functions that implement in C++ Prolog predicates with
+ *  functionality automatically grasped from LLVM or Clang sources.
  */
 
-#ifndef CRISPCLANGPLUGIN_CLANGPROLOGPREDICATEREGISTRATION_H
-#define CRISPCLANGPLUGIN_CLANGPROLOGPREDICATEREGISTRATION_H
+#undef pl_get_one
 
-#include <SWI-Prolog.h>
+#define pl_get_one(NAME, ARGTYPE, RESTYPE, CXXNAME)             \
+  foreign_t pl_##CXXNAME(term_t ArgumentT, term_t ResultT);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#undef pl_check_property
 
-  int plRegisterPredicates();
-
-#ifdef __cplusplus
-}
-#endif  /* __cplusplus */
-
-#endif  /* ifndef CRISPCLANGPLUGIN_CLANGPROLOGPREDICATEREGISTRATION_H */
+#define pl_check_property(NAME, ARGTYPE, CXXNAME)       \
+  foreign_t pl_##CXXNAME(term_t ArgumentT);

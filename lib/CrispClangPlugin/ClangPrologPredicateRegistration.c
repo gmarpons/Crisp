@@ -21,15 +21,21 @@
 #include "ClangPrologPredicates.h"
 #include "ClangPrologPredicateRegistration.h"
 
-void plRegisterPredicates() {
+int plRegisterPredicates() {
+  /* Automatically generated function registration. */
+
+#include "crisp/PrologPredicateAutomaticRegistrationMacros.h"
+#include "ClangFunctions.inc"
+
+  /* Manual function registration. */
   PL_register_foreign("getAsString", 2,
                       (pl_function_t) &pl_getAsString, 0);
   PL_register_foreign("getCanonicalType", 2
                       , (pl_function_t) &pl_getCanonicalType, 0);
   PL_register_foreign("isConstQualified", 1
                       , (pl_function_t) &pl_isConstQualified, 0);
-  PL_register_foreign("isConstFunctionProtoType", 1
-                      , (pl_function_t) &pl_isConstFunctionProtoType, 0);
+  PL_register_foreign("isConstFunctionProtoType", 1,
+                      (pl_function_t) &pl_FunctionProtoType_isConstQualified, 0);
   PL_register_foreign("getPointeeType", 2
                       , (pl_function_t) &pl_getPointeeType, 0);
   PL_register_foreign("getResultType", 2
@@ -42,4 +48,5 @@ void plRegisterPredicates() {
                       , (pl_function_t) &pl_getType, 0);
   PL_register_foreign("mangleName", 2
                       , (pl_function_t) &pl_mangleName, 0);
+  return TRUE;
 }
