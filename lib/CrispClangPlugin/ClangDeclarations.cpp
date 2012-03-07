@@ -1,4 +1,4 @@
-// ClangPrologQueries.h ----------------------------------------------*- C++ -*-
+// ClangDeclarations.cpp ---------------------------------------------*- C++ -*-
 
 // Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 //
@@ -17,28 +17,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
-/// \file
-/// \brief Functions to query Prolog and assert facts from Crisp Clang plugin.
-
-#ifndef CRISPCLANGPLUGIN_CLANGPROLOGQUERIES_H
-#define CRISPCLANGPLUGIN_CLANGPROLOGQUERIES_H
-
-#include <string>
-
 #include "clang/AST/Decl.h"
+#include "clang/AST/Type.h"
 
-using namespace clang;
-
-namespace crisp {
-
-  namespace prolog {
-
-    int plAssertDeclIsA(Decl *Decl, const std::string &Sort);
-    int plAssertTypeIsA(Type *Type, const std::string &Sort);
-    int plRunTranslationUnitAnalysis(const char* FileName);
-
-  } // End namespace crisp::prolog
-
-} // End namespace crisp
-
-#endif
+int main() {
+  return 0;
+}

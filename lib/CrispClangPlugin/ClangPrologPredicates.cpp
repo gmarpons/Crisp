@@ -40,7 +40,7 @@ namespace crisp {
 
   namespace prolog {
 
-    // Automatically generated function definition.
+    // Automatically generated function definitions.
 
 #include "crisp/PrologPredicateAutomaticDefinitionMacros.h"
 #include "ClangFunctions.inc"

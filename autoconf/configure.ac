@@ -1691,8 +1691,17 @@ dnl Configure project makefiles
 dnl List every Makefile that exists within your source tree
 AC_CONFIG_MAKEFILE(Makefile)
 AC_CONFIG_MAKEFILE(Makefile.crisp.rules)
+AC_CONFIG_MAKEFILE(Makefile.llvm.rules)
 AC_CONFIG_MAKEFILE(docs/Makefile)
 AC_CONFIG_MAKEFILE(lib/Makefile)
+AC_CONFIG_MAKEFILE(lib/PrologEngineWrapper/Makefile)
+AC_CONFIG_MAKEFILE(lib/DeclExtractor/Makefile)
+AC_CONFIG_MAKEFILE(lib/CrispClangPlugin/Makefile)
+AC_CONFIG_MAKEFILE(lib/CrispLLVMPass/Makefile)
+AC_CONFIG_MAKEFILE(prolog/Makefile)
+AC_CONFIG_MAKEFILE(prolog/PrologBootForDeclExtractor/Makefile)
+AC_CONFIG_MAKEFILE(prolog/PrologBootForCrispClangPlugin/Makefile)
+AC_CONFIG_MAKEFILE(prolog/PrologBootForCrispLLVMPass/Makefile)
 AC_CONFIG_MAKEFILE(tools/Makefile)
 
 dnl This must be last

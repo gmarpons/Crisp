@@ -4,7 +4,7 @@
 # Indicates our relative path to the top of the project's root directory.
 #
 LEVEL = .
-DIRS = docs lib prolog tools
+DIRS = docs prolog lib tools
 EXTRA_DIST = include
 
 #

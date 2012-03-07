@@ -11,7 +11,9 @@
 # Directory locations
 #--------------------------------------------------------------------
 
-DataDir     := $(PROJ_OBJ_ROOT)/$(BuildMode)/share
+ifeq ($(strip $(DataDir)),)
+  DataDir     := $(PROJ_OBJ_ROOT)/$(BuildMode)/share
+endif
 
 
 #--------------------------------------------------------------------

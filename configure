@@ -13537,10 +13537,37 @@ ac_config_commands="$ac_config_commands Makefile"
 ac_config_commands="$ac_config_commands Makefile.crisp.rules"
 
 
+ac_config_commands="$ac_config_commands Makefile.llvm.rules"
+
+
 ac_config_commands="$ac_config_commands docs/Makefile"
 
 
 ac_config_commands="$ac_config_commands lib/Makefile"
+
+
+ac_config_commands="$ac_config_commands lib/PrologEngineWrapper/Makefile"
+
+
+ac_config_commands="$ac_config_commands lib/DeclExtractor/Makefile"
+
+
+ac_config_commands="$ac_config_commands lib/CrispClangPlugin/Makefile"
+
+
+ac_config_commands="$ac_config_commands lib/CrispLLVMPass/Makefile"
+
+
+ac_config_commands="$ac_config_commands prolog/Makefile"
+
+
+ac_config_commands="$ac_config_commands prolog/PrologBootForDeclExtractor/Makefile"
+
+
+ac_config_commands="$ac_config_commands prolog/PrologBootForCrispClangPlugin/Makefile"
+
+
+ac_config_commands="$ac_config_commands prolog/PrologBootForCrispLLVMPass/Makefile"
 
 
 ac_config_commands="$ac_config_commands tools/Makefile"
@@ -14273,8 +14300,17 @@ do
     "Makefile.llvm.config") CONFIG_FILES="$CONFIG_FILES Makefile.llvm.config" ;;
     "Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS Makefile" ;;
     "Makefile.crisp.rules") CONFIG_COMMANDS="$CONFIG_COMMANDS Makefile.crisp.rules" ;;
+    "Makefile.llvm.rules") CONFIG_COMMANDS="$CONFIG_COMMANDS Makefile.llvm.rules" ;;
     "docs/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS docs/Makefile" ;;
     "lib/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/Makefile" ;;
+    "lib/PrologEngineWrapper/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/PrologEngineWrapper/Makefile" ;;
+    "lib/DeclExtractor/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/DeclExtractor/Makefile" ;;
+    "lib/CrispClangPlugin/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/CrispClangPlugin/Makefile" ;;
+    "lib/CrispLLVMPass/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/CrispLLVMPass/Makefile" ;;
+    "prolog/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS prolog/Makefile" ;;
+    "prolog/PrologBootForDeclExtractor/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS prolog/PrologBootForDeclExtractor/Makefile" ;;
+    "prolog/PrologBootForCrispClangPlugin/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS prolog/PrologBootForCrispClangPlugin/Makefile" ;;
+    "prolog/PrologBootForCrispLLVMPass/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS prolog/PrologBootForCrispLLVMPass/Makefile" ;;
     "tools/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS tools/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
@@ -14835,10 +14871,28 @@ $as_echo "$as_me: executing $ac_file commands" >&6;}
    ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/Makefile Makefile ;;
     "Makefile.crisp.rules":C) ${srcdir}/autoconf/mkinstalldirs `dirname Makefile.crisp.rules`
    ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/Makefile.crisp.rules Makefile.crisp.rules ;;
+    "Makefile.llvm.rules":C) ${srcdir}/autoconf/mkinstalldirs `dirname Makefile.llvm.rules`
+   ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/Makefile.llvm.rules Makefile.llvm.rules ;;
     "docs/Makefile":C) ${srcdir}/autoconf/mkinstalldirs `dirname docs/Makefile`
    ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/docs/Makefile docs/Makefile ;;
     "lib/Makefile":C) ${srcdir}/autoconf/mkinstalldirs `dirname lib/Makefile`
    ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/Makefile lib/Makefile ;;
+    "lib/PrologEngineWrapper/Makefile":C) ${srcdir}/autoconf/mkinstalldirs `dirname lib/PrologEngineWrapper/Makefile`
+   ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/PrologEngineWrapper/Makefile lib/PrologEngineWrapper/Makefile ;;
+    "lib/DeclExtractor/Makefile":C) ${srcdir}/autoconf/mkinstalldirs `dirname lib/DeclExtractor/Makefile`
+   ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/DeclExtractor/Makefile lib/DeclExtractor/Makefile ;;
+    "lib/CrispClangPlugin/Makefile":C) ${srcdir}/autoconf/mkinstalldirs `dirname lib/CrispClangPlugin/Makefile`
+   ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/CrispClangPlugin/Makefile lib/CrispClangPlugin/Makefile ;;
+    "lib/CrispLLVMPass/Makefile":C) ${srcdir}/autoconf/mkinstalldirs `dirname lib/CrispLLVMPass/Makefile`
+   ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/CrispLLVMPass/Makefile lib/CrispLLVMPass/Makefile ;;
+    "prolog/Makefile":C) ${srcdir}/autoconf/mkinstalldirs `dirname prolog/Makefile`
+   ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/prolog/Makefile prolog/Makefile ;;
+    "prolog/PrologBootForDeclExtractor/Makefile":C) ${srcdir}/autoconf/mkinstalldirs `dirname prolog/PrologBootForDeclExtractor/Makefile`
+   ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/prolog/PrologBootForDeclExtractor/Makefile prolog/PrologBootForDeclExtractor/Makefile ;;
+    "prolog/PrologBootForCrispClangPlugin/Makefile":C) ${srcdir}/autoconf/mkinstalldirs `dirname prolog/PrologBootForCrispClangPlugin/Makefile`
+   ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/prolog/PrologBootForCrispClangPlugin/Makefile prolog/PrologBootForCrispClangPlugin/Makefile ;;
+    "prolog/PrologBootForCrispLLVMPass/Makefile":C) ${srcdir}/autoconf/mkinstalldirs `dirname prolog/PrologBootForCrispLLVMPass/Makefile`
+   ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/prolog/PrologBootForCrispLLVMPass/Makefile prolog/PrologBootForCrispLLVMPass/Makefile ;;
     "tools/Makefile":C) ${srcdir}/autoconf/mkinstalldirs `dirname tools/Makefile`
    ${SHELL} ${srcdir}/autoconf/install-sh -m 0644 -c ${srcdir}/tools/Makefile tools/Makefile ;;
 

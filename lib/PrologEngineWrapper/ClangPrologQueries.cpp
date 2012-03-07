@@ -21,8 +21,8 @@
 
 #include "llvm/Support/Debug.h"
 
+#include "crisp/ClangPrologQueries.h"
 #include "crisp/PrologUtilityFunctions.h"
-#include "ClangPrologQueries.h"
 
 using namespace llvm;
 using namespace clang;

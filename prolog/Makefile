@@ -8,6 +8,7 @@ LEVEL=..
 #
 # List all of the subdirectories that we will compile.
 #
-DIRS= PrologBootForCrispClangPlugin PrologBootForCrispLLVMPass
+DIRS =  PrologBootForCrispClangPlugin PrologBootForCrispLLVMPass \
+	PrologBootForDeclExtractor
 
 include $(LEVEL)/Makefile.common
