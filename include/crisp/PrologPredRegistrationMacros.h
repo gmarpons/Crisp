@@ -34,3 +34,13 @@
 #define pl_check_property(NAME, ARGTYPE, CXXNAME)                       \
   if (!PL_register_foreign(#NAME, 1, (pl_function_t) &pl_##CXXNAME, 0)) \
     return FALSE;
+
+#undef pl_get_many
+
+#define pl_get_many(NAME, ARGTYPE,                                      \
+                    ITERTYPE, ITERBEGIN, ITEREND,                       \
+                    CXXNAME)                                            \
+  if (!PL_register_foreign(#NAME, 2,                                    \
+                           (pl_function_t) &pl_##CXXNAME,               \
+                           PL_FA_NONDETERMINISTIC))                     \
+    return FALSE;                                                       \

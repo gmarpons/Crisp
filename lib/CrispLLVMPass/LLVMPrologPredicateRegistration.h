@@ -31,7 +31,7 @@
 extern "C" {
 #endif
 
-  void plRegisterPredicates();
+  int plRegisterPredicates();
 
 #ifdef __cplusplus
 }

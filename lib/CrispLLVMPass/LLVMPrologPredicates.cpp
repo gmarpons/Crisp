@@ -46,6 +46,12 @@ namespace crisp {
 
   namespace prolog {
 
+    // Automatically generated function definitions.
+
+#include "crisp/PrologPredDefinitionMacros.h"
+#include "LLVMFunctions.inc"
+
+    // Manual function definition.
     const char* getSortName(unsigned OpCode) {
       switch (OpCode) {
       // Terminators
@@ -123,11 +129,11 @@ namespace crisp {
       }
     }
 
-    foreign_t pl_containsUse(term_t ValueT, term_t UserT, control_t Handle) {
-      return getMany<Value, Value::const_use_iterator,
-                     &Value::use_begin, &Value::use_end>
-        (ValueT, UserT, "use/2", Handle);
-    }
+    // foreign_t pl_containsUse(term_t ValueT, term_t UserT, control_t Handle) {
+    //   return getMany<Value, Value::const_use_iterator,
+    //                  &Value::use_begin, &Value::use_end>
+    //     (ValueT, UserT, "use/2", Handle);
+    // }
 
     // foreign_t pl_containsUse(term_t ValueT, term_t UserT, control_t Handle) {
     //   return contains< Value, Value::use_iterator >
@@ -135,22 +141,22 @@ namespace crisp {
     //      l::ret<User *>(*l::_1));
     // }
 
-    foreign_t pl_containsArgument(term_t FuncT, term_t ArgT, control_t Handle) {
-      return getMany<Function, Function::const_arg_iterator,
-                     &Function::arg_begin, &Function::arg_end>
-        (FuncT, ArgT, "argument/2", Handle);
-    }
+    // foreign_t pl_containsArgument(term_t FuncT, term_t ArgT, control_t Handle) {
+    //   return getMany<Function, Function::const_arg_iterator,
+    //                  &Function::arg_begin, &Function::arg_end>
+    //     (FuncT, ArgT, "argument/2", Handle);
+    // }
 
     // foreign_t pl_containsArgument(term_t FuncT, term_t ArgT, control_t Handle) {
     //   return contains< Function, Argument >
     //     (FuncT, ArgT, Handle, &Function::arg_begin, &Function::arg_end);
     // }
 
-    foreign_t pl_containsInstruction(term_t FuncT, term_t InstT,
-                                     control_t Handle) {
-      return getMany<Function, const_inst_iterator, &inst_begin, &inst_end>
-        (FuncT, InstT, "instruction/2", Handle);
-    }
+    // foreign_t pl_containsInstruction(term_t FuncT, term_t InstT,
+    //                                  control_t Handle) {
+    //   return getMany<Function, const_inst_iterator, &inst_begin, &inst_end>
+    //     (FuncT, InstT, "instruction/2", Handle);
+    // }
 
     // foreign_t pl_containsInstruction(term_t FuncT, term_t InstT,
     //                                  control_t Handle) {
@@ -158,11 +164,11 @@ namespace crisp {
     //     (FuncT, InstT, Handle, &inst_begin, &inst_end, &(*l::_1));
     // }
 
-    foreign_t pl_containsOp(term_t UserT, term_t ValueT, control_t Handle) {
-      return getMany<User, User::const_op_iterator,
-                     &User::op_begin, &User::op_end>
-        (UserT, ValueT, "operand/2", Handle);
-    }
+    // foreign_t pl_containsOp(term_t UserT, term_t ValueT, control_t Handle) {
+    //   return getMany<User, User::const_op_iterator,
+    //                  &User::op_begin, &User::op_end>
+    //     (UserT, ValueT, "operand/2", Handle);
+    // }
 
     // foreign_t pl_containsOp(term_t UserT, term_t ValueT, control_t Handle) {
     //   return contains< User, User::op_iterator >

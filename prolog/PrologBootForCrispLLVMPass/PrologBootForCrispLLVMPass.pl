@@ -30,7 +30,7 @@ isA_(Instruction, Sort) :-
 
 %% Pre: +Value has PointerType.
 getLocation(Value, Location) :-
-        (  containsUse(Value, User),
+        (  use(Value, User),
            ( isA_(User, 'StoreInst')
            ; isA_(User, 'LoadInst')
            )
@@ -47,24 +47,24 @@ violation('HICPP 3.4.2', [FuncName], AliasResult) :-
         violationCandidate('HICPP 3.4.2', [FuncName]),
         isA_(Module, 'Module'),
         getFunction(Module, FuncName, Func),
-        containsArgument(Func, This),
+        argument(Func, This),
         getName(This, 'this'),
-        containsInstruction(Func, StoreThis),
+        instruction(Func, StoreThis),
         isA_(StoreThis, 'StoreInst'),
         getValueOperand(StoreThis, This),
         getPointerOperand(StoreThis, ThisAddr),
-        containsInstruction(Func, LoadThis),
+        instruction(Func, LoadThis),
         isA_(LoadThis, 'LoadInst'),
         getPointerOperand(LoadThis, ThisAddr),
-        containsInstruction(Func, OffsetFromThis),
+        instruction(Func, OffsetFromThis),
         ( isA_(OffsetFromThis, 'GetElementPtrInst'),
           getPointerOperand(OffsetFromThis, LoadThis)
         ; isA_(OffsetFromThis, 'BitCastInst'),
-          containsOp(OffsetFromThis, LoadThis)
+          op(OffsetFromThis, LoadThis)
         ),
         getLocation(OffsetFromThis, OffsetFromThisLoc),
-        containsInstruction(Func, Return),
+        instruction(Func, Return),
         isA_(Return, 'ReturnInst'),
-        containsOp(Return, UsedByReturn),
+        op(Return, UsedByReturn),
         getLocation(UsedByReturn, ReturnLoc),
         alias(OffsetFromThisLoc, ReturnLoc, AliasResult).

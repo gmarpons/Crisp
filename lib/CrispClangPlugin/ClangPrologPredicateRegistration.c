@@ -23,7 +23,6 @@
 
 int plRegisterPredicates() {
   /* Automatically generated function registration. */
-
 #include "crisp/PrologPredRegistrationMacros.h"
 #include "ClangFunctions.inc"
 

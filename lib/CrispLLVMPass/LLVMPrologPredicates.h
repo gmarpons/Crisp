@@ -42,6 +42,13 @@ extern "C" {
           raised.
       */
 
+      /* Automatically generated function declaration. */
+
+#include "crisp/PrologPredDeclarationMacros.h"
+#include "LLVMFunctions.inc"
+
+      /* Manual function declaration. */
+
       /** \param ValueT +Value
        *  \param NameT Atom
        */
@@ -50,7 +57,7 @@ extern "C" {
       /** \param ValueT +Value
        *  \param UserT User
        */
-      foreign_t pl_containsUse(term_t ValueT, term_t UserT, control_t Handle);
+      /* foreign_t pl_containsUse(term_t ValueT, term_t UserT, control_t Handle); */
 
       /** \param InstT +Instruction
        *  \param SortT Sort
@@ -96,19 +103,19 @@ extern "C" {
       /** \param FuncT +Function
        *  \param ArgT Argument
        */
-      foreign_t pl_containsArgument(term_t FuncT, term_t ArgT,
-                                    control_t Handle);
+      /* foreign_t pl_containsArgument(term_t FuncT, term_t ArgT, */
+      /*                               control_t Handle); */
 
       /** \param FuncT +Function
        *  \param InstT Instruction
        */
-      foreign_t pl_containsInstruction(term_t FuncT, term_t InstT,
-                                       control_t Handle);
+      /* foreign_t pl_containsInstruction(term_t FuncT, term_t InstT, */
+      /*                                  control_t Handle); */
 
       /** \param UserT +User
        *  \param ValueT Value
        */
-      foreign_t pl_containsOp(term_t UserT, term_t ValueT, control_t Handle);
+      /* foreign_t pl_containsOp(term_t UserT, term_t ValueT, control_t Handle); */
 
       /** \param ModuleT +Module
        *  \param NameT +Atom

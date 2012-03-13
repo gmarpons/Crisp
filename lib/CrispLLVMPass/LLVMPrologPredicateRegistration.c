@@ -21,10 +21,14 @@
 #include "LLVMPrologPredicates.h"
 #include "LLVMPrologPredicateRegistration.h"
 
-void plRegisterPredicates() {
+int plRegisterPredicates() {
+  /* Automatically generated function registration. */
+#include "crisp/PrologPredRegistrationMacros.h"
+#include "LLVMFunctions.inc"
+
+  /* Manual function registration. */
+
   PL_register_foreign("getName", 2, pl_getName, 0);
-  PL_register_foreign("containsUse", 2, pl_containsUse,
-                      PL_FA_NONDETERMINISTIC);
   PL_register_foreign("isA_computed", 2, pl_isA_computed, 0);
   PL_register_foreign("getPointerOperand", 2, pl_getPointerOperand, 0);
   PL_register_foreign("getValueOperand", 2, pl_getValueOperand, 0);
@@ -36,11 +40,6 @@ void plRegisterPredicates() {
   PL_register_foreign("aliasLessThanNoAlias", 2,
                       pl_aliasLessThanNoAlias, 0);
   PL_register_foreign("alias", 3, pl_alias, 0);
-  PL_register_foreign("containsArgument", 2, pl_containsArgument,
-                      PL_FA_NONDETERMINISTIC);
-  PL_register_foreign("containsInstruction", 2, pl_containsInstruction,
-                      PL_FA_NONDETERMINISTIC);
-  PL_register_foreign("containsOp", 2, pl_containsOp,
-                      PL_FA_NONDETERMINISTIC);
   PL_register_foreign("getFunction", 3, pl_getFunction, 0);
+  return TRUE;
 }

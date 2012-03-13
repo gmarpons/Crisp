@@ -32,3 +32,11 @@
 
 #define pl_check_property(NAME, ARGTYPE, CXXNAME)       \
   foreign_t pl_##CXXNAME(term_t ArgumentT);
+
+#undef pl_get_many
+
+#define pl_get_many(NAME, ARGTYPE,                                      \
+                    ITERTYPE, ITERBEGIN, ITEREND,                       \
+                    CXXNAME)                                            \
+  foreign_t pl_##CXXNAME(term_t ArgumentT, term_t ResultT,              \
+                         control_t Handle);
