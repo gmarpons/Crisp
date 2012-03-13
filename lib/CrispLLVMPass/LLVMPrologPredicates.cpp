@@ -17,10 +17,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <boost/lambda/bind.hpp>
-#include <boost/lambda/construct.hpp>
-#include <boost/lambda/control_structures.hpp>
-#include <boost/lambda/lambda.hpp>
+// #include <boost/lambda/bind.hpp>
+// #include <boost/lambda/construct.hpp>
+// #include <boost/lambda/control_structures.hpp>
+// #include <boost/lambda/lambda.hpp>
 #include <string>
 
 #include "llvm/Analysis/AliasAnalysis.h"
@@ -34,12 +34,13 @@
 #include "llvm/Target/TargetData.h"
 #include "llvm/Type.h"
 
+#include "crisp/PrologPredBaseTemplates.h"
 #include "LLVMCompilationInfo.h"
 #include "LLVMPrologPredicates.h"
 
 using namespace llvm;
-namespace b = boost;
-namespace l = boost::lambda;
+// namespace b = boost;
+// namespace l = boost::lambda;
 
 namespace crisp {
 
@@ -122,138 +123,52 @@ namespace crisp {
       }
     }
 
-    /// Most general version of \c contains.
-    template< typename ContainerType,
-              typename IterType,
-              typename ContextType,
-              typename IterFuncType,
-              typename Iter2ElemFuncType,
-              typename NewContextFuncType,
-              typename DeleteContextFuncType,
-              typename Context2IterFuncType,
-              typename Iter2ContextFuncType >
-    foreign_t contains(term_t ContainerT, term_t ElemT, control_t Handle,
-                       IterFuncType BeginIt, IterFuncType EndIt,
-                       Iter2ElemFuncType Iter2Elem,
-                       NewContextFuncType NewContext,
-                       DeleteContextFuncType DeleteContext,
-                       Context2IterFuncType Context2Iter,
-                       Iter2ContextFuncType Iter2Context) {
-      ContainerType *Container;
-      IterType It;
-      ContextType Context;
-
-      switch (PL_foreign_control(Handle)) {
-      case PL_FIRST_CALL: case PL_REDO:       // Get Container
-        if ( !PL_get_pointer(ContainerT, (void **) &Container))
-          return PL_warning("contains/2 instantiation fault on first arg");
-      }
-
-      switch (PL_foreign_control(Handle)) {
-      case PL_FIRST_CALL:                     // Get first elem
-        It = l::bind(BeginIt, Container) ();
-        Context = NewContext(It);
-        break;
-      case PL_REDO:                           // Get next elem
-        Context = (ContextType) PL_foreign_context_address(Handle);
-        Context2Iter(Context, It); ++It; Iter2Context(It, Context);
-        break;
-      case PL_PRUNED:
-        Context = (ContextType) PL_foreign_context_address(Handle);
-      }
-
-      switch (PL_foreign_control(Handle)) {
-      case PL_FIRST_CALL: case PL_REDO:       // Return first/next (when exists)
-        if (It == l::bind(EndIt, Container) ()) return FALSE;
-        else {
-          (void) PL_unify_pointer(ElemT, (void *) Iter2Elem(It));
-          PL_retry_address(Context);
-        }
-      case PL_PRUNED:                         // Clean context
-        DeleteContext(Context);
-      default:
-        return TRUE;
-      }
-    }
-
-    /// Overloading of \c contains for the case in which \c BeginIt
-    /// and \c EndIt are member functions of \c ContainerType, and we
-    /// need to store iterators on the heap.
-    template< typename ContainerType,
-              typename IterType,
-              typename Iter2ElemFuncType >
-    foreign_t contains(term_t ContainerT, term_t ElemT, control_t Handle,
-                       IterType (ContainerType::* BeginIt) (),
-                       IterType (ContainerType::* EndIt) (),
-                       Iter2ElemFuncType Iter2Elem) {
-      return contains< ContainerType, IterType, IterType * >
-        (ContainerT, ElemT, Handle, BeginIt, EndIt, Iter2Elem,
-         l::new_ptr<IterType>(), l::delete_ptr(),
-         l::_2 = *l::_1, *l::_2 =  l::_1);
-    }
-
-    /// Overloading of \c contains for the case in which \c BeginIt
-    /// and \c EndIt are member functions of \c ContainerType, and
-    /// their returned iterator is implemented with an \c
-    /// llvm::ilist_iterator. As \c ilist_iterator 's are in fact
-    /// smart pointers, we don't need dynamic memory allocation. This
-    /// \c contains overload is more specialized and efficient than
-    /// the previous one, and should be used whenever possible.
-    template< typename ContainerType,
-              typename ElemType >
-              // template < typename > class ilist_iterator >
-    foreign_t contains(term_t ContainerT, term_t ElemT, control_t Handle,
-                       ilist_iterator< ElemType > (ContainerType::* BeginIt) (),
-                       ilist_iterator< ElemType > (ContainerType::* EndIt) ()) {
-      typedef ilist_iterator< ElemType > IterType;
-      return contains< ContainerType, ilist_iterator< ElemType >, ElemType * >
-        (ContainerT, ElemT, Handle, BeginIt, EndIt,
-         l::_1,                       // Iter2Elem
-         l::_1,                       // NewContext
-         l::_1 = l::_1,               // DeleteContext, do nothing
-         l::_2 = l::_1,               // Context2Iter
-         l::_2 = l::_1);              // Iter2Context
-    }
-
-    /// Overloading of \c contains for the case in which \c BeginIt
-    /// and \c EndIt are ordinary functions of \c ContainerType, and
-    /// we need to store iterators on the heap.
-    template< typename ContainerType,
-              typename IterType,
-              typename Iter2ElemFuncType >
-    foreign_t contains(term_t ContainerT, term_t ElemT, control_t Handle,
-                       IterType (* BeginIt) (ContainerType *),
-                       IterType (* EndIt) (ContainerType *),
-                       Iter2ElemFuncType Iter2Elem) {
-      return contains< ContainerType, IterType, IterType * >
-        (ContainerT, ElemT, Handle, BeginIt, EndIt, Iter2Elem,
-         l::new_ptr<IterType>(),
-         l::if_then(l::_1, l::bind(l::delete_ptr(), l::_1)),
-         l::_2 = *l::_1, *l::_2 = l::_1);
-    }
-
     foreign_t pl_containsUse(term_t ValueT, term_t UserT, control_t Handle) {
-      return contains< Value, Value::use_iterator >
-        (ValueT, UserT, Handle, &Value::use_begin, &Value::use_end,
-         l::ret<User *>(*l::_1));
+      return getMany<Value, Value::const_use_iterator,
+                     &Value::use_begin, &Value::use_end>
+        (ValueT, UserT, "use/2", Handle);
     }
+
+    // foreign_t pl_containsUse(term_t ValueT, term_t UserT, control_t Handle) {
+    //   return contains< Value, Value::use_iterator >
+    //     (ValueT, UserT, Handle, &Value::use_begin, &Value::use_end,
+    //      l::ret<User *>(*l::_1));
+    // }
 
     foreign_t pl_containsArgument(term_t FuncT, term_t ArgT, control_t Handle) {
-      return contains< Function, Argument >
-        (FuncT, ArgT, Handle, &Function::arg_begin, &Function::arg_end);
+      return getMany<Function, Function::const_arg_iterator,
+                     &Function::arg_begin, &Function::arg_end>
+        (FuncT, ArgT, "argument/2", Handle);
     }
+
+    // foreign_t pl_containsArgument(term_t FuncT, term_t ArgT, control_t Handle) {
+    //   return contains< Function, Argument >
+    //     (FuncT, ArgT, Handle, &Function::arg_begin, &Function::arg_end);
+    // }
 
     foreign_t pl_containsInstruction(term_t FuncT, term_t InstT,
                                      control_t Handle) {
-      return contains< Function, inst_iterator >
-        (FuncT, InstT, Handle, &inst_begin, &inst_end, &(*l::_1));
+      return getMany<Function, const_inst_iterator, &inst_begin, &inst_end>
+        (FuncT, InstT, "instruction/2", Handle);
     }
 
+    // foreign_t pl_containsInstruction(term_t FuncT, term_t InstT,
+    //                                  control_t Handle) {
+    //   return contains< Function, inst_iterator >
+    //     (FuncT, InstT, Handle, &inst_begin, &inst_end, &(*l::_1));
+    // }
+
     foreign_t pl_containsOp(term_t UserT, term_t ValueT, control_t Handle) {
-      return contains< User, User::op_iterator >
-        (UserT, ValueT, Handle, &User::op_begin, &User::op_end,
-         l::bind<Value *>(&Use::get, l::_1));
+      return getMany<User, User::const_op_iterator,
+                     &User::op_begin, &User::op_end>
+        (UserT, ValueT, "operand/2", Handle);
     }
+
+    // foreign_t pl_containsOp(term_t UserT, term_t ValueT, control_t Handle) {
+    //   return contains< User, User::op_iterator >
+    //     (UserT, ValueT, Handle, &User::op_begin, &User::op_end,
+    //      l::bind<Value *>(&Use::get, l::_1));
+    // }
 
     foreign_t pl_getName(term_t ValueT, term_t NameT) {
       Value *V;

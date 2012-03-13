@@ -1,4 +1,4 @@
-/* PrologPredicateAutomaticDeclarationMacros.h ----------------------*- C -*- */
+/* PrologPredRegistrationMacros.h -----------------------------------*- C -*- */
 
 /* Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 
@@ -18,17 +18,19 @@
    along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/** \file \brief Preprocessor macro definitions to \e declare
- *  functions that implement in C++ Prolog predicates with
- *  functionality automatically grasped from LLVM or Clang sources.
+/** \file \brief Preprocessor macro definitions to \e register as SWI
+ *  Prolog predicates, functions that implement functionality
+ *  automatically grasped from LLVM or Clang sources.
  */
 
 #undef pl_get_one
 
-#define pl_get_one(NAME, ARGTYPE, RESTYPE, CXXNAME)             \
-  foreign_t pl_##CXXNAME(term_t ArgumentT, term_t ResultT);
+#define pl_get_one(NAME, ARGTYPE, RESTYPE, CXXNAME)                     \
+  if (!PL_register_foreign(#NAME, 2, (pl_function_t) &pl_##CXXNAME, 0)) \
+    return FALSE;                                                       \
 
 #undef pl_check_property
 
-#define pl_check_property(NAME, ARGTYPE, CXXNAME)       \
-  foreign_t pl_##CXXNAME(term_t ArgumentT);
+#define pl_check_property(NAME, ARGTYPE, CXXNAME)                       \
+  if (!PL_register_foreign(#NAME, 1, (pl_function_t) &pl_##CXXNAME, 0)) \
+    return FALSE;

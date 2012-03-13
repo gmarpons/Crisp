@@ -1,4 +1,4 @@
-/* PrologPredicateAutomaticDefinitionMacros.h -----------------------*- C -*- */
+/* PrologPredDefinitionMacros.h -------------------------------------*- C -*- */
 
 /* Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
 

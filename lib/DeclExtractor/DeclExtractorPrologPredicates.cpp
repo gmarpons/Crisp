@@ -19,7 +19,7 @@
 
 #include "clang/AST/Decl.h"
 
-#include "crisp/PrologPredicatesBaseTemplates.h"
+#include "crisp/PrologPredTemplatesForClangTypes.h"
 #include "DeclExtractorPrologPredicates.h"
 
 using namespace clang;
@@ -30,7 +30,7 @@ namespace crisp {
 
     // Automatically generated function definitions.
 
-#include "crisp/PrologPredicateAutomaticDefinitionMacros.h"
+#include "crisp/PrologPredDefinitionMacros.h"
 #include "ClangFunctionsForBootstrapping.inc"
 
   } // End namespace crisp::prolog

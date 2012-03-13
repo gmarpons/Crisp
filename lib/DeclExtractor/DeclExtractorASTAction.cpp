@@ -56,7 +56,8 @@ namespace crisp {
     }
     virtual ~DeclExtractorConsumer();
     virtual void HandleTranslationUnit(ASTContext &Context);
-    virtual bool VisitDecl(Decl *D);
+    virtual bool VisitCXXMethodDecl(CXXMethodDecl *D);
+    virtual bool VisitCXXRecordDecl(CXXRecordDecl *D);
 
   private:
     void VisitTypeFromTypesTable(Type *T);
@@ -92,12 +93,12 @@ namespace crisp {
       DEBUG(dbgs() << "Main source file name: " << MainFileName << "\n");
 
       // Traverse types in the translation unit
-      b::for_each(b::make_iterator_range(Context.types_begin()
-                                         , Context.types_end())
-                  , l::bind(&DeclExtractorConsumer::VisitTypeFromTypesTable
-                            , this
-                            , l::_1)
-                  );
+      // b::for_each(b::make_iterator_range(Context.types_begin()
+      //                                    , Context.types_end())
+      //             , l::bind(&DeclExtractorConsumer::VisitTypeFromTypesTable
+      //                       , this
+      //                       , l::_1)
+      //             );
 
       // Traverse AST to visit declarations and statements
       TraverseDecl(Context.getTranslationUnitDecl());
@@ -121,25 +122,28 @@ namespace crisp {
 
   // Visit declarations
 
-  // TODO: handle Prolog errors when visiting AST (now return values of
-  // pl* funcs are ignored).
+  // bool DeclExtractorConsumer::VisitDecl(Decl *D) {
+  //   // FIXME: the following code is inefficient (uses string
+  //   // concatenation a lot of times). Specific Visit* methods should be
+  //   // written instead.
+  //   std::string DeclKindName(D->getDeclKindName());
+  //   std::string Sort(DeclKindName + "Decl");
+  //   (void) plAssertDeclIsA(D, Sort); // Return value ignored
 
-  bool DeclExtractorConsumer::VisitDecl(Decl *D) {
-    // FIXME: the following code is inefficient (uses string
-    // concatenation a lot of times). Specific Visit* methods should be
-    // written instead.
-    std::string DeclKindName(D->getDeclKindName());
-    std::string Sort(DeclKindName + "Decl");
-    (void) plAssertDeclIsA(D, Sort); // Return value ignored
+  //   return true;
+  // }
 
+  bool DeclExtractorConsumer::VisitCXXMethodDecl(CXXMethodDecl *D) {
+    std::string Sort("CXXMethodDecl");
+    (void) plAssertDeclIsA(D, Sort);
     return true;
   }
 
-  // bool DeclExtractorConsumer::VisitCXXMethodDecl(Decl *D) {
-  //   std::string Sort("CXXMethodDecl");
-  //   (void) plAssertDeclIsA(D, Sort); // Return value ignored
-  //   return true;
-  // }
+  bool DeclExtractorConsumer::VisitCXXRecordDecl(CXXRecordDecl *D) {
+    std::string Sort("CXXrecordDecl");
+    (void) plAssertDeclIsA(D, Sort);
+    return true;
+  }
 
   class DeclExtractorASTAction : public PluginASTAction {
   public:

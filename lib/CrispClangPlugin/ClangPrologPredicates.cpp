@@ -30,7 +30,7 @@
 #include "llvm/ADT/Twine.h"
 #include "llvm/Support/raw_ostream.h"
 
-#include "crisp/PrologPredicatesBaseTemplates.h"
+#include "crisp/PrologPredTemplatesForClangTypes.h"
 #include "CompilationInfo.h"
 #include "ClangPrologPredicates.h"
 
@@ -42,7 +42,7 @@ namespace crisp {
 
     // Automatically generated function definitions.
 
-#include "crisp/PrologPredicateAutomaticDefinitionMacros.h"
+#include "crisp/PrologPredDefinitionMacros.h"
 #include "ClangFunctions.inc"
 
     // Manual function definition.

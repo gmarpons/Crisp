@@ -24,7 +24,7 @@
 int plRegisterPredicates() {
   /* Automatically generated function registration. */
 
-#include "crisp/PrologPredicateAutomaticRegistrationMacros.h"
+#include "crisp/PrologPredRegistrationMacros.h"
 #include "ClangFunctions.inc"
 
   /* Manual function registration. */

@@ -31,7 +31,7 @@ extern "C" {
 #endif
 
       /* Automatically generated function declaration. */
-#include "crisp/PrologPredicateAutomaticDeclarationMacros.h"
+#include "crisp/PrologPredDeclarationMacros.h"
 #include "ClangFunctionsForBootstrapping.inc"
 
 #ifdef __cplusplus
