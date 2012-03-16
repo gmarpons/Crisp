@@ -375,24 +375,32 @@ namespace crisp {
       switch (PL_foreign_control(Handle)) {
       case PL_FIRST_CALL:                     // Get first elem
         It = IteratorHelper::begin(Container);
-        Ctxt = Context<iterator_type>::newContext(It);
         break;
       case PL_REDO:                           // Get next elem
         Ctxt = (context_type) PL_foreign_context_address(Handle);
         Context<iterator_type>::context2iter(Ctxt, It);
-        Context<iterator_type>::iter2context(++It, Ctxt);
+        It++;
         break;
       case PL_PRUNED:
         Ctxt = (context_type) PL_foreign_context_address(Handle);
       }
 
-      switch (PL_foreign_control(Handle)) {
-      case PL_FIRST_CALL: case PL_REDO:       // Return first/next (when exists)
+      switch (PL_foreign_control(Handle)) {   // Return if It ended
+      case PL_FIRST_CALL: case PL_REDO:
         if (It == IteratorHelper::end(Container)) return FALSE;
-        else {
-          (void) UnifyIterator<iterator_type>::_(ResultT, It);
-          PL_retry_address((void *) Ctxt);    // Returns. Cast remove constness
-        }
+      }
+
+      switch (PL_foreign_control(Handle)) {   // Save It for next calls
+      case PL_FIRST_CALL:
+        Ctxt = Context<iterator_type>::newContext(It);
+      case PL_REDO:
+        Context<iterator_type>::iter2context(It, Ctxt);
+      }
+
+      switch (PL_foreign_control(Handle)) {
+      case PL_FIRST_CALL: case PL_REDO:       // Return first/next
+        (void) UnifyIterator<iterator_type>::_(ResultT, It);
+        PL_retry_address((void *) Ctxt);      // Returns. Cast remove constness
       case PL_PRUNED:                         // Clean context
         Context<iterator_type>::deleteContext(Ctxt);
       default:
