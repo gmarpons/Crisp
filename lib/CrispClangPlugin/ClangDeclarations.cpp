@@ -19,6 +19,7 @@
 
 #include "clang/AST/Decl.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/Stmt.h"
 
 int main() {
   return 0;

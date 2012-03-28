@@ -84,11 +84,6 @@ namespace crisp {
         (ArgumentT, ResultT, "canonicalType/2");
     }
 
-    foreign_t pl_isConstQualified(term_t ArgumentT) {
-      return checkProperty<QualType, &QualType::isConstQualified>
-        (ArgumentT, "constQualified/1");
-    }
-
     foreign_t pl_FunctionProtoType_isConstQualified(term_t ArgumentT) {
       Retrieve<FunctionProtoType>::argument_type Argument;
       if ( !Retrieve<FunctionProtoType>::

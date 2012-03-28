@@ -47,6 +47,23 @@ simpleName(Name, Simple) :-
         ).
 simpleName(Name, Name).
 
+topClassName('Decl').
+topClassName('QualType').
+topClassName('Type').
+topClassName('Stmt').
+
+topClass(Class) :-
+        isA(Class, 'CXXRecordDecl'),
+        'NamedDecl::nameAsString'(Class, Name),
+        topClassName(Name).
+
+derivedFromTopClasses(Class) :-
+        topClass(Class).
+derivedFromTopClasses(Class) :-
+        topClass(Top),
+        isA(Class, 'CXXRecordDecl'),
+        base(Class, Top).
+
 % interestingDecl(pl_get_one(Name, ArgTypeStr, ResTypeStr, Name)) :-
 %         isA(Class, 'CXXRecordDecl'),
 %         base(Class, Base),
@@ -64,9 +81,9 @@ simpleName(Name, Name).
         % declContext(Method, Class),
 
 interestingDecl(pl_check_property(SimpleName, ClassName, MethodName)) :-
-        isA(Class, 'CXXRecordDecl'),
-        base(Class, Base),
-        'NamedDecl::nameAsString'(Base, 'Decl'),
+        % isA(Class, 'CXXRecordDecl'),
+        % 'NamedDecl::nameAsString'(Base, 'Decl'),
+        derivedFromTopClasses(Class),
         'CXXRecordDecl::method'(Class, Method),
         'CXXMethodDecl::constQualified'(Method),
         \+ 'CXXMethodDecl::static'(Method),
@@ -78,5 +95,3 @@ interestingDecl(pl_check_property(SimpleName, ClassName, MethodName)) :-
         'NamedDecl::nameAsString'(Class, ClassName),
         'NamedDecl::nameAsString'(Method, MethodName),
         simpleName(MethodName, SimpleName).
-
-        % atomic_list_concat([ClassName, '_', MethodName], Name).
