@@ -26,5 +26,15 @@ int plRegisterPredicates() {
 #include "crisp/PrologPredRegistrationMacros.h"
 #include "ClangFunctionsForBootstrapping.inc"
 
+  /* Manual function registration. */
+  if ( !PL_register_foreign("CXXBaseSpecifier::baseDecl", 2,
+                            (pl_function_t) &pl_CXXBaseSpecifier_getBaseDecl,
+                            0))
+    return FALSE;
+  if ( !PL_register_foreign("CXXMethodDecl::constQualified", 1,
+                            (pl_function_t) &pl_CXXMethodDecl_isConstQualified,
+                            0))
+    return FALSE;
+
   return TRUE;
 }

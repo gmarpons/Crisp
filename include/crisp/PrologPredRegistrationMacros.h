@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 /* PrologPredRegistrationMacros.h -----------------------------------*- C -*- */
 
 /* Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
@@ -26,21 +28,30 @@
 #undef pl_get_one
 
 #define pl_get_one(NAME, ARGTYPE, RESTYPE, CXXNAME)                     \
-  if (!PL_register_foreign(#NAME, 2, (pl_function_t) &pl_##CXXNAME, 0)) \
+  if ( !PL_register_foreign(#ARGTYPE "::" #NAME, 2,                     \
+                            (pl_function_t)                             \
+                            &pl_##ARGTYPE##_##CXXNAME, 0))              \
     return FALSE;                                                       \
 
 #undef pl_check_property
 
 #define pl_check_property(NAME, ARGTYPE, CXXNAME)                       \
-  if (!PL_register_foreign(#NAME, 1, (pl_function_t) &pl_##CXXNAME, 0)) \
-    return FALSE;
+  if ( !PL_register_foreign(#ARGTYPE "::" #NAME, 1,                     \
+                            (pl_function_t)                             \
+                            &pl_##ARGTYPE##_##CXXNAME, 0)) {            \
+    printf("%s", "Registering of " #NAME " failed.\n");                 \
+    return FALSE;                                                       \
+  } else {                                                              \
+    printf("%s", "Registering of " #NAME " succeeded.\n");              \
+  }
 
 #undef pl_get_many
 
 #define pl_get_many(NAME, ARGTYPE,                                      \
                     ITERTYPE, ITERBEGIN, ITEREND,                       \
                     CXXNAME)                                            \
-  if (!PL_register_foreign(#NAME, 2,                                    \
-                           (pl_function_t) &pl_##CXXNAME,               \
-                           PL_FA_NONDETERMINISTIC))                     \
-    return FALSE;                                                       \
+  if ( !PL_register_foreign(#ARGTYPE "::" #NAME, 2,                     \
+                            (pl_function_t)                             \
+                            &pl_##ARGTYPE##_##CXXNAME,                  \
+                            PL_FA_NONDETERMINISTIC))                    \
+    return FALSE;

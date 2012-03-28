@@ -25,20 +25,21 @@
 
 #undef pl_get_one
 
-#define pl_get_one(NAME,                                            \
-                   ARGTYPE, RESTYPE,                                \
-                   CXXNAME)                                         \
-  foreign_t pl_##CXXNAME(term_t ArgumentT, term_t ResultT) {        \
-    return getOne<ARGTYPE, RESTYPE, &ARGTYPE::CXXNAME>              \
-      (ArgumentT, ResultT, #NAME "/2");                             \
+#define pl_get_one(NAME,                                                \
+                   ARGTYPE, RESTYPE,                                    \
+                   CXXNAME)                                             \
+  foreign_t                                                             \
+  pl_##ARGTYPE##_##CXXNAME(term_t ArgumentT, term_t ResultT) {          \
+    return getOne<ARGTYPE, RESTYPE, &ARGTYPE::CXXNAME>                  \
+      (ArgumentT, ResultT, #ARGTYPE "::" #NAME "/2");                   \
   }
 
 #undef pl_check_property
 
-#define pl_check_property(NAME, ARGTYPE, CXXNAME)       \
-  foreign_t pl_##CXXNAME(term_t ArgumentT) {            \
-    return checkProperty<ARGTYPE, &ARGTYPE::CXXNAME>    \
-      (ArgumentT, #NAME "/1");                          \
+#define pl_check_property(NAME, ARGTYPE, CXXNAME)               \
+  foreign_t pl_##ARGTYPE##_##CXXNAME(term_t ArgumentT) {        \
+    return checkProperty<ARGTYPE, &ARGTYPE::CXXNAME>            \
+      (ArgumentT, #ARGTYPE "::" #NAME "/1");                    \
   }
 
 #undef pl_get_many
@@ -46,9 +47,8 @@
 #define pl_get_many(NAME, ARGTYPE,                                      \
                     ITERTYPE, ITERBEGIN, ITEREND,                       \
                     CXXNAME)                                            \
-  foreign_t pl_##CXXNAME(term_t ArgumentT, term_t ResultT,              \
+  foreign_t pl_##ARGTYPE##_##CXXNAME(term_t ArgumentT, term_t ResultT,  \
                          control_t Handle) {                            \
-    return getMany<ARGTYPE, ITERTYPE,                                   \
-      &ITERBEGIN, &ITEREND>                                             \
-      (ArgumentT, ResultT, #NAME "/2", Handle);                         \
+    return getMany<ARGTYPE, ITERTYPE, &ITERBEGIN, &ITEREND>             \
+      (ArgumentT, ResultT, #ARGTYPE "::" #NAME "/2", Handle);           \
   }

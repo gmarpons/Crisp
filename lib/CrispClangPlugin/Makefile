@@ -19,6 +19,10 @@ SOURCES =       ClangPrologPredicateRegistration.c \
 		CompilationInfo.cpp \
 		CrispASTAction.cpp
 
+DECLARATIONSFILENAME := $(strip ClangDeclarations)
+
+BUILT_SOURCES = $(DECLARATIONSFILENAME).inc
+
 LIBRARYNAME = crispclang
 SHARED_LIBRARY = 1
 LOADABLE_MODULE = 1
@@ -38,7 +42,6 @@ CPPFLAGS += ${BOOST_CPPFLAGS}
 # Vars that can be easily changed: CLANGXX
 #
 CLANGXX = $(LLVM_OBJ_ROOT)/Debug+Asserts/bin/clang++
-DECLARATIONSFILENAME := $(strip ClangDeclarations)
 PLUGINNAME = $(strip declextractor.so)
 CLANGPLUGIN = $(LibDir)/$(PLUGINNAME)
 CLANGPLUGINFLAGS = -Xclang -load -Xclang $(CLANGPLUGIN) \
@@ -47,13 +50,16 @@ EXTRAFLAGS = -emit-llvm \
 	$(patsubst %,-I%/include, $(LLVM_OBJ_ROOT) $(LLVM_SRC_ROOT)) \
 	-D_DEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS \
 	-D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
+PROLOGSAVEDSTATEFILE = PrologBootForDeclExtractor.sh
+PROLOGSAVEDSTATEPATH = $(DataDir)/$(strip $(PROLOGSAVEDSTATEFILE))
 
 .PHONY: decl-extraction clean-decl-extraction
 
 decl-extraction: $(DECLARATIONSFILENAME).inc
 
+$(DECLARATIONSFILENAME).inc: $(CLANGPLUGIN) $(PROLOGSAVEDSTATEPATH)
 $(DECLARATIONSFILENAME).inc: $(DECLARATIONSFILENAME).cpp
-	$(Echo) Extracting declarations from clang\'s source code
+	$(Echo) Extracting declarations from Clang\'s source code \(takes some time\)
 	$(Verb) $(CLANGXX) $(CXXFLAGS) $(CPPFLAGS) $(EXTRAFLAGS) \
 		$(CLANGPLUGINFLAGS) -o /dev/null -S $<
 

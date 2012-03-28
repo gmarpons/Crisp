@@ -50,6 +50,7 @@ extern "C" {
 
 #include "crisp/PrologPredDeclarationMacros.h"
 #include "ClangFunctions.inc"
+#include "ClangDeclarations.inc"
 
       /* Manual function declaration. */
 
@@ -65,7 +66,7 @@ extern "C" {
 
       /** \param TypeT +Type
        */
-      /* foreign_t pl_isConstQualified(term_t TypeT); */
+      foreign_t pl_isConstQualified(term_t TypeT);
 
       /** \param FunctionProtoTypeT +FunctionProtoType
        */

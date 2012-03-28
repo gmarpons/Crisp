@@ -97,9 +97,13 @@ namespace crisp {
                                   // (de-)activate debug mode.
 
     DEBUG(dbgs() << "Handling translation unit." << "\n");
-    plRegisterPredicates();
+
+    int Success = plRegisterPredicates();
+    DEBUG(if ( !Success) dbgs() << "Error registering predicates.\n");
+
     // FIXME: RulesFileName is ignored at the moment
-    int Success = plRunEngine("PrologBootForCrispClangPlugin.sh");
+
+    Success = plRunEngine("PrologBootForCrispClangPlugin.sh");
 
     if (Success) {
       // Get main file name

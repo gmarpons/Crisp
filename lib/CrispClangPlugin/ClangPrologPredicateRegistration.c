@@ -25,6 +25,7 @@ int plRegisterPredicates() {
   /* Automatically generated function registration. */
 #include "crisp/PrologPredRegistrationMacros.h"
 #include "ClangFunctions.inc"
+#include "ClangDeclarations.inc"
 
   /* Manual function registration. */
   PL_register_foreign("getAsString", 2,

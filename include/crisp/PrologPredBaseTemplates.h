@@ -137,24 +137,12 @@ namespace crisp {
       }
     };
 
-    /// Most general template. This template version is the one to be
-    /// used for non-pointer types (either values or references).
-    template <class ArgumentType,
-              bool (ArgumentType::* Predicate)() const>
-    struct Check {
-      static inline foreign_t
-      _(const ArgumentType& Argument) {
-        return (Argument .* Predicate)() ? TRUE : FALSE;
-      }
-    };
-
-    /// Specialization for pointer types.
-    template <class ArgumentType,
-              bool (ArgumentType::* Predicate)() const>
-    struct Check <ArgumentType*, Predicate> {
-      static inline foreign_t
-      _(const ArgumentType* Argument) {
-        return (Argument ->* Predicate)() ? TRUE : FALSE;
+    /// Specialization for \c unsigned.
+    template <>
+    struct Unify<unsigned> {
+      typedef unsigned result_type;
+      static inline foreign_t _(term_t ResultT, const result_type Result) {
+        return PL_unify_int64(ResultT, (int64_t) Result);
       }
     };
 
@@ -175,6 +163,28 @@ namespace crisp {
       return Unify<ResultType>::_(ResultT, Result);
     }
 
+    /// Most general template. In fact it assumes that \c ArgumentType
+    /// is a pointer type.
+    template <typename ArgumentType,
+              bool (ArgumentType::* Predicate)() const>
+    struct Check {
+      typedef const ArgumentType* argument_type;
+      static inline foreign_t
+      _(const argument_type Argument) {
+        return (Argument ->* Predicate)() ? TRUE : FALSE;
+      }
+    };
+
+    /// Specialization for pointer types.
+    // template <typename ArgumentType,
+    //           bool (ArgumentType::* Predicate)() const>
+    // struct Check<ArgumentType*, Predicate> {
+    //   static inline foreign_t
+    //   _(const ArgumentType* Argument) {
+    //     return (Argument ->* Predicate)() ? TRUE : FALSE;
+    //   }
+    // };
+
     /// General templarized function to define a unary Prolog
     /// predicate that given an individual (\c ArgumentT) and a
     /// property name (\c Getter), checks if the individual satisfies
@@ -182,7 +192,8 @@ namespace crisp {
     template <typename ArgumentType,
               bool (ArgumentType::* Getter)() const>
     foreign_t checkProperty(term_t ArgumentT, StringRef PropertyName) {
-      typename Retrieve<ArgumentType>::argument_type Argument;
+      typedef typename Retrieve<ArgumentType>::argument_type argument_type;
+      argument_type Argument;
       if ( !Retrieve<ArgumentType>::_(ArgumentT, &Argument, PropertyName))
         return FALSE;
       return Check<ArgumentType, Getter>::_(Argument);
@@ -316,7 +327,7 @@ namespace crisp {
     template <typename ValueType>
     struct Context < ilist_iterator<ValueType> > {
       typedef ilist_iterator<ValueType> iterator_type;
-      typedef typename ilist_iterator<ValueType>::pointer context_type;
+      typedef typename iterator_type::pointer context_type;
       static inline context_type newContext(iterator_type I) {
         return I;
       }

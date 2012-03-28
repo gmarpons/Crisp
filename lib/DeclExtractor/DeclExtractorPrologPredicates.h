@@ -34,6 +34,11 @@ extern "C" {
 #include "crisp/PrologPredDeclarationMacros.h"
 #include "ClangFunctionsForBootstrapping.inc"
 
+      /* Manual function declaration. */
+      foreign_t pl_CXXBaseSpecifier_getBaseDecl(term_t CXXBaseSpecifierT,
+                                                term_t CXXRecordDeclT);
+      foreign_t pl_CXXMethodDecl_isConstQualified(term_t ArgumentT);
+
 #ifdef __cplusplus
     } /* End namespace crisp::prolog */
 

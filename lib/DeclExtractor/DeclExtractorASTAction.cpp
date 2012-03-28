@@ -80,10 +80,11 @@ namespace crisp {
                                   // (de-)activate debug mode.
 
     DEBUG(dbgs() << "Handling translation unit." << "\n");
-    plRegisterPredicates();
 
-    int Success
-      = plRunEngine("PrologBootForDeclExtractor.sh");
+    int Success = plRegisterPredicates();
+    DEBUG(if ( !Success) dbgs() << "Error registering predicates.\n");
+
+    if (Success) plRunEngine("PrologBootForDeclExtractor.sh");
 
     if (Success) {
       // Get main file name
@@ -108,7 +109,7 @@ namespace crisp {
       Success = plRunTranslationUnitAnalysis(MainFileName);
 
       // When debugging, open a PROLOG interactive session
-      if (Success) DEBUG(Success = plInteractiveSession());
+      // if (Success) DEBUG(Success = plInteractiveSession());
     }
 
     DEBUG(if (Success) dbgs() << "Translation unit analyzed.\n";
@@ -140,7 +141,7 @@ namespace crisp {
   }
 
   bool DeclExtractorConsumer::VisitCXXRecordDecl(CXXRecordDecl *D) {
-    std::string Sort("CXXrecordDecl");
+    std::string Sort("CXXRecordDecl");
     (void) plAssertDeclIsA(D, Sort);
     return true;
   }
