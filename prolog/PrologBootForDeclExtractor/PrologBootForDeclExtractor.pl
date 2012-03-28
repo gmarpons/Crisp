@@ -69,6 +69,7 @@ interestingDecl(pl_check_property(SimpleName, ClassName, MethodName)) :-
         'NamedDecl::nameAsString'(Base, 'Decl'),
         'CXXRecordDecl::method'(Class, Method),
         'CXXMethodDecl::constQualified'(Method),
+        \+ 'CXXMethodDecl::static'(Method),
         'FunctionDecl::numParams'(Method, 0),
         'Decl::access'(Method, public),
         'FunctionDecl::resultType'(Method, ResType),

@@ -7,6 +7,7 @@ pl_get_one(access, Decl, enum AccessSpecifier, getAccess)
 pl_get_one(size_overridden_methods, CXXMethodDecl, unsigned, size_overridden_methods)
 
 pl_check_property(definition, CXXRecordDecl, hasDefinition)
+pl_check_property(static, CXXMethodDecl, isStatic)
 
 pl_get_many(base, CXXRecordDecl, CXXRecordDecl::base_class_const_iterator, CXXRecordDecl::bases_begin, CXXRecordDecl::bases_end, bases_it)
 pl_get_many(method, CXXRecordDecl, CXXRecordDecl::method_iterator, CXXRecordDecl::method_begin, CXXRecordDecl::method_end, methods_it)
