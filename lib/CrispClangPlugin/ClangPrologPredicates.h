@@ -49,7 +49,7 @@ extern "C" {
       /* Automatically generated function declaration. */
 
 #include "crisp/PrologPredDeclarationMacros.h"
-#include "ClangFunctions.inc"
+/* #include "ClangFunctions.inc" */
 #include "ClangDeclarations.inc"
 
       /* Manual function declaration. */
@@ -57,12 +57,12 @@ extern "C" {
       /** \param TypeT +Type
        *  \param NameT Atom
        */
-      foreign_t pl_getAsString(term_t TypeT, term_t NameT);
+      /* foreign_t pl_getAsString(term_t TypeT, term_t NameT); */
 
       /** \param TypeT +Type
        *  \param CanonicalT Type
        */
-      foreign_t pl_getCanonicalType(term_t TypeT, term_t CanonicalT);
+      /* foreign_t pl_getCanonicalType(term_t TypeT, term_t CanonicalT); */
 
       /** \param FunctionProtoTypeT +FunctionProtoType
        */
@@ -72,12 +72,12 @@ extern "C" {
       /** \param PointerT +PointerType
        *  \param PointeeT Type
        */
-      foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT);
+      /* foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT); */
 
       /** \param FunctionT +FunctionType
        *  \param ResultT Type
        */
-      foreign_t pl_getResultType(term_t FunctionT, term_t ResultT);
+      /* foreign_t pl_getResultType(term_t FunctionT, term_t ResultT); */
 
       /** \param DeclT +Decl
        *  \param FilenameT Atom
@@ -90,12 +90,12 @@ extern "C" {
       /** \param NamedDeclT +NamedDecl
        *  \param NameT Atom
        */
-      foreign_t pl_getNameAsString(term_t NamedDeclT, term_t NameT);
+      /* foreign_t pl_getNameAsString(term_t NamedDeclT, term_t NameT); */
 
       /** \param ValueT +ValueDecl
        *  \param TypeT Type
        */
-      foreign_t pl_getType(term_t ValueT, term_t TypeT);
+      /* foreign_t pl_getType(term_t ValueT, term_t TypeT); */
 
       /** \param FunctionT +VarDecl or +FunctionDecl (not a
        *  CXXConstructorDecl or CXXDestructorDecl

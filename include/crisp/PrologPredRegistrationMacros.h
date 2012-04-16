@@ -30,8 +30,12 @@
 #define pl_get_one(NAME, ARGTYPE, RESTYPE, CXXNAME)                     \
   if ( !PL_register_foreign(#ARGTYPE "::" #NAME, 2,                     \
                             (pl_function_t)                             \
-                            &pl_##ARGTYPE##_##CXXNAME, 0))              \
+                            &pl_##ARGTYPE##_##CXXNAME, 0)) {            \
+    printf("%s", "Registering of " #NAME " failed.\n");                 \
     return FALSE;                                                       \
+  } else {                                                              \
+    printf("%s", "Registering of " #NAME " succeeded.\n");              \
+  }
 
 #undef pl_check_property
 

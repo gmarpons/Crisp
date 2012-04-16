@@ -18,8 +18,8 @@
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "clang/AST/Decl.h"
-#include "clang/AST/Type.h"
 #include "clang/AST/Stmt.h"
+#include "clang/AST/Type.h"
 
 int main() {
   return 0;

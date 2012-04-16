@@ -79,7 +79,9 @@ namespace crisp {
         , (char *) "welcome_msg_and_prolog"
       };
 
+      dbgs() << "Just before init prolog.\n";
       int Success = PL_initialise(sizeof(argv) / sizeof(argv[0]), argv);
+      dbgs() << "Just after init prolog.\n";
       if (Success) PL_install_readline();
 
       DEBUG(if ( !Success)

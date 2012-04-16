@@ -76,7 +76,10 @@ namespace crisp {
       }
     };
 
-    /// Specialization for \c QualType, that is a smart pointer.
+    // Specialization for \c QualType, that is a smart pointer. We
+    // still need \c QualType::getTypePtr() when \c Type methods are
+    // to be applied, as the smart pointer can sometimes point to a
+    // structure different to a \c Type.
     template <>
     struct Unify<QualType> {
       typedef QualType result_type;

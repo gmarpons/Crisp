@@ -40,10 +40,13 @@ namespace crisp {
 
   namespace prolog {
 
+    typedef Stmt::const_child_range const_child_range;
+    typedef TagDecl::TagKind TagKind;
+
     // Automatically generated function definitions.
 
 #include "crisp/PrologPredDefinitionMacros.h"
-#include "ClangFunctions.inc"
+// #include "ClangFunctions.inc"
 #include "ClangDeclarations.inc"
 
     // Manual function definition.
@@ -74,15 +77,15 @@ namespace crisp {
     //     (ArgumentT, ResultT, "translationUnitDecl/2");
     // }
 
-    foreign_t pl_getAsString(term_t ArgumentT, term_t ResultT) {
-      return getOne<QualType, std::string, &QualType::getAsString>
-        (ArgumentT, ResultT, "asString/2");
-    }
+    // foreign_t pl_getAsString(term_t ArgumentT, term_t ResultT) {
+    //   return getOne<QualType, std::string, &QualType::getAsString>
+    //     (ArgumentT, ResultT, "asString/2");
+    // }
 
-    foreign_t pl_getCanonicalType(term_t ArgumentT, term_t ResultT) {
-      return getOne<QualType, QualType, &QualType::getCanonicalType>
-        (ArgumentT, ResultT, "canonicalType/2");
-    }
+    // foreign_t pl_getCanonicalType(term_t ArgumentT, term_t ResultT) {
+    //   return getOne<QualType, QualType, &QualType::getCanonicalType>
+    //     (ArgumentT, ResultT, "canonicalType/2");
+    // }
 
     foreign_t pl_FunctionProtoType_isConstQualified(term_t ArgumentT) {
       Retrieve<FunctionProtoType>::argument_type Argument;
@@ -93,25 +96,25 @@ namespace crisp {
       return Check<Qualifiers, &Qualifiers::hasConst>::_(Q);
     }
 
-    foreign_t pl_getPointeeType(term_t ArgumentT, term_t ResultT) {
-      return getOne<PointerType, QualType, &PointerType::getPointeeType>
-        (ArgumentT, ResultT, "pointeeType/2");
-    }
+    // foreign_t pl_getPointeeType(term_t ArgumentT, term_t ResultT) {
+    //   return getOne<PointerType, QualType, &PointerType::getPointeeType>
+    //     (ArgumentT, ResultT, "pointeeType/2");
+    // }
 
-    foreign_t pl_getResultType(term_t ArgumentT, term_t ResultT) {
-      return getOne<FunctionType, QualType, &FunctionType::getResultType>
-        (ArgumentT, ResultT, "resultType/2");
-    }
+    // foreign_t pl_getResultType(term_t ArgumentT, term_t ResultT) {
+    //   return getOne<FunctionType, QualType, &FunctionType::getResultType>
+    //     (ArgumentT, ResultT, "resultType/2");
+    // }
 
-    foreign_t pl_getNameAsString(term_t ArgumentT, term_t ResultT) {
-      return getOne<NamedDecl, std::string, &NamedDecl::getNameAsString>
-        (ArgumentT, ResultT, "nameAsString/2");
-    }
+    // foreign_t pl_getNameAsString(term_t ArgumentT, term_t ResultT) {
+    //   return getOne<NamedDecl, std::string, &NamedDecl::getNameAsString>
+    //     (ArgumentT, ResultT, "nameAsString/2");
+    // }
 
-    foreign_t pl_getType(term_t ArgumentT, term_t ResultT) {
-      return getOne<ValueDecl, QualType, &ValueDecl::getType>
-        (ArgumentT, ResultT, "getType/2");
-    }
+    // foreign_t pl_getType(term_t ArgumentT, term_t ResultT) {
+    //   return getOne<ValueDecl, QualType, &ValueDecl::getType>
+    //     (ArgumentT, ResultT, "getType/2");
+    // }
 
     foreign_t pl_mangleName(term_t ArgumentT, term_t ResultT) {
       Retrieve<FunctionDecl>::argument_type Argument;
