@@ -18,7 +18,15 @@
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclFriend.h"
+// #include "clang/AST/DeclObjC.h"
+#include "clang/AST/DeclTemplate.h"
+#include "clang/AST/Expr.h"
+// #include "clang/AST/LocInfoType.h" // Probably not needed
 #include "clang/AST/Stmt.h"
+#include "clang/AST/StmtCXX.h"
+// #include "clang/AST/StmtObjC.h"
 #include "clang/AST/Type.h"
 
 int main() {

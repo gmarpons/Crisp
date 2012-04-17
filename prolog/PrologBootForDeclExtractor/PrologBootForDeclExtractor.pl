@@ -55,7 +55,6 @@ simpleName(Name, Simple) :-
 simpleName(Name, Name).
 
 topClassName('Decl').
-% topClassName('TypeDecl').
 topClassName('QualType').
 topClassName('Type').
 topClassName('Stmt').
