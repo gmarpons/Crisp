@@ -49,6 +49,15 @@ namespace crisp {
 
     typedef Stmt::const_child_range const_child_range;
     typedef TagDecl::TagKind TagKind;
+    // typedef Decl::attr_iterator attr_iterator;
+    // typedef Stmt::const_child_iterator const_child_iterator;
+    // typedef FunctionProtoType::arg_type_iterator arg_type_iterator;
+    // typedef FunctionProtoType::exception_iterator exception_iterator;
+    // typedef ObjCObjectType::qual_iterator qual_iterator;
+    // typedef FunctionDecl::param_const_iterator param_const_iterator;
+    // typedef IndirectFieldDecl::chain_iterator chain_iterator;
+    // typedef EnumDecl::enumerator_iterator enumerator_iterator;
+    // typedef RecordType::field_iterator field_iterator;
 
     // Automatically generated function definitions.
 

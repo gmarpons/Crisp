@@ -111,6 +111,16 @@ isInterestingResultType(Type, _) :-
         'TagType::decl'(PointeeTypePtr, Record),
         topClassHeir(Record).
 
+%% Case already qualified
+qualifiedTypeName(_, TypeName, QualifiedTypeName) :-
+        sub_atom(TypeName, _, _, _, '::'),
+        !,
+        QualifiedTypeName = TypeName.
+%% Case non-qualified
+qualifiedTypeName(Class, TypeName, QualifiedTypeName) :-
+        atom_concat(Class, '::', Aux),
+        atom_concat(Aux, TypeName, QualifiedTypeName).
+
 interestingDecl(pl_get_one(SimpleName, ClassName, ResTypeName, MethodName)) :-
         topClassHeir(Class),
         candidateMethod(Class, Method),
@@ -136,3 +146,38 @@ interestingDecl(pl_check_property(SimpleName, ClassName, MethodName)) :-
         'NamedDecl::nameAsString'(Class, ClassName),
         'NamedDecl::nameAsString'(Method, MethodName),
         simpleName(MethodName, SimpleName).
+interestingDecl(pl_get_many(Name, ArgType, ItType, ItBegin, ItEnd, CXXName)) :-
+        topClassHeir(Class),
+        candidateMethod(Class, BeginMethod),
+        'NamedDecl::nameAsString'(BeginMethod, BeginMethodName),
+        sub_atom(BeginMethodName, Before, 5, After, begin),
+        (  Before == 0
+        -> ( sub_atom(BeginMethodName, 5, After, 0, NameAux),
+             atom_concat(end, NameAux, EndMethodName),
+             atom_concat('_', Name, NameAux)
+           )
+        ;  ( sub_atom(BeginMethodName, 0, Before, 5, NameAux),
+             atom_concat(NameAux, end, EndMethodName),
+             atom_concat(Name, '_', NameAux)
+           )
+        ),
+        candidateMethod(Class, EndMethod),
+        'NamedDecl::nameAsString'(EndMethod, EndMethodName),
+        'NamedDecl::nameAsString'(Class, ArgType),
+        'FunctionDecl::resultType'(BeginMethod, ResType),
+
+                                % FIXME: ConstExprIterator needs an
+                                % iterator_traits specialization.
+        'QualType::canonicalType'(ResType, CanonicalResType),
+        'QualType::asString'(CanonicalResType, CanonicalResTypeName),
+        CanonicalResTypeName \= 'class clang::ConstExprIterator',
+
+        'QualType::asString'(ResType, ResTypeNameAux),
+                                % remove "class " and "struct " from type name
+        removeSubAtom(ResTypeNameAux, 'class ', ResTypeNameAux2),
+        removeSubAtom(ResTypeNameAux2, 'struct ', ResTypeName),
+        qualifiedTypeName(ArgType, ResTypeName, ItType),
+        atom_concat(ArgType, '::', Qualification),
+        atom_concat(Qualification, BeginMethodName, ItBegin),
+        atom_concat(Qualification, EndMethodName, ItEnd),
+        CXXName = Name.

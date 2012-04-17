@@ -57,5 +57,9 @@
   if ( !PL_register_foreign(#ARGTYPE "::" #NAME, 2,                     \
                             (pl_function_t)                             \
                             &pl_##ARGTYPE##_##CXXNAME,                  \
-                            PL_FA_NONDETERMINISTIC))                    \
-    return FALSE;
+                            PL_FA_NONDETERMINISTIC)) {                  \
+    printf("%s", "Registering of " #NAME " failed.\n");                 \
+    return FALSE;                                                       \
+  } else {                                                              \
+    printf("%s", "Registering of " #NAME " succeeded.\n");              \
+  }
