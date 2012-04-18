@@ -23,7 +23,7 @@ writeAllInterestingDecls(FileName) :-
         close(Stream).
 
 directBase(Class, Base) :-
-        'CXXRecordDecl::definition'(Class),
+        'CXXRecordDecl::has_definition'(Class),
         'CXXRecordDecl::base'(Class, BaseSpecifier),
         'CXXBaseSpecifier::baseDecl'(BaseSpecifier, Base).
 
@@ -42,17 +42,18 @@ toLowerFirst(Atom, ToLowerFirst) :-
            atom_codes(ToLowerFirst, [L|Tail1])
         ).
 
-simpleName(Name, Simple) :-
+remove_get(Name, Result) :-
         atom_concat(get, Suffix, Name),
         !,
-        toLowerFirst(Suffix, Simple).
-simpleName(Name, Simple) :-
-        ( atom_concat(is, Suffix, Name)
-        ; atom_concat(has, Suffix, Name)
+        toLowerFirst(Suffix, Result).
+remove_get(Name, Name).
+
+%% Fails if Name doesn't begin with neither 'is' nor 'has'.
+remove_is_or_has(Name, (IsOrHas, NewName)) :-
+        ( atom_concat(is, Suffix, Name) -> IsOrHas = is
+        ; atom_concat(has, Suffix, Name) -> IsOrHas = has
         ),
-        !,
-        toLowerFirst(Suffix, Simple).
-simpleName(Name, Name).
+        toLowerFirst(Suffix, NewName).
 
 topClassName('Decl').
 topClassName('QualType').
@@ -75,7 +76,7 @@ topClassHeir(Class) :-
 candidateMethod(Class, Method) :-
         'CXXRecordDecl::method'(Class, Method),
         'CXXMethodDecl::constQualified'(Method),
-        \+ 'CXXMethodDecl::static'(Method),
+        \+ 'CXXMethodDecl::is_static'(Method),
         'Decl::access'(Method, public),
         'FunctionDecl::numParams'(Method, 0),
         'CXXMethodDecl::size_overridden_methods'(Method, 0).
@@ -97,31 +98,31 @@ removeSubAtom(Atom, SubAtom, Result) :-
 isInterestingResultType(_, 'clang::QualType').
 isInterestingResultType(_, 'const clang::QualType').
 isInterestingResultType(Type, TypeName) :-
-        'Type::builtinType'(Type),
+        'Type::is_builtinType'(Type),
                                 % filter out modifier functions
         TypeName \= 'void',
                                 % filter out property checkers
         TypeName \= '_Bool'.
 isInterestingResultType(Type, _) :-
-        'Type::pointerType'(Type),
+        'Type::is_pointerType'(Type),
         'PointerType::pointeeType'(Type, PointeeType),
         'QualType::canonicalType'(PointeeType, CanonicalPointeeType),
         'QualType::typePtr'(CanonicalPointeeType, PointeeTypePtr),
-        'Type::recordType'(PointeeTypePtr),
+        'Type::is_recordType'(PointeeTypePtr),
         'TagType::decl'(PointeeTypePtr, Record),
         topClassHeir(Record).
 
 %% Case already qualified
-qualifiedTypeName(_, TypeName, QualifiedTypeName) :-
-        sub_atom(TypeName, _, _, _, '::'),
+qualifiedMemberName(_Class, Member, QualifiedMember) :-
+        sub_atom(Member, _, _, _, '::'),
         !,
-        QualifiedTypeName = TypeName.
+        QualifiedMember = Member.
 %% Case non-qualified
-qualifiedTypeName(Class, TypeName, QualifiedTypeName) :-
+qualifiedMemberName(Class, Member, QualifiedMember) :-
         atom_concat(Class, '::', Aux),
-        atom_concat(Aux, TypeName, QualifiedTypeName).
+        atom_concat(Aux, Member, QualifiedMember).
 
-interestingDecl(pl_get_one(SimpleName, ClassName, ResTypeName, MethodName)) :-
+interestingDecl(pl_get_one(Name, ArgType, ResTypeName, CXXName)) :-
         topClassHeir(Class),
         candidateMethod(Class, Method),
         'NamedDecl::nameAsString'(Method, MethodName),
@@ -136,17 +137,19 @@ interestingDecl(pl_get_one(SimpleName, ClassName, ResTypeName, MethodName)) :-
         'QualType::canonicalType'(ResType, CanonicalResType),
         'QualType::typePtr'(CanonicalResType, ResTypePtr),
         isInterestingResultType(ResTypePtr, ResTypeName),
-        'NamedDecl::nameAsString'(Class, ClassName),
-        simpleName(MethodName, SimpleName).
-interestingDecl(pl_check_property(SimpleName, ClassName, MethodName)) :-
+        'NamedDecl::nameAsString'(Class, ArgType),
+        remove_get(MethodName, Name),
+        qualifiedMemberName(ArgType, MethodName, CXXName).
+interestingDecl(pl_check_property(Verb, Name, ArgType, CXXName)) :-
         topClassHeir(Class),
         candidateMethod(Class, Method),
         'FunctionDecl::resultType'(Method, ResType),
         'QualType::asString'(ResType, '_Bool'),
-        'NamedDecl::nameAsString'(Class, ClassName),
+        'NamedDecl::nameAsString'(Class, ArgType),
         'NamedDecl::nameAsString'(Method, MethodName),
-        simpleName(MethodName, SimpleName).
-interestingDecl(pl_get_many(Name, ArgType, ItType, ItBegin, ItEnd, CXXName)) :-
+        remove_is_or_has(MethodName, (Verb, Name)),
+        qualifiedMemberName(ArgType, MethodName, CXXName).
+interestingDecl(pl_get_many(Name, ArgType, ItType, ItBegin, ItEnd)) :-
         topClassHeir(Class),
         candidateMethod(Class, BeginMethod),
         'NamedDecl::nameAsString'(BeginMethod, BeginMethodName),
@@ -176,8 +179,7 @@ interestingDecl(pl_get_many(Name, ArgType, ItType, ItBegin, ItEnd, CXXName)) :-
                                 % remove "class " and "struct " from type name
         removeSubAtom(ResTypeNameAux, 'class ', ResTypeNameAux2),
         removeSubAtom(ResTypeNameAux2, 'struct ', ResTypeName),
-        qualifiedTypeName(ArgType, ResTypeName, ItType),
+        qualifiedMemberName(ArgType, ResTypeName, ItType),
         atom_concat(ArgType, '::', Qualification),
         atom_concat(Qualification, BeginMethodName, ItBegin),
-        atom_concat(Qualification, EndMethodName, ItEnd),
-        CXXName = Name.
+        atom_concat(Qualification, EndMethodName, ItEnd).

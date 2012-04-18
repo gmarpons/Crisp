@@ -30,7 +30,7 @@
 #define pl_get_one(NAME, ARGTYPE, RESTYPE, CXXNAME)                     \
   if ( !PL_register_foreign(#ARGTYPE "::" #NAME, 2,                     \
                             (pl_function_t)                             \
-                            &pl_##ARGTYPE##_##CXXNAME, 0)) {            \
+                            &pl_##ARGTYPE##_##NAME, 0)) {               \
     printf("%s", "Registering of " #NAME " failed.\n");                 \
     return FALSE;                                                       \
   } else {                                                              \
@@ -39,10 +39,10 @@
 
 #undef pl_check_property
 
-#define pl_check_property(NAME, ARGTYPE, CXXNAME)                       \
-  if ( !PL_register_foreign(#ARGTYPE "::" #NAME, 1,                     \
+#define pl_check_property(VERB, NAME, ARGTYPE, CXXNAME)                 \
+  if ( !PL_register_foreign(#ARGTYPE "::" #VERB "_" #NAME, 1,           \
                             (pl_function_t)                             \
-                            &pl_##ARGTYPE##_##CXXNAME, 0)) {            \
+                            &pl_##ARGTYPE##_##VERB##_##NAME, 0)) {      \
     printf("%s", "Registering of " #NAME " failed.\n");                 \
     return FALSE;                                                       \
   } else {                                                              \
@@ -51,12 +51,10 @@
 
 #undef pl_get_many
 
-#define pl_get_many(NAME, ARGTYPE,                                      \
-                    ITERTYPE, ITERBEGIN, ITEREND,                       \
-                    CXXNAME)                                            \
+#define pl_get_many(NAME, ARGTYPE, ITERTYPE, ITERBEGIN, ITEREND)        \
   if ( !PL_register_foreign(#ARGTYPE "::" #NAME, 2,                     \
                             (pl_function_t)                             \
-                            &pl_##ARGTYPE##_##CXXNAME,                  \
+                            &pl_##ARGTYPE##_##NAME,                     \
                             PL_FA_NONDETERMINISTIC)) {                  \
     printf("%s", "Registering of " #NAME " failed.\n");                 \
     return FALSE;                                                       \

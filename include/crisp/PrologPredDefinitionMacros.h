@@ -29,25 +29,23 @@
                    ARGTYPE, RESTYPE,                                    \
                    CXXNAME)                                             \
   foreign_t                                                             \
-  pl_##ARGTYPE##_##CXXNAME(term_t ArgumentT, term_t ResultT) {          \
-    return getOne<ARGTYPE, RESTYPE, &ARGTYPE::CXXNAME>                  \
+  pl_##ARGTYPE##_##NAME(term_t ArgumentT, term_t ResultT) {             \
+    return getOne<ARGTYPE, RESTYPE, &CXXNAME>                           \
       (ArgumentT, ResultT, #ARGTYPE "::" #NAME "/2");                   \
   }
 
 #undef pl_check_property
 
-#define pl_check_property(NAME, ARGTYPE, CXXNAME)               \
-  foreign_t pl_##ARGTYPE##_##CXXNAME(term_t ArgumentT) {        \
-    return checkProperty<ARGTYPE, &ARGTYPE::CXXNAME>            \
-      (ArgumentT, #ARGTYPE "::" #NAME "/1");                    \
+#define pl_check_property(VERB, NAME, ARGTYPE, CXXNAME)                 \
+  foreign_t pl_##ARGTYPE##_##VERB##_##NAME(term_t ArgumentT) {          \
+    return checkProperty<ARGTYPE, &CXXNAME>                             \
+      (ArgumentT, #ARGTYPE "::" #VERB "_" #NAME "/1");                  \
   }
 
 #undef pl_get_many
 
-#define pl_get_many(NAME, ARGTYPE,                                      \
-                    ITERTYPE, ITERBEGIN, ITEREND,                       \
-                    CXXNAME)                                            \
-  foreign_t pl_##ARGTYPE##_##CXXNAME(term_t ArgumentT, term_t ResultT,  \
+#define pl_get_many(NAME, ARGTYPE, ITERTYPE, ITERBEGIN, ITEREND)        \
+  foreign_t pl_##ARGTYPE##_##NAME(term_t ArgumentT, term_t ResultT,     \
                          control_t Handle) {                            \
     return getMany<ARGTYPE, ITERTYPE, &ITERBEGIN, &ITEREND>             \
       (ArgumentT, ResultT, #ARGTYPE "::" #NAME "/2", Handle);           \
