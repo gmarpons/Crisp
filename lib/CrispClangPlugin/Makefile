@@ -38,7 +38,7 @@ CXXFLAGS += ${CLANG_SRC_CXXFLAGS}
 CPPFLAGS += ${BOOST_CPPFLAGS}
 
 #
-# Build ClangFunctions.inc.
+# Build ClangDeclarations.inc.
 # Vars that can be easily changed: CLANGXX
 #
 CLANGXX = $(LLVM_OBJ_ROOT)/Debug+Asserts/bin/clang++

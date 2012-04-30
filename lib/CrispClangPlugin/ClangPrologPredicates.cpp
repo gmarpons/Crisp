@@ -47,61 +47,12 @@ namespace crisp {
 
   namespace prolog {
 
-    typedef Stmt::const_child_range const_child_range;
-    typedef TagDecl::TagKind TagKind;
-    // typedef Decl::attr_iterator attr_iterator;
-    // typedef Stmt::const_child_iterator const_child_iterator;
-    // typedef FunctionProtoType::arg_type_iterator arg_type_iterator;
-    // typedef FunctionProtoType::exception_iterator exception_iterator;
-    // typedef ObjCObjectType::qual_iterator qual_iterator;
-    // typedef FunctionDecl::param_const_iterator param_const_iterator;
-    // typedef IndirectFieldDecl::chain_iterator chain_iterator;
-    // typedef EnumDecl::enumerator_iterator enumerator_iterator;
-    // typedef RecordType::field_iterator field_iterator;
-
     // Automatically generated function definitions.
 
 #include "crisp/PrologPredDefinitionMacros.h"
-// #include "ClangFunctions.inc"
 #include "ClangDeclarations.inc"
 
     // Manual function definition.
-
-    // foreign_t pl_getDeclContext(term_t ArgumentT, term_t ResultT) {
-    //   return getOne<Decl, const DeclContext*, &Decl::getDeclContext>
-    //     (ArgumentT, ResultT, "declContext/2");
-    // }
-
-    // foreign_t pl_getNonClosureContext(term_t ArgumentT, term_t ResultT) {
-    //   return getOne<Decl, const DeclContext*, &Decl::getNonClosureContext>
-    //     (ArgumentT, ResultT, "nonClosureContext/2");
-    // }
-
-    // foreign_t pl_getASTContext(term_t ArgumentT, term_t ResultT) {
-    //   return getOne<Decl, ASTContext&, &Decl::getASTContext>
-    //     (ArgumentT, ResultT, "ASTContext/2");
-    // }
-
-    // foreign_t pl_getDeclKindName(term_t ArgumentT, term_t ResultT) {
-    //   return getOne<Decl, const char *, &Decl::getDeclKindName>
-    //     (ArgumentT, ResultT, "declKindName/2");
-    // }
-
-    // foreign_t pl_getTranslationUnitDecl(term_t ArgumentT, term_t ResultT) {
-    //   return getOne<ASTContext, TranslationUnitDecl*,
-    //                 &ASTContext::getTranslationUnitDecl>
-    //     (ArgumentT, ResultT, "translationUnitDecl/2");
-    // }
-
-    // foreign_t pl_getAsString(term_t ArgumentT, term_t ResultT) {
-    //   return getOne<QualType, std::string, &QualType::getAsString>
-    //     (ArgumentT, ResultT, "asString/2");
-    // }
-
-    // foreign_t pl_getCanonicalType(term_t ArgumentT, term_t ResultT) {
-    //   return getOne<QualType, QualType, &QualType::getCanonicalType>
-    //     (ArgumentT, ResultT, "canonicalType/2");
-    // }
 
     foreign_t pl_FunctionProtoType_isConstQualified(term_t ArgumentT) {
       Retrieve<FunctionProtoType>::argument_type Argument;
@@ -111,26 +62,6 @@ namespace crisp {
       Qualifiers Q = Qualifiers::fromCVRMask(Argument->getTypeQuals());
       return Check<Qualifiers, &Qualifiers::hasConst>::_(Q);
     }
-
-    // foreign_t pl_getPointeeType(term_t ArgumentT, term_t ResultT) {
-    //   return getOne<PointerType, QualType, &PointerType::getPointeeType>
-    //     (ArgumentT, ResultT, "pointeeType/2");
-    // }
-
-    // foreign_t pl_getResultType(term_t ArgumentT, term_t ResultT) {
-    //   return getOne<FunctionType, QualType, &FunctionType::getResultType>
-    //     (ArgumentT, ResultT, "resultType/2");
-    // }
-
-    // foreign_t pl_getNameAsString(term_t ArgumentT, term_t ResultT) {
-    //   return getOne<NamedDecl, std::string, &NamedDecl::getNameAsString>
-    //     (ArgumentT, ResultT, "nameAsString/2");
-    // }
-
-    // foreign_t pl_getType(term_t ArgumentT, term_t ResultT) {
-    //   return getOne<ValueDecl, QualType, &ValueDecl::getType>
-    //     (ArgumentT, ResultT, "getType/2");
-    // }
 
     foreign_t pl_mangleName(term_t ArgumentT, term_t ResultT) {
       Retrieve<FunctionDecl>::argument_type Argument;

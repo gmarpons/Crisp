@@ -22,29 +22,16 @@
 #include "ClangPrologPredicateRegistration.h"
 
 int plRegisterPredicates() {
+
   /* Automatically generated function registration. */
 #include "crisp/PrologPredRegistrationMacros.h"
-/* #include "ClangFunctions.inc" */
 #include "ClangDeclarations.inc"
 
   /* Manual function registration. */
-  /* PL_register_foreign("getAsString", 2, */
-  /*                     (pl_function_t) &pl_getAsString, 0); */
-  /* PL_register_foreign("getCanonicalType", 2 */
-  /*                     , (pl_function_t) &pl_getCanonicalType, 0); */
   PL_register_foreign("isConstFunctionProtoType", 1,
-                      (pl_function_t) &pl_FunctionProtoType_isConstQualified, 0);
-  /* PL_register_foreign("getPointeeType", 2 */
-  /*                     , (pl_function_t) &pl_getPointeeType, 0); */
-  /* PL_register_foreign("getResultType", 2 */
-  /*                     , (pl_function_t) &pl_getResultType, 0); */
-  /* PL_register_foreign("getPresumedLoc", 4, */
-  /*                     (pl_function_t) &pl_getPresumedLoc, 0); */
-  /* PL_register_foreign("getNameAsString", 2, */
-  /*                     (pl_function_t) &pl_getNameAsString, 0); */
-  /* PL_register_foreign("getType", 2 */
-  /*                     , (pl_function_t) &pl_getType, 0); */
-  PL_register_foreign("mangleName", 2
-                      , (pl_function_t) &pl_mangleName, 0);
+                      (pl_function_t) &pl_FunctionProtoType_isConstQualified,
+                      0);
+  PL_register_foreign("mangleName", 2,
+                      (pl_function_t) &pl_mangleName, 0);
   return TRUE;
 }

@@ -49,35 +49,20 @@ extern "C" {
       /* Automatically generated function declaration. */
 
 #include "crisp/PrologPredDeclarationMacros.h"
-/* #include "ClangFunctions.inc" */
 #include "ClangDeclarations.inc"
 
       /* Manual function declaration. */
-
-      /** \param TypeT +Type
-       *  \param NameT Atom
-       */
-      /* foreign_t pl_getAsString(term_t TypeT, term_t NameT); */
-
-      /** \param TypeT +Type
-       *  \param CanonicalT Type
-       */
-      /* foreign_t pl_getCanonicalType(term_t TypeT, term_t CanonicalT); */
 
       /** \param FunctionProtoTypeT +FunctionProtoType
        */
       foreign_t
       pl_FunctionProtoType_isConstQualified(term_t FunctionProtoTypeT);
 
-      /** \param PointerT +PointerType
-       *  \param PointeeT Type
+      /** \param FunctionT +VarDecl or +FunctionDecl (not a
+       *  CXXConstructorDecl or CXXDestructorDecl
+       *  \param MangledNameT Atom
        */
-      /* foreign_t pl_getPointeeType(term_t PointerT, term_t PointeeT); */
-
-      /** \param FunctionT +FunctionType
-       *  \param ResultT Type
-       */
-      /* foreign_t pl_getResultType(term_t FunctionT, term_t ResultT); */
+      foreign_t pl_mangleName(term_t FunctionT, term_t MangledNameT);
 
       /** \param DeclT +Decl
        *  \param FilenameT Atom
@@ -86,22 +71,6 @@ extern "C" {
        */
       foreign_t pl_getPresumedLoc(term_t DeclT, term_t FilenameT,
                                   term_t LineT, term_t ColT);
-
-      /** \param NamedDeclT +NamedDecl
-       *  \param NameT Atom
-       */
-      /* foreign_t pl_getNameAsString(term_t NamedDeclT, term_t NameT); */
-
-      /** \param ValueT +ValueDecl
-       *  \param TypeT Type
-       */
-      /* foreign_t pl_getType(term_t ValueT, term_t TypeT); */
-
-      /** \param FunctionT +VarDecl or +FunctionDecl (not a
-       *  CXXConstructorDecl or CXXDestructorDecl
-       *  \param MangledNameT Atom
-       */
-      foreign_t pl_mangleName(term_t FunctionT, term_t MangledNameT);
 
 #ifdef __cplusplus
     } /* End namespace crisp::prolog */
