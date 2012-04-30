@@ -9,6 +9,8 @@ pl_get_one(pointeeType, PointerType, QualType, PointerType::getPointeeType)
 pl_get_one(decl, TagType, TagDecl*, TagType::getDecl)
 pl_get_one(access, Decl, enum AccessSpecifier, Decl::getAccess)
 pl_get_one(size_overridden_methods, CXXMethodDecl, unsigned, CXXMethodDecl::size_overridden_methods)
+pl_get_one(type, CXXBaseSpecifier, QualType, CXXBaseSpecifier::getType)
+pl_get_one(definition, RecordDecl, RecordDecl*, RecordDecl::getDefinition)
 
 pl_check_property(has, definition, CXXRecordDecl, CXXRecordDecl::hasDefinition)
 pl_check_property(is, static, CXXMethodDecl, CXXMethodDecl::isStatic)

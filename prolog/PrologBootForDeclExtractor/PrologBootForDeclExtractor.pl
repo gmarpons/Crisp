@@ -25,7 +25,13 @@ writeAllInterestingDecls(FileName) :-
 directBase(Class, Base) :-
         'CXXRecordDecl::has_definition'(Class),
         'CXXRecordDecl::base'(Class, BaseSpecifier),
-        'CXXBaseSpecifier::baseDecl'(BaseSpecifier, Base).
+        BaseSpecifier \= 0,
+        'CXXBaseSpecifier::type'(BaseSpecifier, Type),
+        'QualType::canonicalType'(Type, CanonicalType),
+        'QualType::typePtr'(CanonicalType, TypePtr),
+        'Type::is_recordType'(TypePtr),
+        'TagType::decl'(TypePtr, Decl),
+        'RecordDecl::definition'(Decl, Base).
 
 base(Class, Base) :-
         directBase(Class, Base).
