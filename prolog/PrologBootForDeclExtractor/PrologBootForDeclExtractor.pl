@@ -1,10 +1,23 @@
+%%
+%% Initial goals.
+%%
+
 init_msg :-
         write('Initializing Prolog engine.'), nl.
+
+%% To be executed as initial goal when clang predicates are to be
+%% extracted. top_class_name/1 identifies the name of a class on top
+%% of hierarchy of classes to analyse.
+init_clang_base_types :-
+        init_msg,
+        assertz(top_class_name('Decl')),
+        assertz(top_class_name('QualType')),
+        assertz(top_class_name('Type')),
+        assertz(top_class_name('Stmt')).
 
 welcome_msg_and_prolog :-
         write('Welcome to the Crisp interactive interface!'), nl,
         write('Enter Ctrl-D to exit.'), nl,
-        % set_prolog_flag(verbose, normal),
         prolog.
 
 runTranslationUnitAnalysis(TUMainFileName) :-
@@ -22,7 +35,24 @@ writeAllInterestingDecls(FileName) :-
                (write_term(Stream, Decl, [quoted(false)]), nl(Stream))),
         close(Stream).
 
-directBase(Class, Base) :-
+
+%%
+%%
+%%
+
+top_class(Class) :-
+        isA(Class, 'CXXRecordDecl'),
+        'NamedDecl::nameAsString'(Class, Name),
+        top_class_name(Name).
+
+top_class_heir(Class) :-
+        top_class(Class).
+top_class_heir(Class) :-
+        top_class(Top),
+        isA(Class, 'CXXRecordDecl'),
+        base(Class, Top).
+
+direct_base(Class, Base) :-
         'CXXRecordDecl::has_definition'(Class),
         'CXXRecordDecl::base'(Class, BaseSpecifier),
         BaseSpecifier \= 0,
@@ -34,9 +64,14 @@ directBase(Class, Base) :-
         'RecordDecl::definition'(Decl, Base).
 
 base(Class, Base) :-
-        directBase(Class, Base).
+        direct_base(Class, Base).
 base(Class, Base) :-
-        directBase(Class, Aux), base(Aux, Base).
+        direct_base(Class, Aux), base(Aux, Base).
+
+
+%%
+%%
+%%
 
 toLowerFirst(Atom, ToLowerFirst) :-
         atom_codes(Atom, [U1|Tail1]),
@@ -60,24 +95,6 @@ remove_is_or_has(Name, (IsOrHas, NewName)) :-
         ; atom_concat(has, Suffix, Name) -> IsOrHas = has
         ),
         toLowerFirst(Suffix, NewName).
-
-topClassName('Decl').
-topClassName('QualType').
-topClassName('Type').
-topClassName('Stmt').
-% topClassName('ASTContext').
-
-topClass(Class) :-
-        isA(Class, 'CXXRecordDecl'),
-        'NamedDecl::nameAsString'(Class, Name),
-        topClassName(Name).
-
-topClassHeir(Class) :-
-        topClass(Class).
-topClassHeir(Class) :-
-        topClass(Top),
-        isA(Class, 'CXXRecordDecl'),
-        base(Class, Top).
 
 candidateMethod(Class, Method) :-
         'CXXRecordDecl::method'(Class, Method),
@@ -116,7 +133,7 @@ isInterestingResultType(Type, _) :-
         'QualType::typePtr'(CanonicalPointeeType, PointeeTypePtr),
         'Type::is_recordType'(PointeeTypePtr),
         'TagType::decl'(PointeeTypePtr, Record),
-        topClassHeir(Record).
+        top_class_heir(Record).
 
 %% Case already qualified
 qualifiedMemberName(_Class, Member, QualifiedMember) :-
@@ -129,7 +146,7 @@ qualifiedMemberName(Class, Member, QualifiedMember) :-
         atom_concat(Aux, Member, QualifiedMember).
 
 interestingDecl(pl_get_one(Name, ArgType, ResTypeName, CXXName)) :-
-        topClassHeir(Class),
+        top_class_heir(Class),
         candidateMethod(Class, Method),
         'NamedDecl::nameAsString'(Method, MethodName),
         \+ isOperatorName(MethodName),
@@ -147,7 +164,7 @@ interestingDecl(pl_get_one(Name, ArgType, ResTypeName, CXXName)) :-
         remove_get(MethodName, Name),
         qualifiedMemberName(ArgType, MethodName, CXXName).
 interestingDecl(pl_check_property(Verb, Name, ArgType, CXXName)) :-
-        topClassHeir(Class),
+        top_class_heir(Class),
         candidateMethod(Class, Method),
         'FunctionDecl::resultType'(Method, ResType),
         'QualType::asString'(ResType, '_Bool'),
@@ -156,7 +173,7 @@ interestingDecl(pl_check_property(Verb, Name, ArgType, CXXName)) :-
         remove_is_or_has(MethodName, (Verb, Name)),
         qualifiedMemberName(ArgType, MethodName, CXXName).
 interestingDecl(pl_get_many(Name, ArgType, ItType, ItBegin, ItEnd)) :-
-        topClassHeir(Class),
+        top_class_heir(Class),
         candidateMethod(Class, BeginMethod),
         'NamedDecl::nameAsString'(BeginMethod, BeginMethodName),
         sub_atom(BeginMethodName, Before, 5, After, begin),

@@ -45,7 +45,8 @@ CLANGXX = $(LLVM_OBJ_ROOT)/Debug+Asserts/bin/clang++
 PLUGINNAME = $(strip declextractor.so)
 CLANGPLUGIN = $(LibDir)/$(PLUGINNAME)
 CLANGPLUGINFLAGS = -Xclang -load -Xclang $(CLANGPLUGIN) \
-	-Xclang -add-plugin -Xclang decl-extractor
+	-Xclang -add-plugin -Xclang decl-extractor \
+	-Xclang -plugin-arg-decl-extractor -Xclang init_clang_base_types
 EXTRAFLAGS = -emit-llvm \
 	$(patsubst %,-I%/include, $(LLVM_OBJ_ROOT) $(LLVM_SRC_ROOT)) \
 	-D_DEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS \

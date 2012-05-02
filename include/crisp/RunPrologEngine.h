@@ -33,7 +33,8 @@ namespace crisp {
   /// Interface with Prolog Engine.
   namespace prolog {
 
-    int plRunEngine(const std::string &BootFileName);
+    int plRunEngine(const std::string& BootFileName,
+                    const std::string& InitialGoal = std::string("init_msg"));
     int plCleanUp(int Status);
     int plInteractiveSession();
 
