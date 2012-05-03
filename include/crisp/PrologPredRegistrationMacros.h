@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 /* PrologPredRegistrationMacros.h -----------------------------------*- C -*- */
 
 /* Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
@@ -31,10 +29,7 @@
   if ( !PL_register_foreign(#ARGTYPE "::" #NAME, 2,                     \
                             (pl_function_t)                             \
                             &pl_##ARGTYPE##_##NAME, 0)) {               \
-    printf("%s", "Registering of " #NAME " failed.\n");                 \
     return FALSE;                                                       \
-  } else {                                                              \
-    printf("%s", "Registering of " #NAME " succeeded.\n");              \
   }
 
 #undef pl_check_property
@@ -43,10 +38,7 @@
   if ( !PL_register_foreign(#ARGTYPE "::" #VERB "_" #NAME, 1,           \
                             (pl_function_t)                             \
                             &pl_##ARGTYPE##_##VERB##_##NAME, 0)) {      \
-    printf("%s", "Registering of " #NAME " failed.\n");                 \
     return FALSE;                                                       \
-  } else {                                                              \
-    printf("%s", "Registering of " #NAME " succeeded.\n");              \
   }
 
 #undef pl_get_many
@@ -56,8 +48,5 @@
                             (pl_function_t)                             \
                             &pl_##ARGTYPE##_##NAME,                     \
                             PL_FA_NONDETERMINISTIC)) {                  \
-    printf("%s", "Registering of " #NAME " failed.\n");                 \
     return FALSE;                                                       \
-  } else {                                                              \
-    printf("%s", "Registering of " #NAME " succeeded.\n");              \
   }
