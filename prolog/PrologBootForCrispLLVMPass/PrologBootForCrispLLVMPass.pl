@@ -30,7 +30,7 @@ isA_(Instruction, Sort) :-
 
 %% Pre: +Value has PointerType.
 getLocation(Value, Location) :-
-        (  use(Value, User),
+        (  'Value::use'(Value, User),
            ( isA_(User, 'StoreInst')
            ; isA_(User, 'LoadInst')
            )
@@ -47,24 +47,25 @@ violation('HICPP 3.4.2', [FuncName], AliasResult) :-
         violationCandidate('HICPP 3.4.2', [FuncName]),
         isA_(Module, 'Module'),
         getFunction(Module, FuncName, Func),
-        argument(Func, This),
+        'Function::arg'(Func, This),
         getName(This, 'this'),
-        instruction(Func, StoreThis),
+        % 'Value::name'(This, 'this'),
+        'Function::instruction'(Func, StoreThis),
         isA_(StoreThis, 'StoreInst'),
-        getValueOperand(StoreThis, This),
-        getPointerOperand(StoreThis, ThisAddr),
-        instruction(Func, LoadThis),
+        'StoreInst::valueOperand'(StoreThis, This),
+        'StoreInst::pointerOperand'(StoreThis, ThisAddr),
+        'Function::instruction'(Func, LoadThis),
         isA_(LoadThis, 'LoadInst'),
-        getPointerOperand(LoadThis, ThisAddr),
-        instruction(Func, OffsetFromThis),
+        'LoadInst::pointerOperand'(LoadThis, ThisAddr),
+        'Function::instruction'(Func, OffsetFromThis),
         ( isA_(OffsetFromThis, 'GetElementPtrInst'),
-          getPointerOperand(OffsetFromThis, LoadThis)
+          'GetElementPtrInst::pointerOperand'(OffsetFromThis, LoadThis)
         ; isA_(OffsetFromThis, 'BitCastInst'),
-          op(OffsetFromThis, LoadThis)
+          'User::op'(OffsetFromThis, LoadThis)
         ),
         getLocation(OffsetFromThis, OffsetFromThisLoc),
-        instruction(Func, Return),
+        'Function::instruction'(Func, Return),
         isA_(Return, 'ReturnInst'),
-        op(Return, UsedByReturn),
+        'User::op'(Return, UsedByReturn),
         getLocation(UsedByReturn, ReturnLoc),
         alias(OffsetFromThisLoc, ReturnLoc, AliasResult).

@@ -46,6 +46,8 @@ extern "C" {
 
 #include "crisp/PrologPredDeclarationMacros.h"
 #include "LLVMDeclarations.inc"
+      /* Extra function (not a member function) */
+      pl_get_many(instruction, Function, const_inst_iterator, inst_begin, inst_end)
 
       /* Manual function declaration. */
 
@@ -54,25 +56,10 @@ extern "C" {
        */
       foreign_t pl_getName(term_t ValueT, term_t NameT);
 
-      /** \param ValueT +Value
-       *  \param UserT User
-       */
-      /* foreign_t pl_containsUse(term_t ValueT, term_t UserT, control_t Handle); */
-
       /** \param InstT +Instruction
        *  \param SortT Sort
        */
       foreign_t pl_isA_computed(term_t InstT, term_t SortT);
-
-      /** \param InstT +StoreInst or +LoadInst
-       *  \param OpT Value
-       */
-      foreign_t pl_getPointerOperand(term_t InstT, term_t OpT);
-
-      /** \param StoreT +StoreInst
-       *  \param OpT Value
-       */
-      foreign_t pl_getValueOperand(term_t StoreT, term_t OpT);
 
       /** \param StoreT +StoreInst
        *  \param LocationT -AliasAnalysis::Location
@@ -99,23 +86,6 @@ extern "C" {
        *  \param AliasT integer
        */
       foreign_t pl_alias(term_t LocationT1, term_t LocationT2, term_t AliasT);
-
-      /** \param FuncT +Function
-       *  \param ArgT Argument
-       */
-      /* foreign_t pl_containsArgument(term_t FuncT, term_t ArgT, */
-      /*                               control_t Handle); */
-
-      /** \param FuncT +Function
-       *  \param InstT Instruction
-       */
-      /* foreign_t pl_containsInstruction(term_t FuncT, term_t InstT, */
-      /*                                  control_t Handle); */
-
-      /** \param UserT +User
-       *  \param ValueT Value
-       */
-      /* foreign_t pl_containsOp(term_t UserT, term_t ValueT, control_t Handle); */
 
       /** \param ModuleT +Module
        *  \param NameT +Atom

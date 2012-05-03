@@ -25,13 +25,13 @@ int plRegisterPredicates() {
   /* Automatically generated function registration. */
 #include "crisp/PrologPredRegistrationMacros.h"
 #include "LLVMDeclarations.inc"
+  /* Extra function (not a member function) */
+  pl_get_many(instruction, Function, const_inst_iterator, inst_begin, inst_end)
 
   /* Manual function registration. */
 
   PL_register_foreign("getName", 2, pl_getName, 0);
   PL_register_foreign("isA_computed", 2, pl_isA_computed, 0);
-  PL_register_foreign("getPointerOperand", 2, pl_getPointerOperand, 0);
-  PL_register_foreign("getValueOperand", 2, pl_getValueOperand, 0);
   PL_register_foreign("getLocationFromStoreUser", 2,
                       pl_getLocationFromStoreUser, 0);
   PL_register_foreign("getLocationFromLoadUser", 2,
