@@ -40,7 +40,7 @@ CPPFLAGS += ${BOOST_CPPFLAGS}
 # Build LLVMDeclarations.inc.
 # Vars that can be easily changed: CLANGXX
 #
-CLANGXX = $(LLVM_OBJ_ROOT)/Debug+Asserts/bin/clang++
+CLANGXX = $(LLVM_OBJ_ROOT)/Release/bin/clang++
 PLUGINNAME = $(strip declextractor.so)
 CLANGPLUGIN = $(LibDir)/$(PLUGINNAME)
 CLANGPLUGINFLAGS = -Xclang -load -Xclang $(CLANGPLUGIN) \
@@ -48,7 +48,7 @@ CLANGPLUGINFLAGS = -Xclang -load -Xclang $(CLANGPLUGIN) \
 	-Xclang -plugin-arg-decl-extractor -Xclang init_llvm_base_types
 EXTRAFLAGS = -emit-llvm \
 	$(patsubst %,-I%/include, $(LLVM_OBJ_ROOT) $(LLVM_SRC_ROOT)) \
-	-D_DEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS \
+	-D_GNU_SOURCE -D__STDC_CONSTANT_MACROS \
 	-D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
 PROLOGSAVEDSTATEFILE = PrologBootForDeclExtractor.sh
 PROLOGSAVEDSTATEPATH = $(DataDir)/$(strip $(PROLOGSAVEDSTATEFILE))

@@ -78,9 +78,6 @@ namespace crisp {
   }
 
   void DeclExtractorConsumer::HandleTranslationUnit(ASTContext &Context) {
-    DebugFlag = 1;                // FIXME: use a plugin option to
-                                  // (de-)activate debug mode.
-
     DEBUG(dbgs() << "Handling translation unit." << "\n");
 
     int Success = plRegisterPredicates();
@@ -116,9 +113,6 @@ namespace crisp {
           else dbgs() << "Translation unit analysis aborted: "
                       << "Prolog engine failed.\n";);
     (void) plCleanUp(Success ? 0 : 1); // Return value ignored
-
-    DebugFlag = 0;                // FIXME: use a plugin option to
-                                  // (de-)activate debug mode.
   }
 
   // Visit declarations

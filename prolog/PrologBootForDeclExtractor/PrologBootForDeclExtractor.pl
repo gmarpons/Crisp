@@ -2,14 +2,10 @@
 %% Initial goals.
 %%
 
-init_msg :-
-        write('Initializing Prolog engine.'), nl.
-
 %% To be executed as initial goal when clang predicates are to be
 %% extracted. top_class_name/1 identifies the name of a class on top
 %% of hierarchy of classes to analyse.
 init_clang_base_types :-
-        init_msg,
         assertz(top_class_name('Decl')),
         assertz(top_class_name('QualType')),
         assertz(top_class_name('Type')),
@@ -19,7 +15,6 @@ init_clang_base_types :-
 %% extracted. top_class_name/1 identifies the name of a class on top
 %% of hierarchy of classes to analyse.
 init_llvm_base_types :-
-        init_msg,
         assertz(top_class_name('Value')).
 
 welcome_msg_and_prolog :-
