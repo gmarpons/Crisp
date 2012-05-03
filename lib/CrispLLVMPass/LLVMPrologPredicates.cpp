@@ -49,7 +49,7 @@ namespace crisp {
     // Automatically generated function definitions.
 
 #include "crisp/PrologPredDefinitionMacros.h"
-#include "LLVMFunctions.inc"
+#include "LLVMDeclarations.inc"
 
     // Manual function definition.
     const char* getSortName(unsigned OpCode) {

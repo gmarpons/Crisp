@@ -45,7 +45,7 @@ extern "C" {
       /* Automatically generated function declaration. */
 
 #include "crisp/PrologPredDeclarationMacros.h"
-#include "LLVMFunctions.inc"
+#include "LLVMDeclarations.inc"
 
       /* Manual function declaration. */
 

@@ -15,6 +15,13 @@ init_clang_base_types :-
         assertz(top_class_name('Type')),
         assertz(top_class_name('Stmt')).
 
+%% To be executed as initial goal when LLVM predicates are to be
+%% extracted. top_class_name/1 identifies the name of a class on top
+%% of hierarchy of classes to analyse.
+init_llvm_base_types :-
+        init_msg,
+        assertz(top_class_name('Value')).
+
 welcome_msg_and_prolog :-
         write('Welcome to the Crisp interactive interface!'), nl,
         write('Enter Ctrl-D to exit.'), nl,
@@ -199,10 +206,16 @@ interestingDecl(pl_get_many(Name, ArgType, ItType, ItBegin, ItEnd)) :-
         CanonicalResTypeName \= 'class clang::ConstExprIterator',
 
         'QualType::asString'(ResType, ResTypeNameAux),
+
                                 % remove "class " and "struct " from type name
         removeSubAtom(ResTypeNameAux, 'class ', ResTypeNameAux2),
         removeSubAtom(ResTypeNameAux2, 'struct ', ResTypeName),
         qualifiedMemberName(ArgType, ResTypeName, ItType),
+
+                                % FIXME: ConstCaseIt needs a constructor
+                                % and an iterator_traits specialization.
+        ItType \= 'SwitchInst::ConstCaseIt',
+
         atom_concat(ArgType, '::', Qualification),
         atom_concat(Qualification, BeginMethodName, ItBegin),
         atom_concat(Qualification, EndMethodName, ItEnd).

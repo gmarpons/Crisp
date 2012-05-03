@@ -10,6 +10,20 @@ LEVEL=../..
 #
 DIRS=
 
+#
+# Manual SOURCES list to not compile ClangDeclarations.cpp into shared
+# library.
+#
+SOURCES =       LLVMCompilationInfo.cpp \
+		LLVMPrologPredicateRegistration.c \
+		LLVMPrologPredicates.cpp \
+		LLVMPrologQueries.cpp \
+		CrispModulePass.cpp
+
+DECLARATIONSFILENAME := $(strip LLVMDeclarations)
+
+BUILT_SOURCES = $(DECLARATIONSFILENAME).inc
+
 LIBRARYNAME=crispllvm
 SHARED_LIBRARY=1
 LOADABLE_MODULE=1
@@ -21,3 +35,35 @@ LDFLAGS += ${SWIPL_LDFLAGS}
 LIBS += ${SWIPL_LIBS}
 CPPFLAGS += ${SWIPL_CPPFLAGS}
 CPPFLAGS += ${BOOST_CPPFLAGS}
+
+#
+# Build LLVMDeclarations.inc.
+# Vars that can be easily changed: CLANGXX
+#
+CLANGXX = $(LLVM_OBJ_ROOT)/Debug+Asserts/bin/clang++
+PLUGINNAME = $(strip declextractor.so)
+CLANGPLUGIN = $(LibDir)/$(PLUGINNAME)
+CLANGPLUGINFLAGS = -Xclang -load -Xclang $(CLANGPLUGIN) \
+	-Xclang -add-plugin -Xclang decl-extractor \
+	-Xclang -plugin-arg-decl-extractor -Xclang init_llvm_base_types
+EXTRAFLAGS = -emit-llvm \
+	$(patsubst %,-I%/include, $(LLVM_OBJ_ROOT) $(LLVM_SRC_ROOT)) \
+	-D_DEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS \
+	-D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
+PROLOGSAVEDSTATEFILE = PrologBootForDeclExtractor.sh
+PROLOGSAVEDSTATEPATH = $(DataDir)/$(strip $(PROLOGSAVEDSTATEFILE))
+
+.PHONY: decl-extraction clean-decl-extraction
+
+decl-extraction: $(DECLARATIONSFILENAME).inc
+
+$(DECLARATIONSFILENAME).inc: $(CLANGPLUGIN) $(PROLOGSAVEDSTATEPATH)
+$(DECLARATIONSFILENAME).inc: $(DECLARATIONSFILENAME).cpp
+	$(Echo) Extracting declarations from LLVM\'s source code \(takes some time\)
+	$(Verb) $(CLANGXX) $(CXXFLAGS) $(CPPFLAGS) $(EXTRAFLAGS) \
+		$(CLANGPLUGINFLAGS) -o /dev/null -S $<
+
+clean-local:: clean-decl-extraction
+
+clean-decl-extraction:
+	-$(Verb) $(RM) -f $(DECLARATIONSFILENAME).inc
