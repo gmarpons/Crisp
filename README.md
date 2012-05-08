@@ -6,14 +6,15 @@ licensed.
 
 **Coding Rules** constrain admissible constructs of a language to help
 produce better code. Crisp can be used to define and enforce rules for
-C and C++, like those in
-[High Integrity C++](http://www.codingstandard.com/), and
-[CERT's Secure Coding Standards](http://www.cert.org/secure-coding/).
+C and C++, like those in [High Integrity C++] [HICPP], and
+[CERT's Secure Coding Standards] [CERT-SCS].
 
 Crisp rules are written in Prolog. A high-level declarative DSL to
 easily write new rules is under development. It will be called CRISP,
 an acronym for *Coding Rules in Sugared Prolog*.
 
+  [HICPP]:    http://www.codingstandard.com/
+  [CERT-SCS]: http://www.cert.org/secure-coding/
 
 Installation
 ============
@@ -24,30 +25,32 @@ GNU/Linux only so far.
 Prerequisites
 -------------
 
-1. Install and build **LLVM/clang sources**. You can follow
-   instructions in [http://clang.llvm.org/get_started.html](). There
-   are also Git repositories available for both LLVM and clang:
-   - [http://llvm.org/git/llvm.git]()
-   - [http://llvm.org/git/clang.git]()
+1. [Install and build **LLVM/clang sources**] [CLANG-GET-STARTED].
+   There are also Git repositories available for both LLVM and clang:
+   - http://llvm.org/git/llvm.git
+   - http://llvm.org/git/clang.git
 
    Crisp build system expects to find LLVM/clang commands compiled in
    *Release* mode, so you need to set environment variables
    `ENABLE_OPTIMIZED=1` and `DISABLE_ASSERTIONS=1` when running `make`
-   in step 5 of the "Getting Started" documentation above (see more
-   information about these variables at
-   [http://www.llvm.org/docs/GettingStarted.html#compile]()).
+   in step 5 of the build documentation for clang above (see
+   [more information about these variables] [LLVM-COMPILE]).
 
 2. Install **SWI-Prolog**. It is most likely provided as a
    pre-compiled package for your GNU/Linux distribution. On
    Debian/Ubuntu (and derivatives) you simply need to type `sudo
    apt-get install swi-prolog`.
 
-3. Install **Boost C++ Libraries**. General installation instructions
-   for Unix/Linux can be found here:
-   [http://www.boost.org/doc/libs/1_49_0/more/getting_started/unix-variants.html]().
-   Crisp relies on header-only libraries. On Debian/Ubuntu (and
-   derivatives) you only need to type `sudo apt-get install
-   libboost-dev`.
+3. Install **Boost C++ Libraries**. Crisp relies on header-only
+   libraries. On Debian/Ubuntu (and derivatives) you only need to type
+   `sudo apt-get install libboost-dev`. For other systems (or more
+   recent versions of Boost) follow the
+   [general installation instructions for Unix/Linux] [BOOST-UNIX].
+
+  [CLANG-GET-STARTED]: http://clang.llvm.org/get_started.html
+  [LLVM-COMPILE]:      http://www.llvm.org/docs/GettingStarted.html#compile
+  [BOOST-UNIX]:        http://www.boost.org/doc/libs/1_49_0/more/getting_started/unix-variants.html
+
 
 Download Crisp source code
 --------------------------
