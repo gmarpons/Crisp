@@ -127,6 +127,15 @@ namespace crisp {
       }
     };
 
+    /// Specialization for \c llvm::StringRef.
+    template <>
+    struct Unify<llvm::StringRef> {
+      typedef llvm::StringRef result_type;
+      static inline foreign_t _(term_t ResultT, const result_type Result) {
+        return PL_unify_atom_chars(ResultT, Result.str().c_str());
+      }
+    };
+
     /// Specialization for \c const \c char*.
     template <>
     struct Unify<const char*> {

@@ -30,7 +30,6 @@ int plRegisterPredicates() {
 
   /* Manual function registration. */
 
-  PL_register_foreign("getName", 2, pl_getName, 0);
   PL_register_foreign("isA_computed", 2, pl_isA_computed, 0);
   PL_register_foreign("getLocationFromStoreUser", 2,
                       pl_getLocationFromStoreUser, 0);

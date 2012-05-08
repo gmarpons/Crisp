@@ -51,11 +51,6 @@ extern "C" {
 
       /* Manual function declaration. */
 
-      /** \param ValueT +Value
-       *  \param NameT Atom
-       */
-      foreign_t pl_getName(term_t ValueT, term_t NameT);
-
       /** \param InstT +Instruction
        *  \param SortT Sort
        */

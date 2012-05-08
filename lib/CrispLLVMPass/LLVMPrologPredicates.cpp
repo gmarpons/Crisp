@@ -125,15 +125,6 @@ namespace crisp {
       }
     }
 
-    // FIXME: remove this when StringRef's are handled as return type
-    // for getOne
-    foreign_t pl_getName(term_t ValueT, term_t NameT) {
-      Value *V;
-      if ( !PL_get_pointer(ValueT, (void **) &V))
-        return PL_warning("getName/2: instantiation fault on first arg");
-      return PL_unify_atom_chars(NameT, V->getName().str().c_str());
-    }
-
     foreign_t pl_isA_computed(term_t InstT, term_t SortT) {
       Instruction *I;
       if ( !PL_get_pointer(InstT, (void **) &I))
