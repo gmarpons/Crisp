@@ -123,6 +123,7 @@ removeSubAtom(Atom, SubAtom, Result) :-
 isInterestingResultType(_, 'clang::QualType').
 isInterestingResultType(_, 'const clang::QualType').
 isInterestingResultType(_, 'llvm::StringRef').
+isInterestingResultType(_, 'std::string').
 isInterestingResultType(Type, TypeName) :-
         'Type::is_builtinType'(Type),
                                 % filter out modifier functions
