@@ -1919,7 +1919,7 @@ TopDistDir  := $(PROJ_OBJ_ROOT)/$(DistName)
 DistTarGZip := $(PROJ_OBJ_ROOT)/$(DistName).tar.gz
 DistZip     := $(PROJ_OBJ_ROOT)/$(DistName).zip
 DistTarBZ2  := $(PROJ_OBJ_ROOT)/$(DistName).tar.bz2
-DistAlways  := CREDITS.TXT LICENSE.TXT README.txt README AUTHORS COPYING \
+DistAlways  := CREDITS.TXT LICENSE.TXT README.md README.txt README AUTHORS COPYING \
 	       ChangeLog INSTALL NEWS Makefile Makefile.common Makefile.rules \
 	       Makefile.config.in configure autoconf
 DistOther   := $(notdir $(wildcard \
