@@ -10,6 +10,7 @@ LEVEL=..
 # relevant.
 #
 DIRS =  PrologEngineWrapper \
+	PrologEngineWrapper_DeclExtractorBuild \
 	DeclExtractor \
 	CrispClangPlugin \
 	CrispLLVMPass

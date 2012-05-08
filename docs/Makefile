@@ -25,6 +25,8 @@ else
   install-local::
 endif
 
+# TODO: check that installation of docsdir works.
+
 install-doxygen: doxygen
 	$(Echo) Installing doxygen documentation
 	$(Verb) $(MKDIR) $(DESTDIR)$(PROJ_docsdir)/html

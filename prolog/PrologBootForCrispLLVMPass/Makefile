@@ -1,4 +1,4 @@
-## data/PrologBootForCrispLLVMPass/Makefile ---------------------*- Makefile -*-
+## prolog/PrologBootForCrispLLVMPass/Makefile -------------------*- Makefile -*-
 
 #
 # Relative path to the top of the source tree.

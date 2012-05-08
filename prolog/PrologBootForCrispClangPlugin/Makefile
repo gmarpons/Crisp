@@ -1,4 +1,4 @@
-## data/PrologBootForCrispClangPlugin/Makefile ------------------*- Makefile -*-
+## prolog/PrologBootForCrispClangPlugin/Makefile ----------------*- Makefile -*-
 
 #
 # Relative path to the top of the source tree.

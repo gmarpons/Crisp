@@ -67,3 +67,10 @@ clean-local:: clean-decl-extraction
 
 clean-decl-extraction:
 	-$(Verb) $(RM) -f $(DECLARATIONSFILENAME).inc
+
+# The following rule is necessary because the general rule in
+# Makefile.llvm.rules doesn't work for loadable modules (because of
+# the lib prefix).
+uninstall-local::
+	$(Echo) Uninstalling $(BuildMode) Shared Library $(DestSharedLib)
+	-$(Verb) $(RM) -f $(DestSharedLibDir)/$(LIBRARYNAME).*

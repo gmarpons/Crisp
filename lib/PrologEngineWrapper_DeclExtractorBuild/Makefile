@@ -1,4 +1,4 @@
-## lib/DeclExtractor/Makefile -----------------------------------*- Makefile -*-
+## lib/PrologEngineWrapper_DeclExtractorBuild/Makefile ----------*- Makefile -*-
 
 #
 # Relative path to the top of the source tree.
@@ -8,15 +8,22 @@ LEVEL=../..
 #
 # List all of the subdirectories that we will compile.
 #
-DIRS =
+DIRS=
 
-NO_INSTALL = 1
-LIBRARYNAME = declextractor
-SHARED_LIBRARY = 1
-LOADABLE_MODULE = 1
-USEDLIBS = PrologEngineWrapper_DeclExtractorBuild.a
+SOURCES=	ClangPrologQueries.cpp \
+		PrologUtilityFunctions.cpp \
+		RunPrologEngine.cpp
+
+NO_INSTALL=1
+LIBRARYNAME=PrologEngineWrapper_DeclExtractorBuild
+BUILD_ARCHIVE=1
+
+# Force use of local build tree data
+ENABLE_DATA_OBJ_ROOT=1
 
 include $(LEVEL)/Makefile.common
+
+VPATH = $(PROJ_SRC_ROOT)/lib/PrologEngineWrapper
 
 LDFLAGS += ${SWIPL_LDFLAGS}
 LIBS += ${SWIPL_LIBS}
@@ -25,3 +32,4 @@ CXXFLAGS += ${CLANG_OBJ_CXXFLAGS}
 CXXFLAGS += ${CLANG_SRC_CXXFLAGS}
 CXXFLAGS += -DNDEBUG		# No debug info
 CPPFLAGS += ${BOOST_CPPFLAGS}
+

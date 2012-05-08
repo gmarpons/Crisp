@@ -1,4 +1,4 @@
-## data/PrologBootForDeclExtractor/Makefile ---------------------*- Makefile -*-
+## prolog/PrologBootForDeclExtractor/Makefile -------------------*- Makefile -*-
 
 #
 # Relative path to the top of the source tree.
@@ -14,4 +14,3 @@ NO_INSTALL = 1
 PROLOGSAVEDSTATENAME = PrologBootForDeclExtractor
 
 include $(LEVEL)/Makefile.common
-

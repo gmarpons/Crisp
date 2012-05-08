@@ -23,7 +23,7 @@ endif
 ifeq ($(ENABLE_DATA_OBJ_ROOT),1)
   CPP.DataDirDefines := -DDATA_OBJ_ROOT='$(DataDir)'
 else
-  CPP.DataDirDefines := -DDATA_INSTALL_ROOT='$(PROJ_datadir)/$(PROJECT_NAME)'
+  CPP.DataDirDefines := -DDATA_INSTALL_ROOT='$(DESTDIR)$(PROJ_datadir)'
 endif
 
 CPPFLAGS += $(CPP.DataDirDefines)
@@ -95,6 +95,35 @@ $(PrologSavedStateBuildPath): $(FullPathSources)
 	$(Echo) Linking $(BuildMode) Prolog saved state $(PROLOGSAVEDSTATENAME)
 	$(Verb) $(SWIPL) --quiet -o $@ -c $(FullPathSources)
 
+###############################################################################
+# Prolog Saved State Install Rules
+###############################################################################
+
+$(DESTDIR)$(PROJ_datadir)::
+	$(Verb) $(MKDIR) $@
+
+ifdef NO_INSTALL
+install-local::
+	$(Echo) Install circumvented with NO_INSTALL
+uninstall-local::
+	$(Echo) Uninstall circumvented with NO_INSTALL
+else
+
+DestPrologSavedState := $(DESTDIR)$(PROJ_datadir)/$(PROLOGSAVEDSTATEEXENAME)
+
+install-local:: $(DestPrologSavedState)
+
+$(DestPrologSavedState): $(PrologSavedStateBuildPath) $(DESTDIR)$(PROJ_datadir)
+	$(Echo) Installing $(BuildMode) $(DestPrologSavedState)
+	$(Verb) $(ProgInstall) $(PrologSavedStateBuildPath) $(DESTDIR)$(PROJ_datadir)
+
+uninstall-local::
+	$(Echo) Uninstalling $(BuildMode) $(DestPrologSavedState)
+	-$(Verb) $(RM) -f $(DestPrologSavedState)
+
+# endif NO_INSTALL
+endif
+
 # endif PROLOGSAVEDSTATENAME
 endif
 
@@ -109,3 +138,4 @@ endif
 
 printvars::
 	$(Echo) "DataDir      : " '$(DataDir)'
+	$(Echo) "PROJ_datadir : " '$(PROJ_datadir)'
