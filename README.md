@@ -30,10 +30,12 @@ Prerequisites
    - [http://llvm.org/git/llvm.git]()
    - [http://llvm.org/git/clang.git]()
 
-   For faster Crisp compilation it is recommended to (also) build
-   LLVM/clang in *Release* mode, setting environment variables
+   Crisp build system expects to find LLVM/clang commands compiled in
+   *Release* mode, so you need to set environment variables
    `ENABLE_OPTIMIZED=1` and `DISABLE_ASSERTIONS=1` when running `make`
-   in step 5 of the "Getting Started" documentation.
+   in step 5 of the "Getting Started" documentation above (see more
+   information about these variables at
+   [http://www.llvm.org/docs/GettingStarted.html#compile]()).
 
 2. Install **SWI-Prolog**. It is most likely provided as a
    pre-compiled package for your GNU/Linux distribution. On
