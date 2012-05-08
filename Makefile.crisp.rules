@@ -1,8 +1,5 @@
 ## Makefile.crisp.rules - Common make rules for Crisp -----------*- Makefile -*-
 
-# TODO: Check that dependence on this Makefile is correctly handled by
-# build system.
-
 ###############################################################################
 # VARIABLES: Set up various variables based on configuration data
 ###############################################################################
@@ -81,10 +78,6 @@ clean-local::
 ifneq ($(strip $(PrologSavedStateBuildPath)),)
 	-$(Verb) $(RM) -f $(PrologSavedStateBuildPath)
 endif
-
-# TODO: target install, with all the stuff needed for installation and
-# distribution. llvm/Makefile.rules Vars that need possibly to be
-# modified: DistAlways, ...
 
 # TODO: set suitable Prolog compiler options when optimization is
 # enabled.
