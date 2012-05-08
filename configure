@@ -11225,7 +11225,7 @@ CXXFLAGS=$OLD_CXXFLAGS
 CLANG_SRC_CXXFLAGS="-I${CLANG_SRC_ROOT}/include"
 LLVM_SRC_AND_OBJ_CXXFLAGS="-I${LLVM_ABS_OBJ_ROOT}/include -I${llvm_src}/include"
 OLD_CXXFLAGS=$CXXFLAGS;
-CXXFLAGS="$CXXFLAGS $LLVM_SRC_AND_OBJ_CXXFLAGS $CLANG_SRC_CXXFLAGS $CLANG_OBJ_CXXFLAGS"
+CXXFLAGS="$CXXFLAGS $LLVM_SRC_AND_OBJ_CXXFLAGS $CLANG_SRC_CXXFLAGS $CLANG_OBJ_CXXFLAGS -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS"
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for the Clang headers (sources dir)" >&5
 $as_echo_n "checking for the Clang headers (sources dir)... " >&6; }
 ac_ext=cpp

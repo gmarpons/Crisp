@@ -1363,7 +1363,7 @@ CLANG_SRC_CXXFLAGS="-I${CLANG_SRC_ROOT}/include"
 LLVM_SRC_AND_OBJ_CXXFLAGS="-I${LLVM_ABS_OBJ_ROOT}/include -I${llvm_src}/include"
 dnl Store current CXXFLAGS and merge with CLANG_SRC_CXXFLAGS for compilation check   
 OLD_CXXFLAGS=$CXXFLAGS;
-CXXFLAGS="$CXXFLAGS $LLVM_SRC_AND_OBJ_CXXFLAGS $CLANG_SRC_CXXFLAGS $CLANG_OBJ_CXXFLAGS"
+CXXFLAGS="$CXXFLAGS $LLVM_SRC_AND_OBJ_CXXFLAGS $CLANG_SRC_CXXFLAGS $CLANG_OBJ_CXXFLAGS -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS"
 dnl Check for Clang library headers (sources dir)
 AC_MSG_CHECKING([for the Clang headers (sources dir)])
 dnl Try to compile a file that includes a header of the library Clang
