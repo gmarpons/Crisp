@@ -67,6 +67,11 @@ namespace crisp {
       typedef const ArgumentType* argument_type;
       typedef ResultType result_type;
       static inline result_type _(argument_type A) {
+        // Following check forced by compound Stmt heirs and their
+        // children traversal, that can contain null
+        // StmtIteratorImpl's. Maybe necessary for other iterator
+        // types as well.
+        if ( !A) return (result_type) 0;
         return (A ->* Getter)();
       }
     };
@@ -180,6 +185,11 @@ namespace crisp {
       typedef const ArgumentType* argument_type;
       static inline foreign_t
       _(const argument_type Argument) {
+        // Following check forced by compound Stmt heirs and their
+        // children traversal, that can contain null
+        // StmtIteratorImpl's. Maybe necessary for other iterator
+        // types as well.
+        if ( !Argument) return FALSE;
         return (Argument ->* Predicate)() ? TRUE : FALSE;
       }
     };
@@ -283,9 +293,19 @@ namespace crisp {
       typedef const ContainerType* container_type;
       typedef IteratorType iterator_type;
       static inline iterator_type begin(container_type C) {
+        // Following check forced by compound Stmt heirs and their
+        // children traversal, that can contain null
+        // StmtIteratorImpl's. Maybe necessary for other iterator
+        // types as well.
+        if ( !C) return iterator_type();
         return (C ->* Begin)();
       }
       static inline iterator_type end(container_type C) {
+        // Following check forced by compound Stmt heirs and their
+        // children traversal, that can contain null
+        // StmtIteratorImpl's. Maybe necessary for other iterator
+        // types as well.
+        if ( !C) return iterator_type();
         return (C ->* End)();
       }
     };

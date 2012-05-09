@@ -58,6 +58,29 @@ namespace crisp {
     };
 
     /// Specialization for \c QualType (that is a smart pointer) as \c
+    /// ResultType.
+    template <typename ArgumentType,
+              QualType (ArgumentType::* Getter)() const>
+    struct Get<ArgumentType, QualType, Getter> {
+      typedef ArgumentType* argument_type;
+      typedef QualType result_type;
+      static inline result_type _(argument_type A) {
+        return (A ->* Getter)();
+      }
+    };
+
+    /// Specialization for \c QualType (that is a smart pointer) as
+    /// both \c ArgumentType and \c ResultType.
+    template <QualType (QualType::* Getter)() const>
+    struct Get<QualType, QualType, Getter> {
+      typedef QualType argument_type;
+      typedef QualType result_type;
+      static inline result_type _(argument_type A) {
+        return (A .* Getter)();
+      }
+    };
+
+    /// Specialization for \c QualType (that is a smart pointer) as \c
     /// ArgumentType.
     template <bool (QualType::* Predicate)() const>
     struct Check<QualType, Predicate> {
