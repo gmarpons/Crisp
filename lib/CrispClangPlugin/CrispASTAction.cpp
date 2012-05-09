@@ -56,10 +56,11 @@ namespace crisp {
   class CrispConsumer : public ASTConsumer
                       , public RecursiveASTVisitor<CrispConsumer> {
   public:
-    CrispConsumer(CompilerInstance &CI, std::string &RFN)
+    CrispConsumer(CompilerInstance &CI, std::string &RFN, bool FI)
       : CompilerInstance(CI)
       , ErrorInfo()
-      , RulesFileName(RFN) {
+      , RulesFileName(RFN)
+      , FlagInteractive(FI) {
       // ErrorInfo is an output arg to get info about potential errors
       // opening the file/stream.
       FactsOutputStream = new raw_fd_ostream("-", ErrorInfo);
@@ -77,6 +78,7 @@ namespace crisp {
     raw_ostream *FactsOutputStream;
     std::string ErrorInfo;
     std::string RulesFileName;
+    bool FlagInteractive;
   };
 
   CrispConsumer::~CrispConsumer() {
@@ -129,8 +131,8 @@ namespace crisp {
       // Main Prolog analysis
       Success = plRunTranslationUnitAnalysis(MainFileName);
 
-      // When debugging, open a PROLOG interactive session
-      if (Success) DEBUG(Success = plInteractiveSession());
+      // When debugging, open a PROLOG interactive session if user asked one
+      DEBUG(if (Success && FlagInteractive) Success = plInteractiveSession());
 
       // Free global data
       deleteCompilationInfo();
@@ -173,7 +175,7 @@ namespace crisp {
 
   protected:
     virtual ASTConsumer* CreateASTConsumer(CompilerInstance &CI, StringRef) {
-      return new CrispConsumer(CI, RulesFileName);
+      return new CrispConsumer(CI, RulesFileName, FlagInteractive);
     }
 
     virtual bool ParseArgs(const CompilerInstance &CI,
@@ -181,14 +183,14 @@ namespace crisp {
   private:
     std::string RulesFileName;
     bool FlagInteractive;
-    bool ParseOneArg(const std::string &);
+    bool parseOneArg(const std::string &);
   };
 
   bool CrispASTAction::ParseArgs(const CompilerInstance &CI,
                                  const std::vector<std::string> &Args) {
 
     b::find_if(b::make_iterator_range(Args.begin(), Args.end()),
-               l::bind(&CrispASTAction::ParseOneArg, this, l::_1));
+               !l::bind(&CrispASTAction::parseOneArg, this, l::_1));
 
     // At least one argument needed: rules file name.
     if (RulesFileName.empty()) {
@@ -201,22 +203,20 @@ namespace crisp {
     return true;
   }
 
-  bool CrispASTAction::ParseOneArg(const std::string &Arg) {
-    if ( !Arg.empty()) {                  // Meaningfule argument
-      if (Arg[0] == '-') {                // Option argument
-        if (Arg.compare("--interactive") == 0) {
-          FlagInteractive = true;
-        } else {                          // Unknown option argument
-          return false;
-        }
-      } else {                            // Input argument
-        if ( !RulesFileName.empty()) {    // Rules file already set
-          return false;
-        } else {                          // Rules file name given
-          RulesFileName = Arg;
-        }
-      }
-    }
+  /// Sets class attributes. Returns \c false in case of invalid \c Arg.
+  bool CrispASTAction::parseOneArg(const std::string &Arg) {
+    if (Arg.empty()) return true;          // Non-meaningfule argument, ignored
+    if (Arg[0] == '-') {                   // Option argument
+      if (Arg.compare("--interactive") == 0) {
+        FlagInteractive = true;
+        return true;
+      }                                    // else: unknown option argument
+      return false;
+    }                                      // else: input argument
+    if ( !RulesFileName.empty()) {         // Rules file already set
+      return false;
+    }                                      // else: rules file name given
+    RulesFileName = Arg;
     return true;
   }
 
