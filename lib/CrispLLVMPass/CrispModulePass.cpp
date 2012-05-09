@@ -28,6 +28,7 @@
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Module.h"
 #include "llvm/Pass.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetData.h"
@@ -45,6 +46,11 @@ STATISTIC(StNumFunctionsMod, "Number of modules analyzed by crisp-mod");
 namespace crisp {
   unsigned NumFunctionsMod = 0;
 
+  /// Command line flag to enable prolog interactive session.
+  cl::opt<bool> FlagInteractive("crisp-interactive",
+                                cl::desc("Enable interactive prolog session "
+                                         "during crisp analysis"));
+
   /// \brief Class implementing a module pass to analyze LLVM IR
   /// code for Crisp.
   class CrispModulePass : public ModulePass {
@@ -54,6 +60,8 @@ namespace crisp {
     virtual bool runOnModule(Module& M);
     virtual void getAnalysisUsage(AnalysisUsage& AU) const;
     virtual void releaseMemory();
+    // TODO: implement print method.
+    // virtual void print(std::ostream &O, const Module *M) const;
   private:
     int Success;                // Prolog Engine status
   };                            // end of struct CrispModulePass
@@ -88,8 +96,9 @@ namespace crisp {
         // CompilationInfo defined in CompilationInfo.h).
         newLLVMCompilationInfo(*this);
 
-        // When debugging, open a PROLOG interactive session
-        DEBUG(Success = plInteractiveSession());
+        // When debugging, open a PROLOG interactive session if
+        // FlagInteractive is set
+        DEBUG(if (FlagInteractive) Success = plInteractiveSession());
 
         // Free global data
         deleteLLVMCompilationInfo();
