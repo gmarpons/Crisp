@@ -37,6 +37,7 @@ namespace crisp {
                     const std::string& InitialGoal = std::string("init_msg"));
     int plCleanUp(int Status);
     int plInteractiveSession();
+    int plLoadFile(std::string &FileBaseName);
 
   } // End namespace crisp::prolog
 

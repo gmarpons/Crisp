@@ -84,19 +84,46 @@ namespace crisp {
       if (Success) PL_install_readline();
 
       DEBUG(if ( !Success)
-              dbgs() << "Could not initialize Prolog engine.\n");
+              dbgs() << "Could not initialize Prolog engine." << "\n");
       return Success;
     }
 
     int plCleanUp(int Status) {
       int Success = PL_cleanup(Status);
       free(BootFileAbsNameCStr);
-      DEBUG(if ( !Success) dbgs() << "Prolog engine clean up failed.\n");
+      DEBUG(if ( !Success) dbgs() << "Prolog engine clean up failed." << "\n");
       return Success;
     }
 
     int plInteractiveSession() {
       return PL_toplevel();
+    }
+
+    int plLoadFile(std::string &FileBaseName) {
+      // Look for dir where saved state files for booting Prolog are
+      // placed: either build data dir or install data dir, depending on
+      // whether DATA_OBJ_ROOT is defined (in order to define it, its
+      // necessary to set ENABLE_DATA_OBJ_ROOT variable when compiling).
+#ifdef DATA_OBJ_ROOT
+      std::string BootFilesDir(XSTR(DATA_OBJ_ROOT));
+#else
+      std::string BootFilesDir(XSTR(DATA_INSTALL_ROOT));
+#endif  // ifdef DATA_OBJ_ROOT
+      int Success;
+      term_t FileBaseNameA = PL_new_term_ref();
+      Success = PL_put_atom_chars(FileBaseNameA, FileBaseName.c_str());
+      if ( !Success) return Success;
+      term_t RulesDirA = PL_new_term_ref();
+      Success = PL_put_atom_chars(RulesDirA, BootFilesDir.c_str());
+      if ( !Success) return Success;
+      functor_t LoadFileF = PL_new_functor(PL_new_atom("load_file"), 2);
+      term_t LoadFileT = PL_new_term_ref();
+      Success = PL_cons_functor(LoadFileT, LoadFileF, FileBaseNameA, RulesDirA);
+      if ( !Success) return Success;
+      Success = PL_call(LoadFileT, NULL);
+      DEBUG(if ( !Success) dbgs() << "Error executing goal 'load_file("
+                                  << FileBaseName << ")'." << "\n");
+      return Success;
     }
 
   } // End namespace crisp::prolog

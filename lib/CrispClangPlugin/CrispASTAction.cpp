@@ -104,9 +104,13 @@ namespace crisp {
     int Success = plRegisterPredicates();
     DEBUG(if ( !Success) dbgs() << "Error registering predicates.\n");
 
-    // FIXME: RulesFileName is ignored at the moment
-
     Success = plRunEngine("PrologBootForCrispClangPlugin.sh");
+
+    if (Success) {
+      Success = plLoadFile(RulesFileName);
+      DEBUG(if ( !Success) dbgs() << "Error loading rules file '"
+                                  << RulesFileName << "'." << "\n");
+    }
 
     if (Success) {
       // Get main file name

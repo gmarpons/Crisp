@@ -1,3 +1,5 @@
+:- multifile violation/2.
+
 init_msg :-
         write('Initializing Prolog engine.'), nl.
 
@@ -6,6 +8,15 @@ welcome_msg_and_prolog :-
         write('Enter Ctrl-D to exit.'), nl,
         % set_prolog_flag(verbose, normal),
         prolog.
+
+load_file(FileBaseName, RulesDir) :-
+        set_prolog_flag(verbose_file_search, true),
+        assertz(file_search_path(rules, '.')),
+        assertz(file_search_path(rules, RulesDir)),
+        file_name_extension(FileBaseName, pl, FileName),
+        absolute_file_name(rules(FileName), AbsoluteFileName),
+        access_file(AbsoluteFileName, read),
+        ensure_loaded(rules(FileName)).
 
 readModuleFacts(ModuleFileName) :-
         llvmFactsFileName(ModuleFileName, LLVMFactsFileName),
@@ -40,31 +51,3 @@ getLocation(Value, Location) :-
            )
         ;  createLocation(Value, Location)
         ).
-
-%% FIXME: the following code doesn't belongs here
-
-violation('HICPP 3.4.2', [FuncName], AliasResult) :-
-        violationCandidate('HICPP 3.4.2', [FuncName]),
-        isA_(Module, 'Module'),
-        getFunction(Module, FuncName, Func),
-        'Function::arg'(Func, This),
-        'Value::name'(This, 'this'),
-        'Function::instruction'(Func, StoreThis),
-        isA_(StoreThis, 'StoreInst'),
-        'StoreInst::valueOperand'(StoreThis, This),
-        'StoreInst::pointerOperand'(StoreThis, ThisAddr),
-        'Function::instruction'(Func, LoadThis),
-        isA_(LoadThis, 'LoadInst'),
-        'LoadInst::pointerOperand'(LoadThis, ThisAddr),
-        'Function::instruction'(Func, OffsetFromThis),
-        ( isA_(OffsetFromThis, 'GetElementPtrInst'),
-          'GetElementPtrInst::pointerOperand'(OffsetFromThis, LoadThis)
-        ; isA_(OffsetFromThis, 'BitCastInst'),
-          'User::op'(OffsetFromThis, LoadThis)
-        ),
-        getLocation(OffsetFromThis, OffsetFromThisLoc),
-        'Function::instruction'(Func, Return),
-        isA_(Return, 'ReturnInst'),
-        'User::op'(Return, UsedByReturn),
-        getLocation(UsedByReturn, ReturnLoc),
-        alias(OffsetFromThisLoc, ReturnLoc, AliasResult).

@@ -48,8 +48,14 @@ namespace crisp {
 
   /// Command line flag to enable prolog interactive session.
   cl::opt<bool> FlagInteractive("crisp-interactive",
-                                cl::desc("Enable interactive prolog session "
-                                         "during crisp analysis"));
+                                cl::desc("Enable interactive Prolog session"));
+
+  /// Command line option for Rules file
+  cl::opt<std::string>
+  RulesFileName("crisp-rules-file",
+                cl::desc("Specify Rules filename"),
+                cl::value_desc("filename"),
+                cl::Required);
 
   /// \brief Class implementing a module pass to analyze LLVM IR
   /// code for Crisp.
@@ -79,6 +85,12 @@ namespace crisp {
     DEBUG(dbgs() << "Handling LLVM Module.\n");
     plRegisterPredicates();
     Success = plRunEngine("PrologBootForCrispLLVMPass.sh");
+
+    if (Success) {
+      Success = plLoadFile(RulesFileName);
+      DEBUG(if ( !Success) dbgs() << "Error loading rules file '"
+                                  << RulesFileName << "'." << "\n");
+    }
 
     if (Success) {
       // Read clang Prolog facts about the module
