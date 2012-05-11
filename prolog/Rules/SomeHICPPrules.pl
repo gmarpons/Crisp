@@ -18,17 +18,17 @@ calls(Caller, Callee) :-
         calls(Caller, DirectCallee),
         'calls+'(DirectCallee, IndirectCallee).
 
-violation('HICPP 3.3.13', [Caller, Callee]) :-
+violation('HICPP 3.3.13',
+          'ctor/dtor %0 calls (maybe indirectly) virtual method %1',
+          [ namedDecl(Caller, 'caller %0 declared here')
+          , namedDecl(Callee, 'callee %0 declared here')]) :-
         isA(Record, 'CXXRecordDecl'),
         ( 'CXXRecordDecl::ctor'(Record, Caller)
         ; 'CXXRecordDecl::destructor'(Record, Caller)
         ),
         'CXXRecordDecl::method'(Record, Callee),
         'CXXMethodDecl::is_virtual'(Callee), % implies Caller \= Callee
-        'calls+'(Caller, Callee),
-
-        % 'NamedDecl::name'(Caller, CallerName), write(CallerName), nl,
-        'NamedDecl::name'(Callee, CalleeName), write(CalleeName), nl.
+        'calls+'(Caller, Callee).
 
 violationCandidate('HICPP 3.4.2', [MethodRepr]) :-
         isA(Method, 'CXXMethodDecl'),

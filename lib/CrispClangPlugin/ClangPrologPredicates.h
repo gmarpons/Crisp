@@ -72,6 +72,8 @@ extern "C" {
       foreign_t pl_getPresumedLoc(term_t DeclT, term_t FilenameT,
                                   term_t LineT, term_t ColT);
 
+      foreign_t pl_reportViolation(term_t RuleT, term_t MsgT, term_t CulpritsT);
+
 #ifdef __cplusplus
     } /* End namespace crisp::prolog */
 

@@ -33,5 +33,8 @@ int plRegisterPredicates() {
                       0);
   PL_register_foreign("mangleName", 2,
                       (pl_function_t) &pl_mangleName, 0);
+  PL_register_foreign("report_violation", 3,
+                      (pl_function_t) &pl_reportViolation, 0);
+
   return TRUE;
 }

@@ -87,6 +87,78 @@ namespace crisp {
       return PL_unify_int64(ColT, (int64_t) PL.getColumn());
     }
 
+    foreign_t pl_reportViolation(term_t RuleT, term_t MsgT, term_t CulpritsT) {
+      // FIXME: all 'return FALSE' should be PL_warning'
+      const char *Rule;
+      if ( !PL_get_atom_chars(RuleT, (char **) &Rule)) return FALSE;
+      const char *Msg;
+      if ( !PL_get_atom_chars(MsgT, (char **) &Msg)) return FALSE;
+      // atom_t StmtA = PL_new_atom("stmt");
+      // functor_t StmtF = PL_new_functor(StmtA, 1);
+      atom_t NamedDeclA = PL_new_atom("namedDecl");
+      functor_t NamedDeclF = PL_new_functor(NamedDeclA, 2);
+
+      // functor_t SortF;
+      // if ( !PL_get_functor(LocT, &SortF)) return FALSE;
+      // term_t ElemT = PL_new_term_ref();
+      // if ( !PL_get_arg(1, LocT, ElemT)) return FALSE;
+      // SourceLocation SL;
+      // if ( PL_unify_functor(LocT, StmtF)) {
+      //   Stmt *S;
+      //   if ( !PL_get_pointer(ElemT, (void **) &S)) return FALSE;
+      //   SL = S->getLocStart();
+      // }
+      // // FIXME: same for Decl and other elems.
+
+      const CompilerInstance &CI = getCompilationInfo()->getCompilerInstance();
+      DiagnosticsEngine &DE = CI.getDiagnostics();
+      Twine MsgWithRule = Twine(Rule) + Twine(": ") + Twine(Msg);
+      unsigned DiagId = DE.getCustomDiagID(DiagnosticsEngine::Warning,
+                                           MsgWithRule.str());
+      DiagnosticBuilder DB = DE.Report(DiagId);
+
+      term_t HeadT = PL_new_term_ref();
+      term_t ListT = PL_copy_term_ref(CulpritsT); // copy as we need to write
+      while(PL_get_list(ListT, HeadT, ListT)) {
+        functor_t SortF;
+        if ( !PL_get_functor(HeadT, &SortF)) return FALSE;
+        term_t ElemT = PL_new_term_ref();
+        if ( !PL_get_arg(1, HeadT, ElemT)) return FALSE;
+        if ( PL_unify_functor(HeadT, NamedDeclF)) {
+          const NamedDecl *ND;
+          if ( !PL_get_pointer(ElemT, (void **) &ND)) return FALSE;
+          DB << ND->getDeclName();
+          continue;
+        }
+        // FIXME: same for Type and other elems
+      }
+      DB.~DiagnosticBuilder();  // Emits the diagnostic
+
+      ListT = PL_copy_term_ref(CulpritsT);
+      while(PL_get_list(ListT, HeadT, ListT)) {
+        functor_t SortF;
+        if ( !PL_get_functor(HeadT, &SortF)) return FALSE;
+        term_t ElemT = PL_new_term_ref();
+        if ( !PL_get_arg(1, HeadT, ElemT)) return FALSE;
+        term_t MsgT = PL_new_term_ref();
+        if ( !PL_get_arg(2, HeadT, MsgT)) return FALSE;
+        const char *Msg;
+        if ( !PL_get_atom_chars(MsgT, (char **) &Msg)) return FALSE;
+        if ( PL_unify_functor(HeadT, NamedDeclF)) {
+          const NamedDecl *ND;
+          if ( !PL_get_pointer(ElemT, (void **) &ND)) return FALSE;
+          DiagId = DE.getCustomDiagID(DiagnosticsEngine::Note, Msg);
+          DiagnosticBuilder DB = DE.Report(ND->getLocStart(), DiagId);
+          DB << ND->getDeclName();
+          DB.~DiagnosticBuilder(); // Emits the diagnostic
+          continue;
+        }
+        // FIXME: same for Type and other elems
+      }
+
+      return TRUE;
+    }
+
   } // End namespace crisp::prolog
 
 } // End namespace crisp

@@ -1,4 +1,5 @@
 :- multifile violation/2.
+:- multifile violation/3.
 :- multifile violationCandidate/2.
 
 init_msg :-
@@ -21,7 +22,8 @@ load_file(FileBaseName, RulesDir) :-
 
 runTranslationUnitAnalysis(TUMainFileName) :-
         clangFactsFileName(TUMainFileName, ClangFactsFileName),
-        writeAllViolationCandidates(ClangFactsFileName).
+        writeAllViolationCandidates(ClangFactsFileName),
+        report_all_violations.
 
 clangFactsFileName(TUMainFileName, PrologName) :-
         file_base_name(TUMainFileName, CppName),
@@ -33,3 +35,7 @@ writeAllViolationCandidates(FileName) :-
         forall(violationCandidate(Rule, Culprits),
                portray_clause(Stream, violationCandidate(Rule, Culprits))),
         close(Stream).
+
+report_all_violations :-
+        forall(violation(Rule, Message, Culprits),
+               report_violation(Rule, Message, Culprits)).
