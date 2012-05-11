@@ -56,11 +56,12 @@ namespace crisp {
   class CrispConsumer : public ASTConsumer
                       , public RecursiveASTVisitor<CrispConsumer> {
   public:
-    CrispConsumer(CompilerInstance &CI, std::string &RFN, bool FI)
+    CrispConsumer(CompilerInstance &CI, std::string &RFN, bool IF, bool DF)
       : CompilerInstance(CI)
       , ErrorInfo()
       , RulesFileName(RFN)
-      , FlagInteractive(FI) {
+      , InteractiveFlag(IF)
+      , DebugCrispPluginFlag(DF) {
       // ErrorInfo is an output arg to get info about potential errors
       // opening the file/stream.
       FactsOutputStream = new raw_fd_ostream("-", ErrorInfo);
@@ -78,7 +79,8 @@ namespace crisp {
     raw_ostream *FactsOutputStream;
     std::string ErrorInfo;
     std::string RulesFileName;
-    bool FlagInteractive;
+    bool InteractiveFlag;
+    bool DebugCrispPluginFlag;
   };
 
   CrispConsumer::~CrispConsumer() {
@@ -96,8 +98,12 @@ namespace crisp {
   }
 
   void CrispConsumer::HandleTranslationUnit(ASTContext &Context) {
-    DebugFlag = 1;                // FIXME: use a plugin option to
-                                  // (de-)activate debug mode.
+#ifndef NDEBUG
+    if ( !DebugFlag && DebugCrispPluginFlag) {
+      DebugFlag = 1;
+      dbgs() << "DebugFlag switched on." << "\n";
+    }
+#endif
 
     DEBUG(dbgs() << "Handling translation unit." << "\n");
 
@@ -136,7 +142,7 @@ namespace crisp {
       Success = plRunTranslationUnitAnalysis(MainFileName);
 
       // When debugging, open a PROLOG interactive session if user asked one
-      DEBUG(if (Success && FlagInteractive) Success = plInteractiveSession());
+      DEBUG(if (Success && InteractiveFlag) Success = plInteractiveSession());
 
       // Free global data
       deleteCompilationInfo();
@@ -147,8 +153,12 @@ namespace crisp {
                       << "Prolog engine failed.\n";);
     (void) plCleanUp(Success ? 0 : 1); // Return value ignored
 
-    DebugFlag = 0;                // FIXME: use a plugin option to
-                                  // (de-)activate debug mode.
+#ifndef NDEBUG
+    if (DebugFlag) {
+      DebugFlag = 0;
+      dbgs() << "DebugFlag switched off." << "\n";
+    }
+#endif
   }
 
   // Visit declarations
@@ -175,18 +185,20 @@ namespace crisp {
 
   class CrispASTAction : public PluginASTAction {
   public:
-    CrispASTAction() : FlagInteractive(false) {}
+    CrispASTAction() : InteractiveFlag(false), DebugCrispPluginFlag(false) {}
 
   protected:
     virtual ASTConsumer* CreateASTConsumer(CompilerInstance &CI, StringRef) {
-      return new CrispConsumer(CI, RulesFileName, FlagInteractive);
+      return new CrispConsumer(CI, RulesFileName, InteractiveFlag,
+                               DebugCrispPluginFlag);
     }
 
     virtual bool ParseArgs(const CompilerInstance &CI,
                            const std::vector<std::string> &Args);
   private:
     std::string RulesFileName;
-    bool FlagInteractive;
+    bool InteractiveFlag;
+    bool DebugCrispPluginFlag;
     bool parseOneArg(const std::string &);
   };
 
@@ -211,11 +223,15 @@ namespace crisp {
   bool CrispASTAction::parseOneArg(const std::string &Arg) {
     if (Arg.empty()) return true;          // Non-meaningfule argument, ignored
     if (Arg[0] == '-') {                   // Option argument
-      if (Arg.compare("--interactive") == 0) {
-        FlagInteractive = true;
+      if (Arg.compare("-interactive") == 0) {
+        InteractiveFlag = true;
         return true;
-      }                                    // else: unknown option argument
-      return false;
+      }
+      if (Arg.compare("-debug") == 0) {
+        DebugCrispPluginFlag = true;
+        return true;
+      }
+      return false;                        // else: unknown option argument
     }                                      // else: input argument
     if ( !RulesFileName.empty()) {         // Rules file already set
       return false;

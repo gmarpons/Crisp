@@ -2,8 +2,10 @@
 :- multifile violation/3.
 :- multifile violationCandidate/2.
 
-init_msg :-
+%% Argument is 'DebugFlag'.
+init_msg(true) :-
         write('Initializing Prolog engine.'), nl.
+init_msg(false).
 
 welcome_msg_and_prolog :-
         write('Welcome to the Crisp interactive interface!'), nl,

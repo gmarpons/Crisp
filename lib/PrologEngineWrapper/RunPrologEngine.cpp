@@ -43,7 +43,7 @@ namespace crisp {
     static char *BootFileAbsNameCStr;
 
     int plRunEngine(const std::string& BootFileName,
-                    const std::string& InitialGoal) {
+                    const std::string& InitialGoalFunctor) {
       // Look for dir where saved state files for booting Prolog are
       // placed: either build data dir or install data dir, depending on
       // whether DATA_OBJ_ROOT is defined (in order to define it, its
@@ -59,6 +59,11 @@ namespace crisp {
       S.append(BootFileName);
       BootFileAbsNameCStr = (char *) malloc(sizeof(char) * (S.size() + 1));
       strcpy(BootFileAbsNameCStr, S.c_str());
+      std::string DebugFlag("false");
+      DEBUG(DebugFlag = "true");
+      std::string InitialGoal = InitialGoalFunctor + "(" + DebugFlag + ")";
+      // Twine InitialGoal = Twine(InitialGoalFunctor) + Twine("(")
+      //   + Twine(DebugFlag) + Twine(")");
 
       // Necessary to tell SWI where is its Home directory, to find
       // initialization files

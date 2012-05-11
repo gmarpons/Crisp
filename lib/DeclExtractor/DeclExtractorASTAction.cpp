@@ -51,9 +51,9 @@ namespace crisp {
     : public ASTConsumer
     , public RecursiveASTVisitor<DeclExtractorConsumer> {
   public:
-    DeclExtractorConsumer(CompilerInstance &CI, std::string IG)
+    DeclExtractorConsumer(CompilerInstance &CI, std::string IGF)
       : CompilerInstance(CI)
-      , InitialGoal(IG) {
+      , InitialGoalFunctor(IGF) {
     }
     virtual ~DeclExtractorConsumer();
     virtual void HandleTranslationUnit(ASTContext &Context);
@@ -65,7 +65,7 @@ namespace crisp {
 
   private:
     CompilerInstance &CompilerInstance;
-    std::string InitialGoal;
+    std::string InitialGoalFunctor;
   };
 
   DeclExtractorConsumer::~DeclExtractorConsumer() {
@@ -84,7 +84,9 @@ namespace crisp {
     DEBUG(if ( !Success) dbgs() << "Error registering predicates.\n");
 
     // if (Success) plRunEngine(PrologBootFileName);
-    if (Success) plRunEngine("PrologBootForDeclExtractor.sh", InitialGoal);
+    if (Success) {
+      plRunEngine("PrologBootForDeclExtractor.sh", InitialGoalFunctor);
+    }
 
     if (Success) {
       // Get main file name
@@ -146,19 +148,19 @@ namespace crisp {
 
   protected:
     virtual ASTConsumer* CreateASTConsumer(CompilerInstance& CI, StringRef) {
-      return new DeclExtractorConsumer(CI, InitialGoal);
+      return new DeclExtractorConsumer(CI, InitialGoalFunctor);
     }
 
     virtual bool ParseArgs(const CompilerInstance &CI,
                            const std::vector<std::string> &Args);
   private:
-    std::string InitialGoal;
+    std::string InitialGoalFunctor;
   };
 
   bool DeclExtractorASTAction::ParseArgs(const CompilerInstance &CI,
                                          const std::vector<std::string> &Args) {
     // We assume one argument
-    InitialGoal = Args[0];
+    InitialGoalFunctor = Args[0];
     return true;
   }
 
