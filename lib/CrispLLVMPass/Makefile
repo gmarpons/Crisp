@@ -37,10 +37,11 @@ CPPFLAGS += ${SWIPL_CPPFLAGS}
 CPPFLAGS += ${BOOST_CPPFLAGS}
 
 #
-# Build LLVMDeclarations.inc.
-# Vars that can be easily changed: CLANGXX
+# Build ClangDeclarations.inc.
+# Vars that can be easily changed: CLANGXX, CLANGBUILDMODE
 #
-CLANGXX = $(LLVM_OBJ_ROOT)/Release/bin/clang++
+CLANGBUILDMODE = $(BuildMode)
+CLANGXX = $(LLVM_OBJ_ROOT)/$(CLANGBUILDMODE)/bin/clang++
 PLUGINNAME = $(strip declextractor.so)
 CLANGPLUGIN = $(LibDir)/$(PLUGINNAME)
 CLANGPLUGINFLAGS = -Xclang -load -Xclang $(CLANGPLUGIN) \
