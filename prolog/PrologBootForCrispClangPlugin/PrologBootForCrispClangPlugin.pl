@@ -1,6 +1,6 @@
-:- multifile violation/2.
 :- multifile violation/3.
-:- multifile violationCandidate/2.
+:- multifile violation_candidate/2.
+:- multifile violation_llvm/3.
 
 %% Argument is 'DebugFlag'.
 init_msg(true) :-
@@ -34,8 +34,8 @@ clangFactsFileName(TUMainFileName, PrologName) :-
 
 writeAllViolationCandidates(FileName) :-
         open(FileName, write, Stream),
-        forall(violationCandidate(Rule, Culprits),
-               portray_clause(Stream, violationCandidate(Rule, Culprits))),
+        forall(violation_candidate(Rule, Culprits),
+               portray_clause(Stream, violation_candidate(Rule, Culprits))),
         close(Stream).
 
 report_all_violations :-

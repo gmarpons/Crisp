@@ -30,7 +30,7 @@ violation('HICPP 3.3.13',
         'CXXMethodDecl::is_virtual'(Callee), % implies Caller \= Callee
         'calls+'(Caller, Callee).
 
-violationCandidate('HICPP 3.4.2', [MethodRepr]) :-
+violation_candidate('HICPP 3.4.2', [MethodRepr]) :-
         isA(Method, 'CXXMethodDecl'),
         'ValueDecl::type'(Method, MethodType),
         'QualType::canonicalType'(MethodType, CanonicalMethodType),
@@ -47,8 +47,8 @@ violationCandidate('HICPP 3.4.2', [MethodRepr]) :-
                                 % CRISP compiler
         mangleName(Method, MethodRepr).
 
-violation('HICPP 3.4.2', [FuncName], AliasResult) :-
-        violationCandidate('HICPP 3.4.2', [FuncName]),
+violation_llvm('HICPP 3.4.2', [FuncName], AliasResult) :-
+        violation_candidate('HICPP 3.4.2', [FuncName]),
         isA_(Module, 'Module'),
         getFunction(Module, FuncName, Func),
         'Function::arg'(Func, This),
