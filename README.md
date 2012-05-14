@@ -25,16 +25,18 @@ GNU/Linux only so far.
 Prerequisites
 -------------
 
-1. [Install and build **LLVM/clang sources**] [CLANG-GET-STARTED].
-   There are also Git repositories available for both LLVM and clang:
-   - http://llvm.org/git/llvm.git
-   - http://llvm.org/git/clang.git
-
-   Crisp build system expects to find LLVM/clang commands compiled in
-   *Release* mode, so you need to set environment variables
-   `ENABLE_OPTIMIZED=1` and `DISABLE_ASSERTIONS=1` when running `make`
-   in step 5 of the build documentation for clang above (see
-   [more information about these variables] [LLVM-COMPILE]).
+1. [Install and build **LLVM/clang sources**]
+   [CLANG-GET-STARTED]. Note that:
+   - (Steps 2 and 3) There are also Git repositories available for
+     both LLVM (`http://llvm.org/git/llvm.git`) and clang
+     (`http://llvm.org/git/clang.git`) that you can use as an
+     alternative to `svn`.
+   - (Step 4) It is not necessary.
+   - (Step 5) By default, LLVM/clang is build in *Debug+Asserts*
+     mode. There are many [other build combinations]
+     [LLVM-COMPILE]. E.g., you can set environment variables
+     `ENABLE_OPTIMIZED=1` and `DISABLE_ASSERTIONS=1` when running
+     `make` to build in *Release* mode.
 
 2. Install **SWI-Prolog**. It is most likely provided as a
    pre-compiled package for your GNU/Linux distribution. On
@@ -57,30 +59,31 @@ Download Crisp source code
 
 Source code is available at GitHub:
 
-    git clone git://github.com/gmarpons/Crisp.git
+    git clone git://github.com/gmarpons/Crisp.git crisp
 
 Build Crisp
 -----------
 
-Let `LOCAL_LLVM_SRC_ROOT` (resp. `LOCAL_LLVM_OBJ_ROOT`) the root of
-your LLVM/clang source (resp. build) tree, and `LOCAL_CRISP_SRC_ROOT`
-the root of your Crisp source tree. Then do the following:
+Let `LLVM_SRC_ROOT` (resp. `LLVM_OBJ_ROOT`) the absolute
+root path of your LLVM/clang source (resp. build) tree, and
+`CRISP_SRC_ROOT` the absolute root path of your Crisp source
+tree. Then do the following:
 
-    mkdir LOCAL_CRISP_SRC_ROOT/projects/crisp
-    cd LOCAL_CRISP_SRC_ROOT/projects/crisp
-    LOCAL_CRISP_SRC_ROOT/configure \
-      --with-llvmsrc=LOCAL_LLVM_SRC_ROOT \
-      --with-llvmobj=LOCAL_LLVM_OBJ_ROOT
+    mkdir $CRISP_SRC_ROOT/projects/crisp
+    cd $CRISP_SRC_ROOT/projects/crisp
+    $CRISP_SRC_ROOT/configure \
+      --with-llvmsrc=$LLVM_SRC_ROOT \
+      --with-llvmobj=$LLVM_OBJ_ROOT
       
 You will probably need also to set the header directory for
 SWI-Prolog, with the `configure`'s extra argument
 `--with-swipl-includes`. E.g., in Debian/Ubuntu (and derivatives) you
 need to use
 `--with-swipl-includes=/usr/lib/swi-prolog/include/`. Documentation
-for other `configure` command line options (such as `--prefix`) can be
-obtained typing
+for other `configure` command line options (such as `--prefix`, or
+`--with-swipl-libs`) can be obtained typing
 
-    LOCAL_CRISP_SRC_ROOT/configure --help
+    $CRISP_SRC_ROOT/configure --help
 
 In order to build and install Crisp, type:
 
@@ -91,13 +94,19 @@ Compilation is possible with a recent version of LLVM/clang (it does
 not work with GCC). As usual, you can specify a particular building
 compiler with environment variables `CC` and `CXX`. E.g., write
 
-    make CC=LOCAL_LLVM_OBJ_ROOT/BUILD_MODE/bin/clang \
-      CXX=LOCAL_LLVM_OBJ_ROOT/BUILD_MODE/bin/clang++
+    make CC=$LLVM_OBJ_ROOT/$BUILD_MODE/bin/clang \
+      CXX=$LLVM_OBJ_ROOT/$BUILD_MODE/bin/clang++
 
 to compile Crisp using the same compiler you are building an add-on
 for, where `BUILD_MODE` can be `Release`, `Debug+Asserts`, or another
 combination describing the debugging/optimizing/profiling options you
-have used to build LLVM/clang (default is `Debug+Asserts`).
+have used to build LLVM/clang (see Prerequisite 1 above).
+
+It build/install works correctly, it should drop two shared libraries
+in a `lib` sub-directory of your installation place: `crispclang.so`
+and `crispllvm.so`. They are a `clang` plugin and a loadable analysis
+pass for `opt` command, respectively. They are meant to work together
+to detect and report rule violations in your C/C++ code.
 
 If you want to test Crisp without installing it, instead of running
 `make install` you can simply add variable `ENABLE_DATA_OBJ_ROOT=1` to
@@ -108,10 +117,51 @@ initialization data directly from the build tree.
 Basic Usage
 ===========
 
-*TODO*
+Current code is still a proof of concept with very limited
+functionality. The very small number of coding rules already
+implemented can be found in the `prolog/Rules` directory of the source
+distribution. You can test them with your own C/C++ code, or using the
+example code in `docs/examples`.
+
+For example, assuming that LLVM binaries (`clang++`, `opt`, etc.) are
+accessible from your `PATH`, you can enable coding rule validation for
+testing file `hicpp_3_3_11.cpp` with
+
+    clang++ -cc1                                                      \
+      -load $CRISP_INSTALL_ROOT/lib/crispclang.so                     \
+      -add-plugin crisp-clang -plugin-arg-crisp-clang SomeHICPPrules  \
+      -emit-llvm -S $CRISP_SRC_ROOT/docs/examples/hicpp_3_3_13.cpp
+
+where the meaning of all the options and variables used is the
+following:
+
+- `-cc1`: run the clang compiler, not the driver that invokes the
+  different LLVM tools.
+- `-load $CRISP_INSTALL_ROOT/lib/crispclang.so`: dynamically load a
+  plugin that emits a warning message when some coding rule is
+  violated. `$CRISP_INSTALL_ROOT` is the base directory where you have
+  asked to install Crisp during configuration (see section "Build
+  Crisp" above). If you have compiled Crisp with option
+  `ENABLE_DATA_OBJ_ROOT=1`, all the necessary data to run the plugin
+  can be found in the build tree (assume that its root is
+  `$CRISP_OBJ_ROOT`), and you can load the plugin found in
+  `$CRISP_OBJ_ROOT/$BUILD_MODE/lib/crispclang.so` (`$BUILD_MODE` is
+  one of *Release*, *Debug+Asserts*, etc.)
+- `-add-plugin crisp-clang`: run the plugin.
+- `-plugin-arg-crisp-clang SomeHICPPrules`: an argument to the plugin
+  to choose a file with rule definitions (so far codified in
+  Prolog). A `.pl` extension is optional. Rule files are first
+  searched in the working directory, and then in a specific directory
+  of the distribution/installation.
+- `-emit-llvm -S`: compile to LLVM IR, no native object code
+  generation.
+- `$CRISP_SRC_ROOT/docs/examples/hicpp_3_3_13.cpp`: input file with
+  C++ code to compile/analyze.
 
 
 Known Issues
 ============
 
-- Building Crisp in *Release* mode does not currently work.
+- Rule violations detected by `opt` are not reported (the user needs
+  to start a Prolog interactive session with `-crisp-interactive`
+  option).
