@@ -12,11 +12,25 @@ calls(Caller, Callee) :-
         ),
         'CallExpr::directCallee'(CallExpr, Callee).
 
+calls_to_this(Caller, Callee) :-
+        'Decl::body'(Caller, Body),
+        'child+'(Body, CallExpr),
+        'Stmt::stmtClassName'(CallExpr, 'CXXMemberCallExpr'),
+        'CXXMemberCallExpr::implicitObjectArgument'(CallExpr, MemberExpr),
+        'Stmt::stmtClassName'(MemberExpr, 'CXXThisExpr'),
+        'CallExpr::directCallee'(CallExpr, Callee).
+
 'calls+'(Caller, Callee) :-
         calls(Caller, Callee).
 'calls+'(Caller, IndirectCallee) :-
         calls(Caller, DirectCallee),
         'calls+'(DirectCallee, IndirectCallee).
+
+'calls_to_this+'(Caller, Callee) :-
+        calls_to_this(Caller, Callee).
+'calls_to_this+'(Caller, IndirectCallee) :-
+        calls_to_this(Caller, DirectCallee),
+        'calls_to_this+'(DirectCallee, IndirectCallee).
 
 violation('HICPP 3.3.13',
           'ctor/dtor %0 calls (maybe indirectly) virtual method %1',
@@ -28,7 +42,8 @@ violation('HICPP 3.3.13',
         ),
         'CXXRecordDecl::method'(Record, Callee),
         'CXXMethodDecl::is_virtual'(Callee), % implies Caller \= Callee
-        'calls+'(Caller, Callee).
+        'calls_to_this+'(Caller, Callee).
+        % 'calls+'(Caller, Callee).
 
 violation_candidate('HICPP 3.4.2', [MethodRepr]) :-
         isA(Method, 'CXXMethodDecl'),
