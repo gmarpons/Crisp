@@ -21,7 +21,8 @@ B::B() {
 }
 
 B::B(B* other_b) {
-  other_b->func2();		// D::func2 called
+  other_b->func2();		// D::func2 called, on already
+                                // constructed object
 }
 
 int main() {
