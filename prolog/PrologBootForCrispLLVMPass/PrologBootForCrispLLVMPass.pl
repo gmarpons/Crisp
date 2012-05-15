@@ -34,6 +34,13 @@ llvmFactsFileName(ModuleFileName, PrologName) :-
 readAllViolationCandidates(FileName) :-
         ensure_loaded(FileName).
 
+run_module_analysis :-
+        report_all_llvm_violations.
+
+report_all_llvm_violations :-
+        forall(violation_llvm(Rule, Message, Culprits),
+               report_violation_llvm(Rule, Message, Culprits)).
+
 %% Modes:
 %% 1. (Module, 'Module')
 %% 2. (Instruction+, Sort)

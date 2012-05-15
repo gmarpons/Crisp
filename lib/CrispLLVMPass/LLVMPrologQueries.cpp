@@ -47,6 +47,19 @@ namespace crisp {
       return Success;
     }
 
+    int plRunModuleAnalysis() {
+      int Success;
+      functor_t RunAnalysisF
+        = PL_new_functor(PL_new_atom("run_module_analysis"), 0);
+      term_t RunAnalysisT = PL_new_term_ref();
+      Success = PL_cons_functor(RunAnalysisT, RunAnalysisF);
+      if ( !Success) return Success;
+      Success = PL_call(RunAnalysisT, NULL);
+      DEBUG(if ( !Success) dbgs() << "Error calling 'run_module_analysis/0'."
+                                  << "\n");
+      return Success;
+    }
+
     int plAssertModule(Module *M) {
       return plAssertIsA((void *) M, std::string("Module"));
     }

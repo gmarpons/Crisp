@@ -7,3 +7,9 @@ autom4te.cache/
 /GSYMS
 /GTAGS
 /README.html
+/docs/examples/*.ll
+/docs/examples/*.pl
+/docs/examples/*.s
+/docs/examples/*.bc
+/docs/examples/hicpp_3_4_2_b.cpp
+

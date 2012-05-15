@@ -89,6 +89,9 @@ extern "C" {
       foreign_t pl_getFunction(term_t ModuleT, term_t NameT,
                                term_t FunctionT);
 
+      foreign_t pl_reportViolationLLVM(term_t RuleT, term_t MsgT,
+                                       term_t CulpritsT);
+
 #ifdef __cplusplus
     } /* End namespace crisp::prolog */
 

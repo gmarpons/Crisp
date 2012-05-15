@@ -127,10 +127,11 @@ For example, assuming that LLVM binaries (`clang++`, `opt`, etc.) are
 accessible from your `PATH`, you can enable coding rule validation for
 testing file `hicpp_3_3_11.cpp` with
 
+    cd $CRISP_SRC_ROOT/docs/examples
     clang++ -cc1                                                      \
       -load $CRISP_INSTALL_ROOT/lib/crispclang.so                     \
       -add-plugin crisp-clang -plugin-arg-crisp-clang SomeHICPPrules  \
-      -emit-llvm -S $CRISP_SRC_ROOT/docs/examples/hicpp_3_3_13.cpp
+      -emit-llvm hicpp_3_3_13.cpp
 
 where the meaning of all the options and variables used is the
 following:
@@ -153,15 +154,27 @@ following:
   Prolog). A `.pl` extension is optional. Rule files are first
   searched in the working directory, and then in a specific directory
   of the distribution/installation.
-- `-emit-llvm -S`: compile to LLVM IR, no native object code
-  generation.
-- `$CRISP_SRC_ROOT/docs/examples/hicpp_3_3_13.cpp`: input file with
-  C++ code to compile/analyze.
+- `-emit-llvm`: compile to LLVM IR.
+- `hicpp_3_3_13.cpp`: input file with C++ code to compile/analyze.
 
+Some rules need a second step (those that rely on alias analysis
+information):
 
-Known Issues
-============
+    clang++ -cc1                                                      \
+      -load $CRISP_INSTALL_ROOT/lib/crispclang.so                     \
+      -add-plugin crisp-clang -plugin-arg-crisp-clang SomeHICPPrules  \
+      -emit-llvm hicpp_3_4_2.cpp
 
-- Rule violations detected by `opt` are not reported (the user needs
-  to start a Prolog interactive session with `-crisp-interactive`
-  option).
+    opt -load $CRISP_INSTALL_ROOT/lib/crispllvm.so                    \
+      -crisp-mod -crisp-rules-file SomeHICPPrules                     \
+      -analyze -basicaa hicpp_3_4_2.ll > /dev/null
+
+This command runs the optimization and analysis tool of LLVM, and
+executes an analysis pass for rule validation based on alias
+analysis. The precision of rule checkers depends on the sophistication
+of the alias analysis enabled. `-basicaa` enables a simple alias
+analysis algorithm, other options are available installing other
+analysis passes distributed as separated sub-projects.
+
+The command takes as input a `.ll` file generated in the previous
+step.

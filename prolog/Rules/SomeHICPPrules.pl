@@ -47,7 +47,9 @@ violation_candidate('HICPP 3.4.2', [MethodRepr]) :-
                                 % CRISP compiler
         mangleName(Method, MethodRepr).
 
-violation_llvm('HICPP 3.4.2', [FuncName], AliasResult) :-
+violation_llvm('HICPP 3.4.2',
+               'const member function %0 returns a non-const handle to class data',
+               ['Function'(Func)]) :-
         violation_candidate('HICPP 3.4.2', [FuncName]),
         isA_(Module, 'Module'),
         getFunction(Module, FuncName, Func),
@@ -71,4 +73,5 @@ violation_llvm('HICPP 3.4.2', [FuncName], AliasResult) :-
         isA_(Return, 'ReturnInst'),
         'User::op'(Return, UsedByReturn),
         getLocation(UsedByReturn, ReturnLoc),
-        alias(OffsetFromThisLoc, ReturnLoc, AliasResult).
+        alias(OffsetFromThisLoc, ReturnLoc, AliasResult),
+        AliasResult > 0.

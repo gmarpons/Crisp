@@ -40,5 +40,8 @@ int plRegisterPredicates() {
                       pl_aliasLessThanNoAlias, 0);
   PL_register_foreign("alias", 3, pl_alias, 0);
   PL_register_foreign("getFunction", 3, pl_getFunction, 0);
+  PL_register_foreign("report_violation_llvm", 3,
+                      (pl_function_t) &pl_reportViolationLLVM, 0);
+
   return TRUE;
 }

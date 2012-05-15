@@ -108,9 +108,12 @@ namespace crisp {
         // CompilationInfo defined in CompilationInfo.h).
         newLLVMCompilationInfo(*this);
 
+        // Main Prolog analysis
+        Success = plRunModuleAnalysis();
+
         // When debugging, open a PROLOG interactive session if
         // FlagInteractive is set
-        DEBUG(if (FlagInteractive) Success = plInteractiveSession());
+        DEBUG(if (Success && FlagInteractive) Success = plInteractiveSession());
 
         // Free global data
         deleteLLVMCompilationInfo();

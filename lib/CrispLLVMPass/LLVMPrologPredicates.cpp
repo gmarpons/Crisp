@@ -26,6 +26,7 @@
 #include "llvm/Instructions.h"
 #include "llvm/Module.h"
 #include "llvm/Support/InstIterator.h"
+#include "llvm/Support/raw_ostream.h"
 #include "llvm/Use.h"
 #include "llvm/Target/TargetData.h"
 #include "llvm/Type.h"
@@ -223,6 +224,37 @@ namespace crisp {
       if ( !PL_get_atom_chars(NameT, &N))
         return PL_warning("getFunction/3: instantiation fault on second arg");
       return PL_unify_pointer(FunctionT, M->getFunction(StringRef(N)));
+    }
+
+    foreign_t pl_reportViolationLLVM(term_t RuleT, term_t MsgT,
+                                     term_t CulpritsT) {
+      // FIXME: all 'return FALSE' should be PL_warning'
+      const char *Rule;
+      if ( !PL_get_atom_chars(RuleT, (char **) &Rule)) return FALSE;
+      const char *Msg;
+      if ( !PL_get_atom_chars(MsgT, (char **) &Msg)) return FALSE;
+      atom_t FunctionA = PL_new_atom("Function");
+      functor_t FunctionF = PL_new_functor(FunctionA, 1);
+
+      Twine MsgWithRule = Twine(Rule) + Twine(": ") + Twine(Msg);
+      errs() << MsgWithRule;
+
+      term_t HeadT = PL_new_term_ref();
+      term_t ListT = PL_copy_term_ref(CulpritsT); // copy as we need to write
+      while(PL_get_list(ListT, HeadT, ListT)) {
+        term_t ElemT = PL_new_term_ref();
+        if ( !PL_get_arg(1, HeadT, ElemT)) return FALSE;
+        if ( PL_unify_functor(HeadT, FunctionF)) {
+          const Function *F;
+          if ( !PL_get_pointer(ElemT, (void **) &F)) return FALSE;
+          Twine ElemString = Twine(": ") + Twine(F->getName()) + Twine("\n");
+          errs() << ElemString;
+          continue;
+        }
+        // FIXME: same for other elems that are no llvm::Function's
+      }
+
+      return TRUE;
     }
 
   } // End namespace crisp::prolog
