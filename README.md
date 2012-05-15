@@ -169,12 +169,12 @@ information):
       -crisp-mod -crisp-rules-file SomeHICPPrules                     \
       -analyze -basicaa hicpp_3_4_2.ll > /dev/null
 
-This command runs the optimization and analysis tool of LLVM, and
-executes an analysis pass for rule validation based on alias
-analysis. The precision of rule checkers depends on the sophistication
-of the alias analysis enabled. `-basicaa` enables a simple alias
-analysis algorithm, other options are available installing other
-analysis passes distributed as separated sub-projects.
+The first command is the same shown before for example file
+`hicpp_3_4_2.cpp`. The second command runs the optimization and
+analysis tool of LLVM, and executes an analysis pass for rule
+validation based on alias analysis. The precision of rule checkers
+depends on the sophistication of the alias analysis used. `-basicaa`
+enables a simple alias analysis algorithm.
 
 The command takes as input a `.ll` file generated in the previous
 step.
