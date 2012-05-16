@@ -236,7 +236,8 @@ namespace crisp {
       atom_t FunctionA = PL_new_atom("Function");
       functor_t FunctionF = PL_new_functor(FunctionA, 1);
 
-      Twine MsgWithRule = Twine(Rule) + Twine(": ") + Twine(Msg);
+      Twine MsgWithRule = Twine("warning: ") + Twine(Rule) + Twine(": ")
+                                + Twine(Msg);
       errs() << MsgWithRule;
 
       term_t HeadT = PL_new_term_ref();
