@@ -88,28 +88,25 @@ You will probably need also to set the header directory for
 SWI-Prolog, with the `configure`'s extra argument
 `--with-swipl-includes`. E.g., in Debian/Ubuntu (and derivatives) you
 need to use
-`--with-swipl-includes=/usr/lib/swi-prolog/include/`. Documentation
-for other `configure` command line options (such as `--prefix`, or
+`--with-swipl-includes=/usr/lib/swi-prolog/include/`. Installation
+directory can be set with `--prefix=SOME_DIR_WITH_WRITE_ACCESS`.
+Documentation for other `configure` command line options (such as
 `--with-swipl-libs`) can be obtained typing
 
     $CRISP_SRC_ROOT/configure --help
 
 Compilation is possible with a recent version of LLVM/clang (it does
-not work with GCC). In order to build and install Crisp, and assuming
-that commands `clang` and `clang++` are accessible from the `PATH`
-variable, type:
-
-    make
-    make install
-
-As usual, you can specify a particular building compiler with
-environment variables `CC` and `CXX`. E.g., write
+not work with GCC). As usual, you can specify a particular building
+compiler with environment variables `CC` and `CXX`. For instance, to
+compile Crisp using the same compiler you are building an add-on for,
+type:
 
     make CC=$LLVM_OBJ_ROOT/$BUILD_MODE/bin/clang \
       CXX=$LLVM_OBJ_ROOT/$BUILD_MODE/bin/clang++
 
-to compile Crisp using the same compiler you are building an add-on
-for, where `BUILD_MODE` can be `Release`, `Debug+Asserts`, or another
+    make install
+
+where `BUILD_MODE` can be `Release`, `Debug+Asserts`, or another
 combination describing the debugging/optimizing/profiling options you
 have used to build LLVM/clang (see Prerequisite 1 above).
 
@@ -162,6 +159,9 @@ following:
 - `-emit-llvm`: compile to LLVM IR.
 - `hicpp_3_3_13.cpp`: input file with C++ code to compile/analyze.
 
+Three warning messages are expected on *stderr* telling that file
+hicpp_3_3_13.cpp contains three violations of rule HICPP 3.3.13.
+
 Some rules need a second step (those that rely on alias analysis
 information):
 
@@ -173,7 +173,7 @@ information):
     $LLVM_OBJ_ROOT/$BUILD_MODE/bin/opt -analyze                       \
       -load $CRISP_INSTALL_ROOT/lib/crispllvm.so                      \
       -crisp-mod -crisp-rules-file SomeHICPPrules                     \
-       -basicaa hicpp_3_4_2.ll > /dev/null
+      -basicaa hicpp_3_4_2.ll > /dev/null
 
 The first command is the same shown before, but applied to example
 file `hicpp_3_4_2.cpp`. The second command runs the optimization and
@@ -183,4 +183,17 @@ depends on the sophistication of the alias analysis used. `-basicaa`
 enables a simple alias analysis algorithm. Other useful alias analysis
 implementations require installing loadable modules distributed
 separately. The command takes as input a `.ll` file generated in the
-previous step.
+previous step. The expected output is a list of two warnings, telling
+that rule HICPP 3.4.2 has been violated by two different functions.
+
+
+Known Issues
+============
+
+- Rule violation reporting could be improved, specially for `opt`
+  plug-in (assembler names are used to point functions out, and no
+  line/column numbers are given to the user).
+- Extending the tool with user-defined rules requires a deep knowledge
+  of both Prolog and Crisp internals. Next releases will focus on
+  providing a high-level rule definition DSL that will be
+  automatically translated into Prolog.
