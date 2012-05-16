@@ -94,14 +94,16 @@ for other `configure` command line options (such as `--prefix`, or
 
     $CRISP_SRC_ROOT/configure --help
 
-In order to build and install Crisp, type:
+Compilation is possible with a recent version of LLVM/clang (it does
+not work with GCC). In order to build and install Crisp, and assuming
+that commands `clang` and `clang++` are accessible from the `PATH`
+variable, type:
 
     make
     make install
 
-Compilation is possible with a recent version of LLVM/clang (it does
-not work with GCC). As usual, you can specify a particular building
-compiler with environment variables `CC` and `CXX`. E.g., write
+As usual, you can specify a particular building compiler with
+environment variables `CC` and `CXX`. E.g., write
 
     make CC=$LLVM_OBJ_ROOT/$BUILD_MODE/bin/clang \
       CXX=$LLVM_OBJ_ROOT/$BUILD_MODE/bin/clang++
@@ -117,11 +119,6 @@ and `crispllvm.so`. They are a `clang` plugin and a loadable analysis
 pass for `opt` command, respectively. They are meant to work together
 to detect and report rule violations in your C/C++ code.
 
-If you want to test Crisp without installing it, instead of running
-`make install` you can simply add variable `ENABLE_DATA_OBJ_ROOT=1` to
-your compilation command. This will allow Crisp access to necessary
-initialization data directly from the build tree.
-
 
 Basic Usage
 ===========
@@ -132,12 +129,11 @@ implemented can be found in the `prolog/Rules` directory of the source
 distribution. You can test them with your own C/C++ code, or using the
 example code in `docs/examples`.
 
-For example, assuming that LLVM binaries (`clang++`, `opt`, etc.) are
-accessible from your `PATH`, you can enable coding rule validation for
-testing file `hicpp_3_3_11.cpp` with
+For example, you can enable coding rule validation for testing file
+`hicpp_3_3_11.cpp` with
 
     cd $CRISP_SRC_ROOT/docs/examples
-    clang++ -cc1                                                      \
+    $LLVM_OBJ_ROOT/$BUILD_MODE/bin/clang++ -cc1                       \
       -load $CRISP_INSTALL_ROOT/lib/crispclang.so                     \
       -add-plugin crisp-clang -plugin-arg-crisp-clang SomeHICPPrules  \
       -emit-llvm hicpp_3_3_13.cpp
@@ -169,19 +165,22 @@ following:
 Some rules need a second step (those that rely on alias analysis
 information):
 
-    clang++ -cc1                                                      \
+    $LLVM_OBJ_ROOT/$BUILD_MODE/bin/clang++ -cc1                       \
       -load $CRISP_INSTALL_ROOT/lib/crispclang.so                     \
       -add-plugin crisp-clang -plugin-arg-crisp-clang SomeHICPPrules  \
       -emit-llvm hicpp_3_4_2.cpp
 
-    opt -load $CRISP_INSTALL_ROOT/lib/crispllvm.so                    \
+    $LLVM_OBJ_ROOT/$BUILD_MODE/bin/opt -analyze                       \
+      -load $CRISP_INSTALL_ROOT/lib/crispllvm.so                      \
       -crisp-mod -crisp-rules-file SomeHICPPrules                     \
-      -analyze -basicaa hicpp_3_4_2.ll > /dev/null
+       -basicaa hicpp_3_4_2.ll > /dev/null
 
-The first command is the same shown before for example file
-`hicpp_3_4_2.cpp`. The second command runs the optimization and
+The first command is the same shown before, but applied to example
+file `hicpp_3_4_2.cpp`. The second command runs the optimization and
 analysis tool of LLVM, and executes an analysis pass for rule
 validation based on alias analysis. The precision of rule checkers
 depends on the sophistication of the alias analysis used. `-basicaa`
-enables a simple alias analysis algorithm. The command takes as input
-a `.ll` file generated in the previous step.
+enables a simple alias analysis algorithm. Other useful alias analysis
+implementations require installing loadable modules distributed
+separately. The command takes as input a `.ll` file generated in the
+previous step.
