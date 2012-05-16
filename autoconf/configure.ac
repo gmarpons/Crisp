@@ -1326,7 +1326,7 @@ AC_SUBST(SWIPL_CPPFLAGS)
 
 dnl Check for Clang header files (object dir)
 CLANG_SRC_ROOT="${llvm_src}/tools/clang"
-CLANG_OBJ_ROOT="${LLVM_ABS_OBJ_ROOT}/tools/clang"
+CLANG_OBJ_ROOT="${llvm_obj}/tools/clang"
 CLANG_OBJ_CXXFLAGS="-I${CLANG_OBJ_ROOT}/include"
 dnl Store current CXXFLAGS and merge with CLANG_OBJ_CXXFLAGS for compilation check   
 OLD_CXXFLAGS=$CXXFLAGS;
@@ -1360,7 +1360,7 @@ AC_SUBST(CLANG_OBJ_CXXFLAGS)
 
 dnl Check for Clang header files (sources dir)
 CLANG_SRC_CXXFLAGS="-I${CLANG_SRC_ROOT}/include"
-LLVM_SRC_AND_OBJ_CXXFLAGS="-I${LLVM_ABS_OBJ_ROOT}/include -I${llvm_src}/include"
+LLVM_SRC_AND_OBJ_CXXFLAGS="-I${llvm_obj}/include -I${llvm_src}/include"
 dnl Store current CXXFLAGS and merge with CLANG_SRC_CXXFLAGS for compilation check   
 OLD_CXXFLAGS=$CXXFLAGS;
 CXXFLAGS="$CXXFLAGS $LLVM_SRC_AND_OBJ_CXXFLAGS $CLANG_SRC_CXXFLAGS $CLANG_OBJ_CXXFLAGS -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS"
