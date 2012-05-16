@@ -95,7 +95,7 @@ namespace crisp {
       if ( !PL_get_atom_chars(MsgT, (char **) &Msg)) return FALSE;
       // atom_t StmtA = PL_new_atom("stmt");
       // functor_t StmtF = PL_new_functor(StmtA, 1);
-      atom_t NamedDeclA = PL_new_atom("namedDecl");
+      atom_t NamedDeclA = PL_new_atom("NamedDecl");
       functor_t NamedDeclF = PL_new_functor(NamedDeclA, 2);
 
       // functor_t SortF;
@@ -120,8 +120,6 @@ namespace crisp {
       term_t HeadT = PL_new_term_ref();
       term_t ListT = PL_copy_term_ref(CulpritsT); // copy as we need to write
       while(PL_get_list(ListT, HeadT, ListT)) {
-        functor_t SortF;
-        if ( !PL_get_functor(HeadT, &SortF)) return FALSE;
         term_t ElemT = PL_new_term_ref();
         if ( !PL_get_arg(1, HeadT, ElemT)) return FALSE;
         if ( PL_unify_functor(HeadT, NamedDeclF)) {
