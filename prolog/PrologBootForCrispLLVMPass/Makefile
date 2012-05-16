@@ -10,6 +10,7 @@ LEVEL=../..
 #
 DIRS=
 
+KEEP_SYMBOLS=1
 PROLOGSAVEDSTATENAME=PrologBootForCrispLLVMPass
 
 include $(LEVEL)/Makefile.common

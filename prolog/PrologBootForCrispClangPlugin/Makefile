@@ -10,6 +10,7 @@ LEVEL=../..
 #
 DIRS=
 
+KEEP_SYMBOLS=1
 PROLOGSAVEDSTATENAME=PrologBootForCrispClangPlugin
 
 include $(LEVEL)/Makefile.common
