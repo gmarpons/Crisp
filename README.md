@@ -38,19 +38,25 @@ Prerequisites
      `ENABLE_OPTIMIZED=1` and `DISABLE_ASSERTIONS=1` when running
      `make` to build in *Release* mode.
 
-2. Install **SWI-Prolog**. It is most likely provided as a
-   pre-compiled package for your GNU/Linux distribution. On
-   Debian/Ubuntu (and derivatives) you simply need to type `sudo
-   apt-get install swi-prolog`.
+2. Install **SWI-Prolog**. Version 5.10 or greater is recommended. It
+   is most likely provided as a pre-compiled package for your
+   GNU/Linux distribution. On Debian/Ubuntu (and derivatives) you
+   simply need to type `sudo apt-get install swi-prolog`. On other
+   systems, you need to be sure that a dynamic library (called
+   `libswipl.so` on POSIX systems) is available. That means that if
+   you install from [sources] [SWIPL-DOWNLOAD], you must pass option
+   `--enable-shared` to the `configure` script.
 
-3. Install **Boost C++ Libraries**. Crisp relies on header-only
-   libraries. On Debian/Ubuntu (and derivatives) you only need to type
-   `sudo apt-get install libboost-dev`. For other systems (or more
-   recent versions of Boost) follow the
-   [general installation instructions for Unix/Linux] [BOOST-UNIX].
+3. Install **Boost C++ Libraries**, version 1.46.1 or greater. Crisp
+   relies on header-only libraries. On Debian/Ubuntu (and derivatives)
+   you only need to type `sudo apt-get install libboost-dev`. For
+   other systems (or more recent versions of Boost) follow the
+   [general installation instructions for Unix/Linux]
+   [BOOST-UNIX].
 
   [CLANG-GET-STARTED]: http://clang.llvm.org/get_started.html
   [LLVM-COMPILE]:      http://www.llvm.org/docs/GettingStarted.html#compile
+  [SWIPL-DOWNLOAD]:    http://www.swi-prolog.org/Download.html
   [BOOST-UNIX]:        http://www.boost.org/doc/libs/1_49_0/more/getting_started/unix-variants.html
 
 
@@ -69,12 +75,15 @@ root path of your LLVM/clang source (resp. build) tree, and
 `CRISP_SRC_ROOT` the absolute root path of your Crisp source
 tree. Then do the following:
 
-    mkdir $CRISP_SRC_ROOT/projects/crisp
-    cd $CRISP_SRC_ROOT/projects/crisp
+    mkdir $LLVM_OBJ_ROOT/projects/crisp
+    cd $LLVM_OBJ_ROOT/projects/crisp
     $CRISP_SRC_ROOT/configure \
       --with-llvmsrc=$LLVM_SRC_ROOT \
       --with-llvmobj=$LLVM_OBJ_ROOT
-      
+
+(In fact, it is possible to build Crisp in a different directory, but
+`$LLVM_OBJ_ROOT/projects` is meant to be used that way).
+
 You will probably need also to set the header directory for
 SWI-Prolog, with the `configure`'s extra argument
 `--with-swipl-includes`. E.g., in Debian/Ubuntu (and derivatives) you
@@ -102,7 +111,7 @@ for, where `BUILD_MODE` can be `Release`, `Debug+Asserts`, or another
 combination describing the debugging/optimizing/profiling options you
 have used to build LLVM/clang (see Prerequisite 1 above).
 
-It build/install works correctly, it should drop two shared libraries
+If build/install works correctly, it should drop two shared libraries
 in a `lib` sub-directory of your installation place: `crispclang.so`
 and `crispllvm.so`. They are a `clang` plugin and a loadable analysis
 pass for `opt` command, respectively. They are meant to work together
@@ -110,7 +119,7 @@ to detect and report rule violations in your C/C++ code.
 
 If you want to test Crisp without installing it, instead of running
 `make install` you can simply add variable `ENABLE_DATA_OBJ_ROOT=1` to
-your make command. This will allow Crisp access to necessary
+your compilation command. This will allow Crisp access to necessary
 initialization data directly from the build tree.
 
 
@@ -174,7 +183,5 @@ The first command is the same shown before for example file
 analysis tool of LLVM, and executes an analysis pass for rule
 validation based on alias analysis. The precision of rule checkers
 depends on the sophistication of the alias analysis used. `-basicaa`
-enables a simple alias analysis algorithm.
-
-The command takes as input a `.ll` file generated in the previous
-step.
+enables a simple alias analysis algorithm. The command takes as input
+a `.ll` file generated in the previous step.
