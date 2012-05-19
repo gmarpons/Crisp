@@ -1,8 +1,7 @@
 Crisp
 =====
 
-A coding rule validation add-on for **LLVM/clang**, GPL v3
-licensed.
+A coding rule validation add-on for **LLVM/Clang**, GPLv3 Licensed.
 
 **Coding Rules** constrain admissible constructs of a language to help
 produce better code. Crisp can be used to define and enforce rules for
@@ -11,7 +10,7 @@ C and C++, like those in [High Integrity C++] [HICPP], and
 
 Crisp rules are written in Prolog. A high-level declarative DSL to
 easily write new rules is under development. It will be called CRISP,
-an acronym for *Coding Rules in Sugared Prolog*.
+an acronym for *Coding Rules In Sugared Prolog*.
 
   [HICPP]:    http://www.codingstandard.com/
   [CERT-SCS]: http://www.cert.org/secure-coding/
@@ -25,14 +24,14 @@ GNU/Linux only so far.
 Prerequisites
 -------------
 
-1. [Install and build **LLVM/clang sources**]
+1. [Install and build **LLVM/Clang sources**]
    [CLANG-GET-STARTED]. Note that:
    - (Steps 2 and 3) There are also Git repositories available for
-     both LLVM (`http://llvm.org/git/llvm.git`) and clang
+     both LLVM (`http://llvm.org/git/llvm.git`) and Clang
      (`http://llvm.org/git/clang.git`) that you can use as an
      alternative to `svn`.
    - (Step 4) It is not necessary.
-   - (Step 5) By default, LLVM/clang is build in *Debug+Asserts*
+   - (Step 5) By default, LLVM/Clang is build in *Debug+Asserts*
      mode. There are many [other build combinations]
      [LLVM-COMPILE]. E.g., you can set environment variables
      `ENABLE_OPTIMIZED=1` and `DISABLE_ASSERTIONS=1` when running
@@ -71,7 +70,7 @@ Build Crisp
 -----------
 
 Let `LLVM_SRC_ROOT` (resp. `LLVM_OBJ_ROOT`) the absolute
-root path of your LLVM/clang source (resp. build) tree, and
+root path of your LLVM/Clang source (resp. build) tree, and
 `CRISP_SRC_ROOT` the absolute root path of your Crisp source
 tree. Then do the following:
 
@@ -95,7 +94,7 @@ Documentation for other `configure` command line options (such as
 
     $CRISP_SRC_ROOT/configure --help
 
-Compilation is possible with a recent version of LLVM/clang (it does
+Compilation is possible with a recent version of LLVM/Clang (it does
 not work with GCC). As usual, you can specify a particular building
 compiler with environment variables `CC` and `CXX`. For instance, to
 compile Crisp using the same compiler you are building an add-on for,
@@ -108,7 +107,7 @@ type:
 
 where `BUILD_MODE` can be `Release`, `Debug+Asserts`, or another
 combination describing the debugging/optimizing/profiling options you
-have used to build LLVM/clang (see Prerequisite 1 above).
+have used to build LLVM/Clang (see Prerequisite 1 above).
 
 If build/install works correctly, it should drop two shared libraries
 in a `lib` sub-directory of your installation place: `crispclang.so`
@@ -138,7 +137,7 @@ For example, you can enable coding rule validation for testing file
 where the meaning of all the options and variables used is the
 following:
 
-- `-cc1`: run the clang compiler, not the driver that invokes the
+- `-cc1`: run the Clang compiler, not the driver that invokes the
   different LLVM tools.
 - `-load $CRISP_INSTALL_ROOT/lib/crispclang.so`: dynamically load a
   plugin that emits a warning message when some coding rule is
