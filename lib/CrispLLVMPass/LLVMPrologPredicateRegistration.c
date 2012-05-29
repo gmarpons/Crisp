@@ -30,7 +30,7 @@ int plRegisterPredicates() {
 
   /* Manual function registration. */
 
-  PL_register_foreign("isA_computed", 2, pl_isA_computed, 0);
+  PL_register_foreign("isA_", 2, pl_isA_, 0);
   PL_register_foreign("getLocationFromStoreUser", 2,
                       pl_getLocationFromStoreUser, 0);
   PL_register_foreign("getLocationFromLoadUser", 2,
@@ -39,7 +39,7 @@ int plRegisterPredicates() {
   PL_register_foreign("aliasLessThanNoAlias", 2,
                       pl_aliasLessThanNoAlias, 0);
   PL_register_foreign("alias", 3, pl_alias, 0);
-  PL_register_foreign("getFunction", 3, pl_getFunction, 0);
+  PL_register_foreign("getFunction", 2, pl_getFunction, 0);
   PL_register_foreign("report_violation_llvm", 3,
                       (pl_function_t) &pl_reportViolationLLVM, 0);
 

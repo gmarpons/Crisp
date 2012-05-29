@@ -37,23 +37,23 @@ namespace crisp {
 
     class LLVMCompilationInfo {
     public:
-      // const TargetData& getTargetData() const;
-      // const AliasAnalysis& getAliasAnalysis() const;
       const Pass& getPass() const;
+      const Module& getModule() const;
 
       std::list<Location>& getLocations();
 
-      friend void newLLVMCompilationInfo(Pass &CI);
+      friend void newLLVMCompilationInfo(Pass &P, Module &M);
       friend void deleteLLVMCompilationInfo();
 
     private:
-      LLVMCompilationInfo(Pass &P)
-        : Pass(P) {
+      LLVMCompilationInfo(Pass &P, Module &M)
+        : Pass(P), Module(M) {
       }
 
       ~LLVMCompilationInfo();
 
       const Pass &Pass;
+      const Module &Module;
 
       // TODO: see if a more efficient data structure than a linked
       // list can be found for Locations. We need that pointers to
@@ -68,12 +68,16 @@ namespace crisp {
 
     LLVMCompilationInfo* getLLVMCompilationInfo();
 
-    void newLLVMCompilationInfo(Pass &P);
+    void newLLVMCompilationInfo(Pass &P, Module &M);
 
     void deleteLLVMCompilationInfo();
 
     inline const Pass& LLVMCompilationInfo::getPass() const {
       return Pass;
+    }
+
+    inline const Module& LLVMCompilationInfo::getModule() const {
+      return Module;
     }
 
     inline std::list<Location>& LLVMCompilationInfo::getLocations() {

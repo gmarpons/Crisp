@@ -156,9 +156,9 @@ violation_candidate('HICPP 3.4.2', [MethodRepr]) :-
 violation_llvm('HICPP 3.4.2',
                'const member function %0 returns a non-const handle to object data',
                ['Function'(Func)]) :-
-        violation_candidate('HICPP 3.4.2', [FuncName]),
-        isA_(Module, 'Module'),
-        getFunction(Module, FuncName, Func),
+        violation_candidate_('HICPP 3.4.2', [FuncName]),
+        % isA_(Module, 'Module'),
+        getFunction(FuncName, Func),
         'Function::arg'(Func, This),
         'Value::name'(This, 'this'),
         'Function::instruction'(Func, StoreThis),

@@ -126,7 +126,7 @@ namespace crisp {
       }
     }
 
-    foreign_t pl_isA_computed(term_t InstT, term_t SortT) {
+    foreign_t pl_isA_(term_t InstT, term_t SortT) {
       Instruction *I;
       if ( !PL_get_pointer(InstT, (void **) &I))
         return PL_warning("isA/2: instantiation fault on first arg");
@@ -169,7 +169,7 @@ namespace crisp {
         return PL_warning("createLocation/2: "
                           "instantiation fault on first arg");
       const Type* TypeOfV = V->getType();
-      assert(TypeOfV && "Value 'V'has no type!");
+      assert(TypeOfV && "Value 'V' has no type!");
       assert(TypeOfV->isPointerTy() && "Type of 'V' is not a pointer type!");
       Type* ElementTypeOfV = (cast<PointerType>(TypeOfV))->getElementType();
 
@@ -215,15 +215,12 @@ namespace crisp {
       return PL_unify_int64(AliasT, Res);
     }
 
-    foreign_t pl_getFunction(term_t ModuleT, term_t NameT,
-                             term_t FunctionT) {
-      const Module *M;
-      if ( !PL_get_pointer(ModuleT, (void **) &M))
-        return PL_warning("getFunction/3: instantiation fault on first arg");
+    foreign_t pl_getFunction(term_t NameT, term_t FunctionT) {
+      const Module &M = getLLVMCompilationInfo()->getModule();
       char *N;
       if ( !PL_get_atom_chars(NameT, &N))
-        return PL_warning("getFunction/3: instantiation fault on second arg");
-      return PL_unify_pointer(FunctionT, M->getFunction(StringRef(N)));
+        return PL_warning("getFunction/2: instantiation fault on first arg");
+      return PL_unify_pointer(FunctionT, M.getFunction(StringRef(N)));
     }
 
     foreign_t pl_reportViolationLLVM(term_t RuleT, term_t MsgT,

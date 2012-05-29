@@ -100,13 +100,13 @@ namespace crisp {
       Success = plReadModuleFacts(ModuleId.c_str());
 
       if (Success) {
-        DEBUG(dbgs() << "Processing module: " << M.getModuleIdentifier()
-              << "\n");
-        (void) plAssertModule(&M);
+        // DEBUG(dbgs() << "Processing module: " << M.getModuleIdentifier()
+        //       << "\n");
+        // (void) plAssertModule(&M);
 
         // Set some global data to be accessed from Prolog (var
         // CompilationInfo defined in CompilationInfo.h).
-        newLLVMCompilationInfo(*this);
+        newLLVMCompilationInfo(*this, M);
 
         // Main Prolog analysis
         Success = plRunModuleAnalysis();

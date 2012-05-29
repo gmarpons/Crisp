@@ -54,7 +54,7 @@ clangFactsFileName(TUMainFileName, PrologName) :-
 writeAllViolationCandidates(FileName) :-
         open(FileName, write, Stream),
         forall(violation_candidate(Rule, Culprits),
-               portray_clause(Stream, violation_candidate(Rule, Culprits))),
+               portray_clause(Stream, violation_candidate_(Rule, Culprits))),
         close(Stream).
 
 report_all_violations :-

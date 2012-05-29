@@ -54,7 +54,7 @@ extern "C" {
       /** \param InstT +Instruction
        *  \param SortT Sort
        */
-      foreign_t pl_isA_computed(term_t InstT, term_t SortT);
+      foreign_t pl_isA_(term_t InstT, term_t SortT);
 
       /** \param StoreT +StoreInst
        *  \param LocationT -AliasAnalysis::Location
@@ -86,8 +86,7 @@ extern "C" {
        *  \param NameT +Atom
        *  \param FunctionT Function
        */
-      foreign_t pl_getFunction(term_t ModuleT, term_t NameT,
-                               term_t FunctionT);
+      foreign_t pl_getFunction(term_t NameT, term_t FunctionT);
 
       foreign_t pl_reportViolationLLVM(term_t RuleT, term_t MsgT,
                                        term_t CulpritsT);

@@ -60,15 +60,6 @@ report_all_llvm_violations :-
         forall(violation_llvm(Rule, Message, Culprits),
                report_violation_llvm(Rule, Message, Culprits)).
 
-%% Modes:
-%% 1. (Module, 'Module')
-%% 2. (Instruction+, Sort)
-%% 'Sort' is an atom.
-isA_(Module, Sort) :-
-        isA(Module, Sort), !.
-isA_(Instruction, Sort) :-
-        isA_computed(Instruction, Sort).
-
 %% Pre: +Value has PointerType.
 getLocation(Value, Location) :-
         (  'Value::use'(Value, User),

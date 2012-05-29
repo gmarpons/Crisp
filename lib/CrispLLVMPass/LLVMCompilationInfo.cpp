@@ -29,9 +29,9 @@ namespace crisp {
       return LLVMCompilationInfoSingleton;
     }
 
-    void newLLVMCompilationInfo(Pass& P) {
+    void newLLVMCompilationInfo(Pass &P, Module &M) {
       if (LLVMCompilationInfoSingleton) delete LLVMCompilationInfoSingleton;
-      LLVMCompilationInfoSingleton = new LLVMCompilationInfo(P);
+      LLVMCompilationInfoSingleton = new LLVMCompilationInfo(P, M);
     }
 
     void deleteLLVMCompilationInfo() {
