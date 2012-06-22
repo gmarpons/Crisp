@@ -24,6 +24,10 @@
 %% To be executed as initial goal when clang predicates are to be
 %% extracted. top_class_name/1 identifies the name of a class on top
 %% of hierarchy of classes to analyse. Argument is 'DebugFlag'.
+%%
+%% FIXME: it seems that adding top classes with multiple inheritance
+%% cause problems (e.g., when DeclContext is added, some predicates
+%% appear repeated in .inc file.
 init_clang_base_types(_DebugFlag) :-
         assertz(top_class_name('Decl')),
         assertz(top_class_name('QualType')),
@@ -34,7 +38,8 @@ init_clang_base_types(_DebugFlag) :-
 %% extracted. top_class_name/1 identifies the name of a class on top
 %% of hierarchy of classes to analyse. Argument is 'DebugFlag'.
 init_llvm_base_types(_DebugFlag) :-
-        assertz(top_class_name('Value')).
+        assertz(top_class_name('Value')),
+        assertz(top_class_name('Module')).
 
 welcome_msg_and_prolog :-
         write('Welcome to the Crisp interactive interface!'), nl,
@@ -141,6 +146,10 @@ removeSubAtom(Atom, SubAtom, Result) :-
 
 isInterestingResultType(_, 'clang::QualType').
 isInterestingResultType(_, 'const clang::QualType').
+isInterestingResultType(_, 'clang::DeclContext *').
+isInterestingResultType(_, 'const clang::DeclContext *').
+isInterestingResultType(_, 'clang::DeclContext &').
+isInterestingResultType(_, 'const clang::DeclContext &').
 isInterestingResultType(_, 'llvm::StringRef').
 isInterestingResultType(_, 'std::string').
 isInterestingResultType(_, 'const char *').
@@ -158,6 +167,7 @@ isInterestingResultType(Type, _) :-
         'Type::is_recordType'(PointeeTypePtr),
         'TagType::decl'(PointeeTypePtr, Record),
         top_class_heir(Record).
+%% FIXME: maybe include references to top class heirs?
 
 %% Case already qualified
 qualifiedMemberName(_Class, Member, QualifiedMember) :-

@@ -70,7 +70,14 @@ namespace crisp {
       std::string StreamString, Result;
       llvm::raw_string_ostream Stream(StreamString);
       MangleContext *MC = getCompilationInfo()->getMangleContext();
-      MC->mangleName(Argument, Stream);
+      if (const CXXConstructorDecl *C =dyn_cast<CXXConstructorDecl>(Argument)) {
+        MC->mangleCXXCtor(C, Ctor_Complete, Stream);
+      } else if
+          (const CXXDestructorDecl *D =dyn_cast<CXXDestructorDecl>(Argument)) {
+        MC->mangleCXXDtor(D, Dtor_Complete, Stream);
+      } else {
+        MC->mangleName(Argument, Stream);
+      }
       Result = Stream.str();
       return Unify<std::string>::_(ResultT, Result);
     }
