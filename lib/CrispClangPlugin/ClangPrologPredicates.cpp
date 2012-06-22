@@ -63,13 +63,19 @@ namespace crisp {
       return Check<Qualifiers, &Qualifiers::hasConst>::_(Q);
     }
 
-    foreign_t pl_mangleName(term_t ArgumentT, term_t ResultT) {
-      Retrieve<FunctionDecl>::argument_type Argument;
-      if ( !Retrieve<FunctionDecl>::
-           _(ArgumentT, &Argument, "FunctionDecl_mangleName/2")) return FALSE;
-      std::string StreamString, Result;
-      llvm::raw_string_ostream Stream(StreamString);
+    foreign_t pl_llvmName(term_t ArgumentT, term_t ResultT) {
+      Retrieve<NamedDecl>::argument_type Argument;
+      if ( !Retrieve<NamedDecl>::
+           _(ArgumentT, &Argument, "NamedDecl_llvmName/2")) return FALSE;
       MangleContext *MC = getCompilationInfo()->getMangleContext();
+      std::string Result;
+      if ( !MC->shouldMangleDeclName(Argument)) {
+        Result = Argument->getNameAsString();
+        return Unify<std::string>::_(ResultT, Result);
+      }
+      // Name needs mangling
+      std::string StreamString;
+      llvm::raw_string_ostream Stream(StreamString);
       if (const CXXConstructorDecl *C =dyn_cast<CXXConstructorDecl>(Argument)) {
         MC->mangleCXXCtor(C, Ctor_Complete, Stream);
       } else if

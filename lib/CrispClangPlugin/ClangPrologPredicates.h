@@ -58,11 +58,10 @@ extern "C" {
       foreign_t
       pl_FunctionProtoType_isConstQualified(term_t FunctionProtoTypeT);
 
-      /** \param FunctionT +VarDecl or +FunctionDecl (not a
-       *  CXXConstructorDecl or CXXDestructorDecl
-       *  \param MangledNameT Atom
+      /** \param ArgumentT +NamedDecl
+       *  \param ResultT std::string
        */
-      foreign_t pl_mangleName(term_t FunctionT, term_t MangledNameT);
+      foreign_t pl_llvmName(term_t ArgumentT, term_t ResultT);
 
       /** \param DeclT +Decl
        *  \param FilenameT Atom
