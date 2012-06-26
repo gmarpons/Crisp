@@ -84,13 +84,35 @@ llvm_name(Decl, LlvmName) :-
         %% subsumtion is not implemented yet.
         ( isA(Decl, 'FunctionDecl')
         ; isA(Decl, 'CXXMethodDecl')
-        ; isA(Decl, 'CXXConstructorDecl')
-        ; isA(Decl, 'CXXDestructorDecl')
         ; isA(Decl, 'CXXConversionDecl')
         ),
         !,
         llvmName(Decl, Name),
         LlvmName = function(Name).
+%% Clause for constructors and destructors
+llvm_name(Decl, LlvmName) :-
+        ( isA(Decl, 'CXXConstructorDecl')
+        ; isA(Decl, 'CXXDestructorDecl')
+        ),
+        !,
+        llvmName(Decl, MangledName), % Returns mangled name for
+                                     % 'complete' structor.
+        'NamedDecl::nameAsString'(Decl, Name),
+        atom_codes(MangledName, MangledNameCodes),
+        reverse(MangledNameCodes, ReversedMangledNameCodes),
+        atom_codes(ReversedMangledName, ReversedMangledNameCodes),
+        atom_concat(Name, 'C1', C1Name),
+        atom_codes(C1Name, C1NameCodes),
+        reverse(C1NameCodes, ReversedC1NameCodes),
+        atom_codes(ReversedC1Name, ReversedC1NameCodes),
+        atom_length(C1Name, C1Length),
+        sub_atom(ReversedMangledName, Start, C1Length, After, ReversedC1Name),
+        !,
+        sub_atom(MangledName, 0, After, _, NamePrefixAux),
+        sub_atom(MangledName, _, Start, 0, NameSuffix),
+        atom_concat(NamePrefixAux, Name, NamePrefix),
+        LlvmName = structor(NamePrefix, NameSuffix).
+%% Clause for global variables.
 llvm_name(Decl, LlvmName) :-
         isA(Decl, 'VarDecl'),
         'VarDecl::has_globalStorage'(Decl),
