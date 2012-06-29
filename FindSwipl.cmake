@@ -13,8 +13,10 @@ function(set_swipl_version swipl_cmd)
     COMMAND ${SWIPL_EXECUTABLE} --version
     OUTPUT_VARIABLE swipl_version
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-  string(REGEX MATCH "([0-9]+(\\.[0-9]+)*)" version ${swipl_version})
-  set(SWIPL_VERSION_STRING "${version}" PARENT_SCOPE)
+  if(NOT (swipl_version MATCHES "^$"))
+    string(REGEX MATCH "([0-9]+(\\.[0-9]+)*)" version ${swipl_version})
+    set(SWIPL_VERSION_STRING "${version}" PARENT_SCOPE)
+  endif()
 endfunction()
 
 function(set_swipl_include_flags swipl_cmd)
@@ -23,8 +25,12 @@ function(set_swipl_include_flags swipl_cmd)
     COMMAND sed -n "s:PLBASE=\"\\(.*\\)\";:\\1:p"
     OUTPUT_VARIABLE swipl_base_dir
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(SWIPL_ROOT_DIR "${swipl_base_dir}" PARENT_SCOPE)
-  set(SWIPL_INCLUDE_DIRS "${swipl_base_dir}/include" PARENT_SCOPE)
+  if (swipl_base_dir MATCHES "^$")
+    message(FATAL_ERROR "Can't get swipl base dir")
+  else()
+    set(SWIPL_ROOT_DIR "${swipl_base_dir}" PARENT_SCOPE)
+    set(SWIPL_INCLUDE_DIRS "${swipl_base_dir}/include" PARENT_SCOPE)
+  endif()
 endfunction()
 
 function(set_swipl_definitions_flags swipl_cmd)
@@ -33,29 +39,37 @@ function(set_swipl_definitions_flags swipl_cmd)
     COMMAND sed -n "s:PLCFLAGS=\"\\(.*\\)\";:\\1:p"
     OUTPUT_VARIABLE swipl_cflags
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-  string(REGEX MATCHALL "(-D[^ ]*)" cxxflags ${swipl_cflags})
-  set(SWIPL_DEFINITIONS ${cxxflags} PARENT_SCOPE)
+  if(NOT (swipl_cflags MATCHES "^$"))
+    string(REGEX MATCHALL "(-D[^ ]*)" cxxflags ${swipl_cflags})
+    set(SWIPL_DEFINITIONS ${cxxflags} PARENT_SCOPE)
+  endif()
 endfunction()
 
 function(set_swipl_libraries swipl_cmd)
   execute_process(
     COMMAND ${swipl_cmd} --dump-runtime-variables
-    COMMAND sed -n "s:PLLIBS=\"\\(.*\\)\";:\\1:p"
+    COMMAND sed -n "s:PLLIB=\"\\(.*\\)\";:\\1:p"
     OUTPUT_VARIABLE swipl_libs
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-  string(REGEX MATCHALL "(-l[^ ]*)" libs ${swipl_libs})
-  set(SWIPL_LIBRARIES ${libs} PARENT_SCOPE)
+  if(swipl_libs MATCHES "^$")
+    message(FATAL_ERROR "Can't get swipl library")
+  else()
+    string(REGEX MATCHALL "(-l[^ ]*)" libs ${swipl_libs})
+    set(SWIPL_LIBRARIES ${libs} PARENT_SCOPE)
+  endif()
 endfunction()
 
 function(set_swipl_library_dirs swipl_cmd)
   execute_process(
     COMMAND ${swipl_cmd} --dump-runtime-variables
-    COMMAND sed -n "s:PLLDFLAGS=\"\\(.*\\)\";:\\1:p"
-    OUTPUT_VARIABLE swipl_ldflags
+    COMMAND sed -n "s:PLARCH=\"\\(.*\\)\";:\\1:p"
+    OUTPUT_VARIABLE swipl_plarch
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-  string(REGEX MATCH "(-rpath=[^ ]*)" rpathflags ${swipl_ldflags})
-  string(REGEX REPLACE "-rpath=([^ ]*)" "\\1" ldflags ${rpathflags})
-  set(SWIPL_LIBRARY_DIRS ${ldflags} PARENT_SCOPE)
+  if(swipl_plarch MATCHES "^$")
+    message(FATAL_ERROR "Can't get swipl library path")
+  else()
+    set(SWIPL_LIBRARY_DIRS "${SWIPL_ROOT_DIR}/lib/${swipl_plarch}" PARENT_SCOPE)
+  endif()
 endfunction()
 
 
