@@ -151,9 +151,9 @@ namespace crisp {
     template <typename SpecificDecl>
     struct Context < DeclContext::specific_decl_iterator<SpecificDecl> > {
       typedef DeclContext::specific_decl_iterator<SpecificDecl> iterator_type;
-      typedef typename iterator_type::pointer context_type;
+      typedef typename iterator_type::value_type context_type;
       static inline context_type newContext(iterator_type I) {
-        return &*I;
+        return *I;
       }
       static inline void deleteContext(context_type C) {
         // Do nothing.
@@ -163,7 +163,7 @@ namespace crisp {
         I = DeclContext::specific_decl_iterator<SpecificDecl>(DI);
       }
       static inline void iter2context(iterator_type I, context_type& C) {
-        C = &*I;
+        C = *I;
       }
     };
 
