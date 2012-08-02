@@ -1,5 +1,5 @@
 
-add_executable(run_clang_decl_extractor
+add_library(run_clang_decl_extractor STATIC
     ClangDeclarations.cpp)
 
 add_dependencies(run_clang_decl_extractor declextractor)

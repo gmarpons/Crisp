@@ -1,5 +1,5 @@
 
-add_executable(run_llvm_decl_extractor
+add_library(run_llvm_decl_extractor STATIC
     LLVMDeclarations.cpp)
 
 add_dependencies(run_llvm_decl_extractor declextractor)
