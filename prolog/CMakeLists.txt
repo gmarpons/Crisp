@@ -21,6 +21,9 @@ endmacro()
 generate_all_prolog_state()
 add_custom_target(generate_saved_state DEPENDS states)
 
+# do copy the Rule files to ${DATA_OBJ_ROOT} for test
+configure_file(Rules/SomeHICPPrules.pl . COPYONLY)
+
 install(
   FILES
     ${CMAKE_CURRENT_BINARY_DIR}/PrologBootForCrispClangPlugin.sh

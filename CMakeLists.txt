@@ -21,3 +21,4 @@ add_subdirectory(include)
 add_subdirectory(prolog)
 # order is important!!! lib is using variable from prolog.
 add_subdirectory(lib)
+add_subdirectory(test)
