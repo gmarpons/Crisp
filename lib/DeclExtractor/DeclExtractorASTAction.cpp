@@ -52,8 +52,11 @@ namespace crisp {
     : public ASTConsumer
     , public RecursiveASTVisitor<DeclExtractorConsumer> {
   public:
-    DeclExtractorConsumer(CompilerInstance &CI, std::string IGF)
+    DeclExtractorConsumer(CompilerInstance &CI,
+                          const std::string &BFD,
+                          const std::string &IGF)
       : CompilerInstance(CI)
+      , BootFilesDir(BFD)
       , InitialGoalFunctor(IGF) {
     }
     virtual ~DeclExtractorConsumer();
@@ -66,7 +69,8 @@ namespace crisp {
 
   private:
     CompilerInstance &CompilerInstance;
-    std::string InitialGoalFunctor;
+    const std::string BootFilesDir;
+    const std::string InitialGoalFunctor;
   };
 
   DeclExtractorConsumer::~DeclExtractorConsumer() {
@@ -86,7 +90,7 @@ namespace crisp {
 
     // if (Success) plRunEngine(PrologBootFileName);
     if (Success) {
-      plRunEngine("PrologBootForDeclExtractor.sh", InitialGoalFunctor);
+      plRunEngine("PrologBootForDeclExtractor.sh", BootFilesDir, InitialGoalFunctor);
     }
 
     if (Success) {
@@ -149,20 +153,25 @@ namespace crisp {
 
   protected:
     virtual ASTConsumer* CreateASTConsumer(CompilerInstance& CI, StringRef) {
-      return new DeclExtractorConsumer(CI, InitialGoalFunctor);
+      return new DeclExtractorConsumer(CI, BootFilesDir, InitialGoalFunctor);
     }
 
     virtual bool ParseArgs(const CompilerInstance &CI,
                            const std::vector<std::string> &Args);
   private:
+    std::string BootFilesDir;
     std::string InitialGoalFunctor;
   };
 
   bool DeclExtractorASTAction::ParseArgs(const CompilerInstance &CI,
                                          const std::vector<std::string> &Args) {
-    // We assume one argument
-    InitialGoalFunctor = Args[0];
-    return true;
+    // We assume two arguments
+    if (Args.size() == 2) {
+      BootFilesDir = Args[0];
+      InitialGoalFunctor = Args[1];
+      return true;
+    }
+    return false;
   }
 
   static FrontendPluginRegistry::Add<DeclExtractorASTAction>

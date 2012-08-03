@@ -15,6 +15,8 @@ set(CRISP_INCLUDE_DIRS ${include_dirs})
 set(CMAKE_CXX_COMPILER "${CLANG_EXECUTABLE}++")
 set(CMAKE_C_COMPILER "${CLANG_EXECUTABLE}")
 
+add_definitions("-DDATA_INSTALL_ROOT=${CMAKE_INSTALL_PREFIX}/share")
+
 add_subdirectory(include)
 add_subdirectory(prolog)
 # order is important!!! lib is using variable from prolog.

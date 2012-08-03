@@ -43,18 +43,10 @@ namespace crisp {
     static char *BootFileAbsNameCStr;
 
     int plRunEngine(const std::string& BootFileName,
+                    const std::string& BootFilesDir,
                     const std::string& InitialGoalFunctor) {
-      // Look for dir where saved state files for booting Prolog are
-      // placed: either build data dir or install data dir, depending on
-      // whether DATA_OBJ_ROOT is defined (in order to define it, its
-      // necessary to set ENABLE_DATA_OBJ_ROOT variable when compiling).
-#ifdef DATA_OBJ_ROOT
-      fs::directory_entry BootFilesDir(XSTR(DATA_OBJ_ROOT));
-#else
-      fs::directory_entry BootFilesDir(XSTR(DATA_INSTALL_ROOT));
-#endif  // ifdef DATA_OBJ_ROOT
 
-      std::string S(BootFilesDir.path());
+      std::string S(BootFilesDir);
       S.append("/");
       S.append(BootFileName);
       BootFileAbsNameCStr = (char *) malloc(sizeof(char) * (S.size() + 1));
@@ -104,16 +96,8 @@ namespace crisp {
       return PL_toplevel();
     }
 
-    int plLoadFile(std::string &FileBaseName) {
-      // Look for dir where saved state files for booting Prolog are
-      // placed: either build data dir or install data dir, depending on
-      // whether DATA_OBJ_ROOT is defined (in order to define it, its
-      // necessary to set ENABLE_DATA_OBJ_ROOT variable when compiling).
-#ifdef DATA_OBJ_ROOT
-      std::string BootFilesDir(XSTR(DATA_OBJ_ROOT));
-#else
-      std::string BootFilesDir(XSTR(DATA_INSTALL_ROOT));
-#endif  // ifdef DATA_OBJ_ROOT
+    int plLoadFile(const std::string& FileBaseName,
+                   const std::string& BootFilesDir) {
       int Success;
       term_t FileBaseNameA = PL_new_term_ref();
       Success = PL_put_atom_chars(FileBaseNameA, FileBaseName.c_str());
