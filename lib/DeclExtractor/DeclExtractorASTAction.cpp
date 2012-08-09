@@ -25,6 +25,7 @@
 #include <boost/range/iterator_range.hpp>
 #include <SWI-Prolog.h>
 
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Basic/FileManager.h"
