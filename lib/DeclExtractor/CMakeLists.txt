@@ -16,5 +16,4 @@ include_directories(${SWIPL_INCLUDE_DIRS})
 add_definitions(${CLANG_DEFINITIONS})
 add_definitions(${SWIPL_DEFINITIONS})
 
-target_link_libraries(declextractor "-L${SWIPL_LIBRARY_DIRS}")
 target_link_libraries(declextractor ${SWIPL_LIBRARIES})

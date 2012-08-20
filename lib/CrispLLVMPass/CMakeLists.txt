@@ -31,7 +31,6 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 #add_definitions(${CLANG_DEFINITIONS})
 add_definitions(${SWIPL_DEFINITIONS})
 
-target_link_libraries(crispllvm "-L${SWIPL_LIBRARY_DIRS}")
 target_link_libraries(crispllvm ${SWIPL_LIBRARIES})
 
 install(TARGETS crispllvm
