@@ -64,14 +64,19 @@ extern "C" {
       foreign_t pl_llvmName(term_t ArgumentT, term_t ResultT);
 
       /** \param DeclT +Decl
-       *  \param FilenameT Atom
+       *  \param FilenameT atom
        *  \param LineT an Integer
        *  \param ColT an Integer
        */
       foreign_t pl_getPresumedLoc(term_t DeclT, term_t FilenameT,
                                   term_t LineT, term_t ColT);
 
-      foreign_t pl_reportViolation(term_t RuleT, term_t MsgT, term_t CulpritsT);
+      /** Uses clang diagnostic facilities to report a violation to
+       *  the user.
+       *  \param RuleT +atom with the name of the rule.
+       *  \param DiagnosticsT +list of diagnostic messages.
+       */
+      foreign_t pl_reportViolation(term_t RuleT, term_t DiagnosticsT);
 
 #ifdef __cplusplus
     } /* End namespace crisp::prolog */

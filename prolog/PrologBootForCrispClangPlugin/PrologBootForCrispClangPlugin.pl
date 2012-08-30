@@ -58,8 +58,8 @@ writeAllViolationCandidates(FileName) :-
         close(Stream).
 
 report_all_violations :-
-        forall(violation(Rule, Message, Culprits),
-               report_violation(Rule, Message, Culprits)).
+        forall(violation(Rule, Diagnostics),
+               report_violation(Rule, Diagnostics)).
 
 %% TODO: take into accout (e.g. with a warning) symbols (constants)
 %% that are inlined in LLVM IR code and, as a result, do not always
