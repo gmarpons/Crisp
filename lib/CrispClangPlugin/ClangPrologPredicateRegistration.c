@@ -24,8 +24,10 @@
 int plRegisterPredicates() {
 
   /* Automatically generated function registration. */
+#ifndef PARSING_WITH_EMACS_SEMANTIC
 #include "crisp/PrologPredRegistrationMacros.h"
 #include "ClangDeclarations.inc"
+#endif
 
   /* Manual function registration. */
   PL_register_foreign("isConstFunctionProtoType", 1,

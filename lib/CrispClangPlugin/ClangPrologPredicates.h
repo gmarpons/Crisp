@@ -48,8 +48,10 @@ extern "C" {
 
       /* Automatically generated function declaration. */
 
+#ifndef PARSING_WITH_EMACS_SEMANTIC
 #include "crisp/PrologPredDeclarationMacros.h"
 #include "ClangDeclarations.inc"
+#endif
 
       /* Manual function declaration. */
 

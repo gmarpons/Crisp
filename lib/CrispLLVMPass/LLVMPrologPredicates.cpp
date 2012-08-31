@@ -43,8 +43,11 @@ namespace crisp {
 
     // Automatically generated function definitions.
 
+#ifndef PARSING_WITH_EMACS_SEMANTIC
 #include "crisp/PrologPredDefinitionMacros.h"
 #include "LLVMDeclarations.inc"
+#endif
+
     // Extra function (not a member function)
     pl_get_many(instruction, Function, const_inst_iterator, inst_begin, inst_end)
 

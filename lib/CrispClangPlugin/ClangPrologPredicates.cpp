@@ -50,8 +50,10 @@ namespace crisp {
 
     // Automatically generated function definitions.
 
+#ifndef PARSING_WITH_EMACS_SEMANTIC
 #include "crisp/PrologPredDefinitionMacros.h"
 #include "ClangDeclarations.inc"
+#endif
 
     // Manual function definition.
 
