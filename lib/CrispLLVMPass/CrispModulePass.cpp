@@ -38,6 +38,10 @@
 #include "LLVMPrologPredicateRegistration.h"
 #include "LLVMPrologQueries.h"
 
+// Stringify environment variables
+#define XSTR(s) STR(s)
+#define STR(s) #s
+
 using namespace llvm;
 using namespace crisp::prolog;
 
@@ -56,6 +60,13 @@ namespace crisp {
                 cl::desc("Specify Rules filename"),
                 cl::value_desc("filename"),
                 cl::Required);
+
+  /// Command line option for BootFiles directory
+  cl::opt<std::string>
+  BootFilesDir("crisp-boot-dir",
+                cl::desc("Specify boot files directory"),
+                cl::value_desc("dir"),
+                cl::init(XSTR(DATA_INSTALL_ROOT)));
 
   /// \brief Class implementing a module pass to analyze LLVM IR
   /// code for Crisp.
@@ -84,12 +95,13 @@ namespace crisp {
     DEBUG(dbgs() << "Initializing Crisp Module Pass.\n");
     DEBUG(dbgs() << "Handling LLVM Module.\n");
     plRegisterPredicates();
-    Success = plRunEngine("PrologBootForCrispLLVMPass.sh");
+    Success = plRunEngine("PrologBootForCrispLLVMPass.sh", BootFilesDir);
 
     if (Success) {
-      Success = plLoadFile(RulesFileName);
+      Success = plLoadFile(RulesFileName, BootFilesDir);
       DEBUG(if ( !Success) dbgs() << "Error loading rules file '"
-                                  << RulesFileName << "'." << "\n");
+                                  << RulesFileName << "' from '"
+                                  << BootFilesDir << "'.\n");
     }
 
     if (Success) {

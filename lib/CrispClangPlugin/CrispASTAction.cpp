@@ -22,10 +22,13 @@
 
 #include <string>
 #include <vector>
+#include <iterator>
+#include <boost/functional.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/algorithm/for_each.hpp>
+#include <boost/range/algorithm/transform.hpp>
 #include <boost/range/iterator_range.hpp>
 
 #include "clang/AST/ASTConsumer.h"
@@ -34,6 +37,7 @@
 #include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendPluginRegistry.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
@@ -42,6 +46,10 @@
 #include "crisp/RunPrologEngine.h"
 #include "ClangPrologPredicateRegistration.h"
 #include "CompilationInfo.h"
+
+// Stringify environment variables
+#define XSTR(s) STR(s)
+#define STR(s) #s
 
 using namespace llvm;
 using namespace clang;
@@ -56,9 +64,10 @@ namespace crisp {
   class CrispConsumer : public ASTConsumer
                       , public RecursiveASTVisitor<CrispConsumer> {
   public:
-    CrispConsumer(CompilerInstance &CI, std::string &RFN, bool IF, bool DF)
+    CrispConsumer(CompilerInstance &CI, const std::string &BFD, const std::string &RFN, bool IF, bool DF)
       : CompilerInstance(CI)
       , ErrorInfo()
+      , BootFilesDir(BFD)
       , RulesFileName(RFN)
       , InteractiveFlag(IF)
       , DebugCrispPluginFlag(DF) {
@@ -78,9 +87,10 @@ namespace crisp {
     CompilerInstance &CompilerInstance;
     raw_ostream *FactsOutputStream;
     std::string ErrorInfo;
-    std::string RulesFileName;
-    bool InteractiveFlag;
-    bool DebugCrispPluginFlag;
+    const std::string BootFilesDir;
+    const std::string RulesFileName;
+    const bool InteractiveFlag;
+    const bool DebugCrispPluginFlag;
   };
 
   CrispConsumer::~CrispConsumer() {
@@ -110,12 +120,13 @@ namespace crisp {
     int Success = plRegisterPredicates();
     DEBUG(if ( !Success) dbgs() << "Error registering predicates.\n");
 
-    Success = plRunEngine("PrologBootForCrispClangPlugin.sh");
+    Success = plRunEngine("PrologBootForCrispClangPlugin.sh", BootFilesDir);
 
     if (Success) {
-      Success = plLoadFile(RulesFileName);
+      Success = plLoadFile(RulesFileName, BootFilesDir);
       DEBUG(if ( !Success) dbgs() << "Error loading rules file '"
-                                  << RulesFileName << "'." << "\n");
+                                  << RulesFileName << "' from '"
+                                  << BootFilesDir << "'.\n");
     }
 
     if (Success) {
@@ -185,58 +196,54 @@ namespace crisp {
 
   class CrispASTAction : public PluginASTAction {
   public:
-    CrispASTAction() : InteractiveFlag(false), DebugCrispPluginFlag(false) {}
+    CrispASTAction()
+        : PluginASTAction()
+        , BootFilesDir("crisp-boot-dir",
+                        cl::desc("Specify boot files directory"),
+                        cl::value_desc("dir"),
+                        cl::init(XSTR(DATA_INSTALL_ROOT)))
+        , RulesFileName(cl::Positional,
+                        cl::value_desc("rule_file"),
+                        cl::Required)
+        , FlagInteractive("-interactive",
+                        cl::desc("Enable interactive Prolog session"),
+                        cl::init(false))
+        , FlagDebug("-debug", 
+                        cl::desc("Enable debug output"),
+                        cl::init(false))
+    { }
 
   protected:
     virtual ASTConsumer* CreateASTConsumer(CompilerInstance &CI, StringRef) {
-      return new CrispConsumer(CI, RulesFileName, InteractiveFlag,
-                               DebugCrispPluginFlag);
+      return new CrispConsumer(CI, BootFilesDir, RulesFileName,
+                               FlagInteractive, FlagDebug);
     }
 
     virtual bool ParseArgs(const CompilerInstance &CI,
                            const std::vector<std::string> &Args);
   private:
-    std::string RulesFileName;
-    bool InteractiveFlag;
-    bool DebugCrispPluginFlag;
-    bool parseOneArg(const std::string &);
+    cl::opt<std::string> BootFilesDir;
+    cl::opt<std::string> RulesFileName;
+    cl::opt<bool> FlagInteractive;
+    cl::opt<bool> FlagDebug;
   };
 
   bool CrispASTAction::ParseArgs(const CompilerInstance &CI,
                                  const std::vector<std::string> &Args) {
 
-    b::find_if(b::make_iterator_range(Args.begin(), Args.end()),
-               !l::bind(&CrispASTAction::parseOneArg, this, l::_1));
-
-    // At least one argument needed: rules file name.
-    if (RulesFileName.empty()) {
-      DiagnosticsEngine &DE = CI.getDiagnostics();
-      std::string DiagMsg = "rules file missing";
-      unsigned DiagId = DE.getCustomDiagID(DiagnosticsEngine::Error, DiagMsg);
-      DE.Report(DiagId);
-      return false;
+    std::vector<char const *> ArgPtrs;
+    {
+        // make cl::ParseCommandLineOptions happy
+        static char const * const prg_name = "crisp-clang";
+        ArgPtrs.push_back(prg_name);
     }
-    return true;
-  }
 
-  /// Sets class attributes. Returns \c false in case of invalid \c Arg.
-  bool CrispASTAction::parseOneArg(const std::string &Arg) {
-    if (Arg.empty()) return true;          // Non-meaningfule argument, ignored
-    if (Arg[0] == '-') {                   // Option argument
-      if (Arg.compare("-interactive") == 0) {
-        InteractiveFlag = true;
-        return true;
-      }
-      if (Arg.compare("-debug") == 0) {
-        DebugCrispPluginFlag = true;
-        return true;
-      }
-      return false;                        // else: unknown option argument
-    }                                      // else: input argument
-    if ( !RulesFileName.empty()) {         // Rules file already set
-      return false;
-    }                                      // else: rules file name given
-    RulesFileName = Arg;
+    b::transform(b::make_iterator_range(Args.begin(), Args.end()),
+                 std::back_inserter(ArgPtrs),
+                 b::mem_fun_ref(&std::string::c_str));
+
+    cl::ParseCommandLineOptions(ArgPtrs.size(), &ArgPtrs.front());
+
     return true;
   }
 

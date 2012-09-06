@@ -11,4 +11,3 @@ include_directories(${SWIPL_INCLUDE_DIRS})
 
 add_definitions(${CLANG_DEFINITIONS})
 add_definitions(${SWIPL_DEFINITIONS})
-add_definitions("-DDATA_INSTALL_ROOT=${CMAKE_INSTALL_PREFIX}/share")

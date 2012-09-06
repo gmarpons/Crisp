@@ -9,7 +9,7 @@ include_directories(${CLANG_INCLUDE_DIRS})
 add_definitions(${CLANG_DEFINITIONS})
 
 set_source_files_properties(LLVMDeclarations.cpp PROPERTIES
-    COMPILE_FLAGS "-Xclang -load -Xclang ${DECLEXTRACTOR_BUILD_DIR}/libdeclextractor.so -Xclang -add-plugin -Xclang decl-extractor -Xclang -plugin-arg-decl-extractor -Xclang init_llvm_base_types")
+    COMPILE_FLAGS "-Xclang -load -Xclang ${DECLEXTRACTOR_BUILD_DIR}/libdeclextractor.so -Xclang -add-plugin -Xclang decl-extractor -Xclang -plugin-arg-decl-extractor -Xclang ${DATA_OBJ_ROOT} -Xclang -plugin-arg-decl-extractor -Xclang init_llvm_base_types")
 
 
 add_library(crispllvm SHARED
