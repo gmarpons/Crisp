@@ -17,6 +17,8 @@
 %% You should have received a copy of the GNU General Public License
 %% along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
+:- use_module(library(lists), [append/2]). % Needed by rule files
+
 :- multifile violation/3.
 :- multifile violation_candidate/2.
 :- multifile violation_llvm/3.
