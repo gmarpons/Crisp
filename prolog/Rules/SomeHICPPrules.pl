@@ -67,9 +67,10 @@
 %%         Record has ctor or destructor Caller
 %%         Record has method Callee
 %%         Callee is virtual
-%%         Caller calls+ Callee where
-%%               each  Caller' calls Callee' at CallPoint
-%%               meet  Caller', Callee' is CXXMethodDecl
+%%         Caller calls'+ Callee where   -- inline preds can refer to outer vars
+%%               pred  Caller' calls' Callee' at CallPoint
+%%               meet  Caller' calls Callee' at CallPoint
+%%                     Caller', Callee' is CXXMethodDecl
 %%                     CallPoint is CallExpr  -- redundant due to def of 'calls'
 %%                     Caller' is not virtual -- implies Caller' \= Callee'
 %%                     CallPoint has implicitObjectArgument MemberExpr
