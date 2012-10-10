@@ -48,10 +48,10 @@
 %%   pred  Func has functionCall Call
 %%   vars  Func is FunctionDecl
 %%         Call is CallExpr
-%%   meet  Func has body Body
+%%   meet  Func has body Body       -- Optional: Body is Stmt
 %%         Body has child+ Call
 %%
-%%   pred  Caller calls Callee (at CallPoint)
+%%   pred  Caller calls Callee [at CallPoint]
 %%   vars  Caller, Callee is FunctionDecl
 %%         CallPoint is CallExpr
 %%   meet  Caller has functionCall CallPoint
@@ -70,8 +70,8 @@
 %%         Caller calls+ Callee where
 %%               each  Caller' calls Callee' at CallPoint
 %%               meet  Caller', Callee' is CXXMethodDecl
-%%                     CallPoint is CallExpr  %% redundant due to def of 'calls'
-%%                     Caller' is not virtual %% implies Caller \= Callee
+%%                     CallPoint is CallExpr  -- redundant due to def of 'calls'
+%%                     Caller' is not virtual -- implies Caller' \= Callee'
 %%                     CallPoint has implicitObjectArgument MemberExpr
 %%                     MemberExpr is CXXThisExpr
 %%               note  "method %Caller' calls method %Callee'",
