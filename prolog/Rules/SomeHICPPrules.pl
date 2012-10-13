@@ -174,7 +174,7 @@ violation('HICPP 3.3.13', Diagnostic) :-
 %% Tentative formalization in CRISP:
 %%
 %%   rule  HICPP 3.4.2.
-%%   warn  "Return statement in const member function %Method returns a
+%%   warn  "return statement in const member function %Method returns a
 %%         non-const handle to class data", show Return range
 %%   note  "const member function %Method declared here", show Method location
 %%   vars  Method is CXXMethodDecl
@@ -212,6 +212,35 @@ violation('HICPP 3.3.13', Diagnostic) :-
 %% has to be adapted to new diagnostic facilities and CRISP syntax.
 
 %% Executable formalization in Prolog:
+
+violation('HICPP 3.4.2', Diagnostic) :-
+        GlobalDiagnostic =
+        [ warn( 'return statement in const member function %0 returns a non-const handle to class data'
+              , 'Stmt'(Return)
+              , [ 'NamedDecl'(Method) ]
+              , 'Stmt'(Return)
+              ),
+          note( 'const member function %0 declared here'
+              , 'Decl'(Method)
+              , [ 'NamedDecl'(Method) ]
+              , 'Null'
+              )
+        ],
+        isA(Method, 'CXXMethodDecl'),
+        'ValueDecl::type'(Method, MethodType),
+        'QualType::canonicalType'(MethodType, CanonicalMethodType),
+        isConstFunctionProtoType(CanonicalMethodType),
+        'FunctionType::resultType'(CanonicalMethodType, ResultType),
+        'QualType::canonicalType'(ResultType, CanonicalResultType),
+        isA(CanonicalResultType, 'PointerType'),
+        'QualType::typePtr'(CanonicalResultType, ResultTypePtr),
+        'PointerType::pointeeType'(ResultTypePtr, PointeeType),
+        'QualType::canonicalType'(PointeeType, CanonicalPointeeType),
+        \+ 'QualType::is_constQualified'(CanonicalPointeeType),
+        'Decl::body'(Method, Body),
+        'child+'(Body, Return),
+        'Stmt::stmtClassName'(Return, 'ReturnStmt'),
+        append([GlobalDiagnostic], Diagnostic).
 
 % violation_candidate('HICPP 3.4.2', [MethodRepr]) :-
 %         isA(Method, 'CXXMethodDecl'),
