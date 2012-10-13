@@ -158,9 +158,6 @@ violation('HICPP 3.3.13', Diagnostic) :-
         append([GlobalDiagnostic, CallsDiagnostic], Diagnostic).
 
 
-%% FIXME: The following rule example has become obsolete, it has to be
-%% adapted to new diagnostic facilities and CRISP syntax.
-%%
 %% HICPP 3.4.2
 %% ===========
 %%
@@ -177,17 +174,25 @@ violation('HICPP 3.3.13', Diagnostic) :-
 %% Tentative formalization in CRISP:
 %%
 %%   rule  HICPP 3.4.2.
-%%   warn  "const member function %0 returns a non-const handle to object data"
-%%   vars  Method is CXXMethodDecl, note "const member function %0 declared here"
-%%   def   Method has type Type
-%%         Type has canonicalType CanonicalMethodType
-%%         CanonicalMethodType is const
-%%         CanonicalMethodType has resultType ResultType
-%%         ResultType has canonicalType CanonicalResultType
-%%         CanonicalResultType is PointerType
-%%         CanonicalResultType has pointeeType PointeeType
-%%         PointeeType has canonicalType CanonicalPointeeType
-%%         CanonicalPointeeType is not const
+%%   warn  "Return statement in const member function %Method returns a
+%%         non-const handle to class data", show Return range
+%%   note  "const member function %Method declared here", show Method location
+%%   vars  Method is CXXMethodDecl
+%%         Return is ReturnStmt                 -- has pointer type
+%%   meet  Method has canonical type MethodType -- 'canonical':opt if a T is ret
+%%         MethodType is const
+%%         MethodType has canonical resultType ResultType
+%%         ResultType is PointerType
+%%         ResultType has canonical pointeeType PointeeType
+%%         PointeeType is not const
+%%         Method has body Body
+%%         Body has child+ Return
+%%         Return has retValueMemLoc ReturnLoc      -- binds to LLVM location
+%%         Method has thisMemLoc ThisLoc            -- binds to LLVM location
+%%         cannotDiscardAliasBetween ReturnLoc ThisLoc
+
+%% Low-level CRISP:
+
 %%         Method has arg This
 %%         This has name "this"
 %%         Method has instruction StoreThis, LoadThis, OffsetFromThis, Return
@@ -202,7 +207,10 @@ violation('HICPP 3.3.13', Diagnostic) :-
 %%         Return has op UsedByReturn
 %%         UsedByReturn has location ReturnLoc
 %%         OffsetFromThisLoc alias ReturnLoc /<= NoAlias
-%%
+
+%% FIXME: The following rule implementation has become obsolete, it
+%% has to be adapted to new diagnostic facilities and CRISP syntax.
+
 %% Executable formalization in Prolog:
 
 % violation_candidate('HICPP 3.4.2', [MethodRepr]) :-
