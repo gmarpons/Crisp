@@ -45,14 +45,14 @@ namespace crisp {
       Success = PL_put_atom_chars(FileNameA, FileName);
       if ( !Success) return Success;
       functor_t RunAnalysisF
-        = PL_new_functor(PL_new_atom("runTranslationUnitAnalysis"), 1);
+        = PL_new_functor(PL_new_atom("run_translation_unit_analysis"), 1);
       term_t RunAnalysisT = PL_new_term_ref();
       Success = PL_cons_functor(RunAnalysisT, RunAnalysisF, FileNameA);
       if ( !Success) return Success;
       Success = PL_call(RunAnalysisT, NULL);
-      DEBUG(if ( !Success) dbgs()
-                             << "Error calling 'runTranslationUnitAnalysis/1'."
-                             << "\n");
+      DEBUG(if ( !Success)
+              dbgs() << "Error calling 'run_translation_unit_analysis/1'."
+                     << "\n");
       return Success;
     }
 

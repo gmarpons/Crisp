@@ -35,7 +35,7 @@ int plRegisterPredicates() {
                       0);
   PL_register_foreign("llvmName", 2,
                       (pl_function_t) &pl_llvmName, 0);
-  PL_register_foreign("report_violation", 2,
+  PL_register_foreign("report_violation", 3,
                       (pl_function_t) &pl_reportViolation, 0);
 
   return TRUE;

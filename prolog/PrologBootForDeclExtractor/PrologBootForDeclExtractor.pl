@@ -46,7 +46,7 @@ welcome_msg_and_prolog :-
         write('Enter Ctrl-D to exit.'), nl,
         prolog.
 
-runTranslationUnitAnalysis(TUMainFileName) :-
+run_translation_unit_analysis(TUMainFileName) :-
         clangFactsFileName(TUMainFileName, ClangFactsFileName),
         writeAllInterestingDecls(ClangFactsFileName).
 

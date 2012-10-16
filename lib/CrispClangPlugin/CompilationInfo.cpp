@@ -17,6 +17,11 @@
 // You should have received a copy of the GNU General Public License
 // along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <string>
+
+#include "llvm/ADT/Twine.h"
+#include "llvm/Support/Debug.h"
+
 #include "CompilationInfo.h"
 
 using namespace clang;
@@ -33,7 +38,27 @@ namespace crisp {
 
     void newCompilationInfo(CompilerInstance &CI) {
       if (CompilationInfoSingleton) delete CompilationInfoSingleton;
-      CompilationInfoSingleton = new CompilationInfo(CI);
+
+      // Get main file name
+      SourceManager& SM(CI.getASTContext().getSourceManager());
+      FileID MainFileID = SM.getMainFileID();
+      const char* MainFileName = SM.getFileEntryForID(MainFileID)->getName();
+      DEBUG(llvm::dbgs() << "Main source file name: " << MainFileName << "\n");
+
+      // Open file for facts for LLVM
+      Twine LlvmFactsFileName = MainFileName + Twine(".diags");
+      std::string ErrorInfo;
+
+      // The following stream is created and never destroyed
+      static llvm::raw_fd_ostream
+        LlvmFactsFile(LlvmFactsFileName.str().c_str(), ErrorInfo);
+      if ( !ErrorInfo.empty()) {
+        llvm::errs() <<"Fatal error opening file " << LlvmFactsFileName << "\n";
+        abort();                // TODO: quit gracefully
+      }
+
+      // Create singleton
+      CompilationInfoSingleton = new CompilationInfo(CI, LlvmFactsFile);
     }
 
     void deleteCompilationInfo() {
@@ -41,6 +66,9 @@ namespace crisp {
     }
 
     CompilationInfo::~CompilationInfo() {
+      DiagnosticsEngine &DE = CompilerInstance.getDiagnostics();
+      DE.setClient(NormalDiagnosticConsumer, true); // owns client
+      LlvmFactsDiagnosticConsumer.EndSourceFile();
       delete MangleContext;
     }
 

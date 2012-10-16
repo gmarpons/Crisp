@@ -20,7 +20,7 @@
 :- use_module(library(lists), [append/2]). % Needed by rule files
 
 :- multifile violation/3.
-:- multifile violation_candidate/2.
+% :- multifile violation_candidate/2.
 :- multifile violation_llvm/3.
 
 %% Argument is 'DebugFlag'.
@@ -28,10 +28,10 @@ init_msg(true) :-
         write('Initializing Prolog engine.'), nl.
 init_msg(false).
 
+%% TODO: factorize with identical pred. in PrologBootForDeclExtractor.pl
 welcome_msg_and_prolog :-
         write('Welcome to the Crisp interactive interface!'), nl,
         write('Enter Ctrl-D to exit.'), nl,
-        % set_prolog_flag(verbose, normal),
         prolog.
 
 load_file(FileBaseName, RulesDir) :-
@@ -43,25 +43,31 @@ load_file(FileBaseName, RulesDir) :-
         access_file(AbsoluteFileName, read),
         ensure_loaded(rules(FileName)).
 
-runTranslationUnitAnalysis(TUMainFileName) :-
-        clangFactsFileName(TUMainFileName, ClangFactsFileName),
-        writeAllViolationCandidates(ClangFactsFileName),
+run_translation_unit_analysis(_TUMainFileName) :-
+        % clang_facts_file_name(TUMainFileName, ClangFactsFileName),
+        % write_all_violation_candidates(ClangFactsFileName).
         report_all_violations.
 
-clangFactsFileName(TUMainFileName, PrologName) :-
-        file_base_name(TUMainFileName, CppName),
-        file_name_extension(Base, _, CppName),
-        file_name_extension(Base, pl, PrologName).
-
-writeAllViolationCandidates(FileName) :-
-        open(FileName, write, Stream),
-        forall(violation_candidate(Rule, Culprits),
-               portray_clause(Stream, violation_candidate_(Rule, Culprits))),
-        close(Stream).
+%% TODO: factorize with very similar pred. in PrologBootForDeclExtractor.pl
+% clang_facts_file_name(TUMainFileName, PrologName) :-
+%         file_base_name(TUMainFileName, CppName),
+%         file_name_extension(Base, _, CppName),
+%         file_name_extension(Base, pl, PrologName).
 
 report_all_violations :-
-        forall(violation(Rule, Diagnostics),
-               report_violation(Rule, Diagnostics)).
+        forall(violation(Rule, Diagnostics, EmitLlvmFacts),
+               report_violation(Rule, Diagnostics, EmitLlvmFacts)).
+
+% write_all_violation_candidates(FileName) :-
+%         open(FileName, write, _Stream, [alias(candidates_stream)]),
+%         forall(violation(Rule, Diagnostics, NeedsLlvmAnalyses),
+%                report_violation(Rule, Diagnostics, NeedsLlvmAnalyses)),
+%         close(Stream).
+
+%% This predicate is called from C++ as part of report_violation/2.
+% write_violation_candidate(Rule, Culprits, DiagnosticsString) :-
+%         portray_clause(candidates_stream,
+%                        violation_candidate(Rule, Culprits, DiagnosticsString)).
 
 %% TODO: take into accout (e.g. with a warning) symbols (constants)
 %% that are inlined in LLVM IR code and, as a result, do not always

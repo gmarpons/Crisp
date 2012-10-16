@@ -133,7 +133,7 @@ meet(Caller, Callee, CallPoint, Diagnostic) :-
         'CXXMemberCallExpr::implicitObjectArgument'(CallPoint, MemberExpr),
         'Stmt::stmtClassName'(MemberExpr, 'CXXThisExpr'). % replaces is/2 call
 
-violation('HICPP 3.3.13', Diagnostic) :-
+violation('HICPP 3.3.13', Diagnostic, false) :-
         GlobalDiagnostic =
         [ warn( 'ctor/dtor %0 calls (maybe indirectly) virtual method %1'
               , 'Decl'(Caller)
@@ -213,9 +213,10 @@ violation('HICPP 3.3.13', Diagnostic) :-
 
 %% Executable formalization in Prolog:
 
-violation('HICPP 3.4.2', Diagnostic) :-
+violation('HICPP 3.4.2', Diagnostic, true) :-
         GlobalDiagnostic =
-        [ warn( 'return statement in const member function %0 returns a non-const handle to class data'
+        [ warn( 'return statement in const member function %0 returns a \c
+              non-const handle to class data'
               , 'Stmt'(Return)
               , [ 'NamedDecl'(Method) ]
               , 'Stmt'(Return)

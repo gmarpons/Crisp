@@ -64,7 +64,11 @@ namespace crisp {
   class CrispConsumer : public ASTConsumer
                       , public RecursiveASTVisitor<CrispConsumer> {
   public:
-    CrispConsumer(CompilerInstance &CI, const std::string &BFD, const std::string &RFN, bool IF, bool DF)
+    CrispConsumer(CompilerInstance &CI,
+                  const std::string &BFD,
+                  const std::string &RFN,
+                  bool IF,
+                  bool DF)
       : CompilerInstance(CI)
       , ErrorInfo()
       , BootFilesDir(BFD)
@@ -130,12 +134,6 @@ namespace crisp {
     }
 
     if (Success) {
-      // Get main file name
-      SourceManager& SC(Context.getSourceManager());
-      FileID MainFileID = SC.getMainFileID();
-      const char* MainFileName = SC.getFileEntryForID(MainFileID)->getName();
-      DEBUG(dbgs() << "Main source file name: " << MainFileName << "\n");
-
       // Traverse types in the translation unit
       b::for_each(b::make_iterator_range(Context.types_begin(),
                                          Context.types_end()),
@@ -150,7 +148,7 @@ namespace crisp {
       newCompilationInfo(CompilerInstance);
 
       // Main Prolog analysis
-      Success = plRunTranslationUnitAnalysis(MainFileName);
+      Success = plRunTranslationUnitAnalysis("");
 
       // When debugging, open a PROLOG interactive session if user asked one
       DEBUG(if (Success && InteractiveFlag) Success = plInteractiveSession());
@@ -208,7 +206,7 @@ namespace crisp {
         , FlagInteractive("-interactive",
                         cl::desc("Enable interactive Prolog session"),
                         cl::init(false))
-        , FlagDebug("-debug", 
+        , FlagDebug("-debug",
                         cl::desc("Enable debug output"),
                         cl::init(false))
     { }

@@ -95,9 +95,9 @@ namespace crisp {
 
     if (Success) {
       // Get main file name
-      SourceManager& SC(Context.getSourceManager());
-      FileID MainFileID = SC.getMainFileID();
-      const char* MainFileName = SC.getFileEntryForID(MainFileID)->getName();
+      SourceManager& SM(Context.getSourceManager());
+      FileID MainFileID = SM.getMainFileID();
+      const char* MainFileName = SM.getFileEntryForID(MainFileID)->getName();
       DEBUG(dbgs() << "Main source file name: " << MainFileName << "\n");
 
       // Traverse types in the translation unit

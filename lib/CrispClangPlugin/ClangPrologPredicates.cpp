@@ -108,9 +108,7 @@ namespace crisp {
 
     /// Add an item's name as part of a diagnostic. The item must be
     /// either a \c NamedDecl or a \c Type.
-    ///
     /// \param DB Diagnostic we're building.
-    ///
     /// \param ItemT Prolog term representing the item and its kind.
     foreign_t addItemNameToDiagnostic(DiagnosticBuilder &DB, term_t ItemT) {
       atom_t ItemKindA = PL_new_atom("");
@@ -145,11 +143,12 @@ namespace crisp {
     /// of \c Decl/1, \c NamedDecl/1, \c Stmt/1, \c Type/1, or \c
     /// Null/0 (the last one only to indicate an inexistent source
     /// range). Not all operations are possible on any item kind.
-    foreign_t processDiagnostic(const char* Rule, term_t DiagnosticT) {
+    foreign_t processDiagnostic(const char* Rule, term_t DiagnosticsT,
+                                bool EmitLlvmFactsT) {
       // FIXME: all 'return FALSE' should be PL_warning'
       atom_t DiagKindA = PL_new_atom(""); // 'warn' or 'note'
       int Arity;
-      if ( !PL_get_name_arity(DiagnosticT, &DiagKindA, &Arity)) return FALSE;
+      if ( !PL_get_name_arity(DiagnosticsT, &DiagKindA, &Arity)) return FALSE;
       const char* DiagKindChars;
       if ( !(DiagKindChars = PL_atom_chars(DiagKindA)))
         return FALSE;
@@ -165,17 +164,17 @@ namespace crisp {
       term_t ArgT = PL_new_term_ref(); // Reused for each argument
 
       // Arg 1: message format string
-      if ( !PL_get_arg(1, DiagnosticT, ArgT)) return FALSE;
+      if ( !PL_get_arg(1, DiagnosticsT, ArgT)) return FALSE;
       char *FormatString;
-      // TODO: Check if our assumtion that being FormatStrinT and
-      // atom, BUF_RING store option is enough to avoid a memory copy,
-      // is correct.
+      // TODO: Check if it is correct our assumtion that, being
+      // FormatStringT an atom, BUF_RING store option is enough to
+      // avoid a memory copy.
       if ( !PL_get_chars(ArgT, &FormatString, CVT_ATOM|BUF_RING))
         return FALSE;
 
       // Arg 2: item for SourceLocation
       // Possible item kinds: Decl, Stmt.
-      if ( !PL_get_arg(2, DiagnosticT, ArgT)) return FALSE;
+      if ( !PL_get_arg(2, DiagnosticsT, ArgT)) return FALSE;
       atom_t ItemKindA = PL_new_atom("");
       if ( !PL_get_name_arity(ArgT, &ItemKindA, &Arity)) return FALSE;
       const char* ItemKindChars;
@@ -206,7 +205,7 @@ namespace crisp {
       DiagnosticBuilder DB = DE.Report(SrcLoc, DiagId);
 
       // Arg 3: list of items
-      if ( !PL_get_arg(3, DiagnosticT, ArgT)) return FALSE;
+      if ( !PL_get_arg(3, DiagnosticsT, ArgT)) return FALSE;
       term_t HeadT = PL_new_term_ref();
       term_t ListT = PL_copy_term_ref(ArgT); // Copy, as we need to write
       foreign_t Ok = TRUE;
@@ -216,7 +215,7 @@ namespace crisp {
 
       // Arg 4: (optional) item for source range.
       // Possible item kinds: Decl, Stmt. Null to indicate no range.
-      if ( !PL_get_arg(4, DiagnosticT, ArgT)) return FALSE;
+      if ( !PL_get_arg(4, DiagnosticsT, ArgT)) return FALSE;
       if ( !PL_get_name_arity(ArgT, &ItemKindA, &Arity)) return FALSE;
       if ( !(ItemKindChars = PL_atom_chars(ItemKindA))) return FALSE;
       ItemKind = StringSwitch<crisp::prolog::ItemKind>(ItemKindChars)
@@ -245,16 +244,33 @@ namespace crisp {
       return TRUE;
     }
 
-    foreign_t pl_reportViolation(term_t RuleT, term_t DiagnosticsT) {
+    foreign_t pl_reportViolation(term_t RuleT,
+                                 term_t DiagnosticsT,
+                                 term_t EmitLlvmFactsT) {
+
       char *Rule;
       if ( !PL_get_atom_chars(RuleT, &Rule)) return FALSE;
+
+      // CompilationInfo.h provides us with two diagnostic consumers:
+      // the normal one (a TextDiagnosticPrinter usually attached to
+      // stderr) and the 'LlvmFactsDiagnosticConsumer', to print
+      // diagnostics to a file for Crisp LLVM plugin to use. We switch
+      // from one consumer to the other depending on wheather the rule
+      // needs to emit facts for LLVM or not.
+      int EmitLlvmFactsI;
+      bool EmitLlvmFacts;
+      if ( !PL_get_bool(EmitLlvmFactsT, &EmitLlvmFactsI)) return FALSE;
+      EmitLlvmFacts = EmitLlvmFactsI == TRUE;
+      if (EmitLlvmFacts)        // Send diagnostics to a file
+        getCompilationInfo()->setLlvmFactsDiagnosticConsumer();
+      else
+        getCompilationInfo()->setNormalDiagnosticConsumer();
 
       term_t HeadT = PL_new_term_ref();
       term_t ListT = PL_copy_term_ref(DiagnosticsT); // Copy, we need to write
       foreign_t Ok = TRUE;
-      while (Ok && PL_get_list(ListT, HeadT, ListT)) {
-        Ok = processDiagnostic(Rule, HeadT);
-      }
+      while (Ok && PL_get_list(ListT, HeadT, ListT))
+        Ok = processDiagnostic(Rule, HeadT, EmitLlvmFacts);
 
       return TRUE;
     }
