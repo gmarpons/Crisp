@@ -20,7 +20,8 @@
 #include <string>
 
 #include "llvm/ADT/Twine.h"
-#include "llvm/Support/Debug.h"
+#include "llvm/Support/ErrorHandling.h"
+
 
 #include "CompilationInfo.h"
 
@@ -39,26 +40,8 @@ namespace crisp {
     void newCompilationInfo(CompilerInstance &CI) {
       if (CompilationInfoSingleton) delete CompilationInfoSingleton;
 
-      // Get main file name
-      SourceManager& SM(CI.getASTContext().getSourceManager());
-      FileID MainFileID = SM.getMainFileID();
-      const char* MainFileName = SM.getFileEntryForID(MainFileID)->getName();
-      DEBUG(llvm::dbgs() << "Main source file name: " << MainFileName << "\n");
-
-      // Open file for facts for LLVM
-      Twine LlvmFactsFileName = MainFileName + Twine(".diags");
-      std::string ErrorInfo;
-
-      // The following stream is created and never destroyed
-      static llvm::raw_fd_ostream
-        LlvmFactsFile(LlvmFactsFileName.str().c_str(), ErrorInfo);
-      if ( !ErrorInfo.empty()) {
-        llvm::errs() <<"Fatal error opening file " << LlvmFactsFileName << "\n";
-        abort();                // TODO: quit gracefully
-      }
-
       // Create singleton
-      CompilationInfoSingleton = new CompilationInfo(CI, LlvmFactsFile);
+      CompilationInfoSingleton = new CompilationInfo(CI);
     }
 
     void deleteCompilationInfo() {
@@ -67,8 +50,8 @@ namespace crisp {
 
     CompilationInfo::~CompilationInfo() {
       DiagnosticsEngine &DE = CompilerInstance.getDiagnostics();
-      DE.setClient(NormalDiagnosticConsumer, true); // owns client
-      LlvmFactsDiagnosticConsumer.EndSourceFile();
+      DE.setClient(&NormalDiagnosticConsumer, true); // owns client
+      LlvmDiagnosticConsumer.EndSourceFile();
       delete MangleContext;
     }
 

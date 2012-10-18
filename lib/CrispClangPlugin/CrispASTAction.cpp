@@ -211,6 +211,8 @@ namespace crisp {
                         cl::init(false))
     { }
 
+    // FIXME: command-line opts doesn't appear in --help
+
   protected:
     virtual ASTConsumer* CreateASTConsumer(CompilerInstance &CI, StringRef) {
       return new CrispConsumer(CI, BootFilesDir, RulesFileName,

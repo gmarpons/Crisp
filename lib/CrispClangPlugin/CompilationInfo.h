@@ -28,6 +28,7 @@
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
+#include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 
 using namespace clang;
@@ -48,29 +49,45 @@ namespace crisp {
 
       MangleContext* getMangleContext();
 
-      // DiagnosticConsumer& getLlvmFactsDiagnosticConsumer();
-
       void setNormalDiagnosticConsumer();
 
-      void setLlvmFactsDiagnosticConsumer();
+      void setLlvmDiagnosticConsumer();
+
+      llvm::raw_ostream& getLlvmFactsOStream();
+
+      llvm::raw_ostream& getLlvmDiagsOStream();
 
       friend void newCompilationInfo(CompilerInstance &CI);
       friend void deleteCompilationInfo();
 
     private:
-      CompilationInfo(CompilerInstance &CI, llvm::raw_ostream &F)
+      CompilationInfo(CompilerInstance &CI)
         : CompilerInstance(CI)
         , LangOptions(CI.getLangOpts())
         , PrintingPolicy(LangOptions)
         , SourceManager(CI.getSourceManager())
         , MangleContext(CI.getASTContext().createMangleContext())
-        , LlvmFactsDiagnosticConsumer(F, CI.getDiagnosticOpts(),
-                                      false) // doesn't own stream
-        , LlvmFactsFile(F) {
-        DiagnosticsEngine &DE = CI.getDiagnostics();
-        NormalDiagnosticConsumer = DE.takeClient();
-        LlvmFactsDiagnosticConsumer.BeginSourceFile(CI.getLangOpts(),
-                                                    &CI.getPreprocessor());
+        , MainFileName(SourceManager
+                       .getFileEntryForID(SourceManager.getMainFileID())
+                       ->getName())
+        , LlvmDiagsOStream((MainFileName + Twine(".diags")).str().c_str(),
+                           ErrorInfoDiags)
+        , LlvmFactsOStream((MainFileName + Twine(".pl")).str().c_str(),
+                           ErrorInfoFacts)
+        , NormalDiagnosticConsumer(*CI.getDiagnostics().takeClient())
+        , LlvmDiagnosticConsumer(LlvmDiagsOStream, CI.getDiagnosticOpts())
+      {
+        DEBUG(llvm::dbgs() << "Main source file name: "<< MainFileName << "\n");
+
+        if ( !ErrorInfoDiags.empty())
+          llvm::report_fatal_error(Twine("Error opening file ")
+                                   + Twine(MainFileName) + Twine(".diags"));
+        if ( !ErrorInfoFacts.empty())
+          llvm::report_fatal_error(Twine("Error opening file ")
+                                   + Twine(MainFileName) + Twine(".pl"));
+
+        LlvmDiagnosticConsumer.BeginSourceFile(CI.getLangOpts(),
+                                               &CI.getPreprocessor());
       }
 
       ~CompilationInfo();
@@ -80,9 +97,12 @@ namespace crisp {
       const PrintingPolicy PrintingPolicy;
       const SourceManager &SourceManager;
       MangleContext *MangleContext;
-      TextDiagnosticPrinter LlvmFactsDiagnosticConsumer;
-      DiagnosticConsumer *NormalDiagnosticConsumer;
-      const llvm::raw_ostream &LlvmFactsFile;
+      const char* MainFileName;
+      std::string ErrorInfoDiags, ErrorInfoFacts;
+      llvm::raw_fd_ostream LlvmDiagsOStream;
+      llvm::raw_fd_ostream LlvmFactsOStream;
+      DiagnosticConsumer &NormalDiagnosticConsumer;
+      TextDiagnosticPrinter LlvmDiagnosticConsumer;
     };
 
     CompilationInfo* getCompilationInfo();
@@ -112,20 +132,24 @@ namespace crisp {
       return MangleContext;
     }
 
-    // inline DiagnosticConsumer& CompilationInfo::getLlvmFactsDiagnosticConsumer() {
-    //   return LlvmFactsDiagnosticConsumer;
-    // }
-
     inline void CompilationInfo::setNormalDiagnosticConsumer() {
       DiagnosticsEngine &DE = CompilerInstance.getDiagnostics();
-      if (DE.getClient() != NormalDiagnosticConsumer)
-        DE.setClient(NormalDiagnosticConsumer, false); // doesn't own client
+      if (DE.getClient() != &NormalDiagnosticConsumer)
+        DE.setClient(&NormalDiagnosticConsumer, false); // doesn't own client
     }
 
-    inline void CompilationInfo::setLlvmFactsDiagnosticConsumer() {
+    inline void CompilationInfo::setLlvmDiagnosticConsumer() {
       DiagnosticsEngine &DE = CompilerInstance.getDiagnostics();
-      if (DE.getClient() != &LlvmFactsDiagnosticConsumer)
-        DE.setClient(&LlvmFactsDiagnosticConsumer, false); // doesn't own client
+      if (DE.getClient() != &LlvmDiagnosticConsumer)
+        DE.setClient(&LlvmDiagnosticConsumer, false); // doesn't own client
+    }
+
+    inline llvm::raw_ostream& CompilationInfo::getLlvmDiagsOStream() {
+      return LlvmDiagsOStream;
+    }
+
+    inline llvm::raw_ostream& CompilationInfo::getLlvmFactsOStream() {
+      return LlvmFactsOStream;
     }
 
   } // End namespace crisp::prolog

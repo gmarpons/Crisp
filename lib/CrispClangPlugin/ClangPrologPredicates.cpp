@@ -174,6 +174,7 @@ namespace crisp {
 
       // Arg 2: item for SourceLocation
       // Possible item kinds: Decl, Stmt.
+      const SourceManager &SM = getCompilationInfo()->getSourceManager();
       if ( !PL_get_arg(2, DiagnosticsT, ArgT)) return FALSE;
       atom_t ItemKindA = PL_new_atom("");
       if ( !PL_get_name_arity(ArgT, &ItemKindA, &Arity)) return FALSE;
@@ -191,10 +192,23 @@ namespace crisp {
         const Decl *D;
         if ( !PL_get_pointer(ItemPointerT, (void **) &D)) return FALSE;
         SrcLoc = D->getLocStart();
+        if (EmitLlvmFactsT) {
+          SrcLoc = D->getLocation();
+          getCompilationInfo()->getLlvmFactsOStream()
+            << "'" << D->getDeclKindName() << "'("
+            << SM.getExpansionLineNumber(SrcLoc) << ", "
+            << SM.getExpansionColumnNumber(SrcLoc) << ")";
+        }
       } else {                  // ItemKind == ItemKind_Stmt
         const Stmt *S;
         if ( !PL_get_pointer(ItemPointerT, (void **) &S)) return FALSE;
         SrcLoc = S->getLocStart();
+        if (EmitLlvmFactsT) {
+          getCompilationInfo()->getLlvmFactsOStream()
+            << "'" << S->getStmtClassName() << "'("
+            << SM.getExpansionLineNumber(SrcLoc) << ", "
+            << SM.getExpansionColumnNumber(SrcLoc) << ")";
+        }
       }
 
       // Diagnostic generation
@@ -257,21 +271,42 @@ namespace crisp {
       // diagnostics to a file for Crisp LLVM plugin to use. We switch
       // from one consumer to the other depending on wheather the rule
       // needs to emit facts for LLVM or not.
+      uint64_t DiagsOffsetInit, DiagsOffsetFinal;
       int EmitLlvmFactsI;
       bool EmitLlvmFacts;
       if ( !PL_get_bool(EmitLlvmFactsT, &EmitLlvmFactsI)) return FALSE;
       EmitLlvmFacts = EmitLlvmFactsI == TRUE;
-      if (EmitLlvmFacts)        // Send diagnostics to a file
-        getCompilationInfo()->setLlvmFactsDiagnosticConsumer();
-      else
+      if (EmitLlvmFacts) {
+        // Set file as diagnostics sink
+        getCompilationInfo()->setLlvmDiagnosticConsumer();
+        // Init fact construction
+        getCompilationInfo()->getLlvmFactsOStream()
+          << "violation_candidate('" << Rule << "', [";
+        // Get initial diagnostics stream offset
+        DiagsOffsetInit = getCompilationInfo()->getLlvmDiagsOStream().tell();
+      } else {                  // Set stderr as diagnostics sink
         getCompilationInfo()->setNormalDiagnosticConsumer();
+      }
 
       term_t HeadT = PL_new_term_ref();
       term_t ListT = PL_copy_term_ref(DiagnosticsT); // Copy, we need to write
-      foreign_t Ok = TRUE;
-      while (Ok && PL_get_list(ListT, HeadT, ListT))
+      if ( !PL_get_list(ListT, HeadT, ListT)) return FALSE;
+      foreign_t Ok = processDiagnostic(Rule, HeadT, EmitLlvmFacts);
+      while (Ok && PL_get_list(ListT, HeadT, ListT)) {
+        if (EmitLlvmFacts)        // Violation candidate item separator
+          getCompilationInfo()->getLlvmFactsOStream() << ", ";
         Ok = processDiagnostic(Rule, HeadT, EmitLlvmFacts);
+      }
+      if ( !Ok) return FALSE;
 
+      if (EmitLlvmFacts) {
+        // Get final diagnostics stream offset
+        DiagsOffsetFinal = getCompilationInfo()->getLlvmDiagsOStream().tell();
+        // Close fact construction
+        getCompilationInfo()->getLlvmFactsOStream()
+          << "], " << DiagsOffsetInit << ", "
+          << DiagsOffsetFinal - DiagsOffsetInit << ").\n";
+      }
       return TRUE;
     }
 
