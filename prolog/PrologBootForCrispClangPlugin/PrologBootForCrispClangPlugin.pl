@@ -43,31 +43,22 @@ load_file(FileBaseName, RulesDir) :-
         access_file(AbsoluteFileName, read),
         ensure_loaded(rules(FileName)).
 
-run_translation_unit_analysis(_TUMainFileName) :-
-        % clang_facts_file_name(TUMainFileName, ClangFactsFileName),
-        % write_all_violation_candidates(ClangFactsFileName).
-        report_all_violations.
+run_translation_unit_analysis(TUMainFileName) :-
+        atom_concat(TUMainFileName, '.pl', ViolationCandidatesFileName),
+        report_all_violations(ViolationCandidatesFileName).
 
-%% TODO: factorize with very similar pred. in PrologBootForDeclExtractor.pl
-% clang_facts_file_name(TUMainFileName, PrologName) :-
-%         file_base_name(TUMainFileName, CppName),
-%         file_name_extension(Base, _, CppName),
-%         file_name_extension(Base, pl, PrologName).
-
-report_all_violations :-
+report_all_violations(FileName) :-
+        open(FileName, write, _Stream, [alias(violation_candidates_stream)]),
         forall(violation(Rule, Diagnostics, EmitLlvmFacts),
-               report_violation(Rule, Diagnostics, EmitLlvmFacts)).
-
-% write_all_violation_candidates(FileName) :-
-%         open(FileName, write, _Stream, [alias(candidates_stream)]),
-%         forall(violation(Rule, Diagnostics, NeedsLlvmAnalyses),
-%                report_violation(Rule, Diagnostics, NeedsLlvmAnalyses)),
-%         close(Stream).
+               (report_violation(Rule, Diagnostics, EmitLlvmFacts))),
+        close(violation_candidates_stream).
 
 %% This predicate is called from C++ as part of report_violation/2.
-% write_violation_candidate(Rule, Culprits, DiagnosticsString) :-
-%         portray_clause(candidates_stream,
-%                        violation_candidate(Rule, Culprits, DiagnosticsString)).
+write_violation_candidate(Rule, Culprits, DiagsOffsetFinal, DiagsLength) :-
+        reverse(Culprits, CulpritsRev),
+        D = diags_file_segment(DiagsOffsetFinal, DiagsLength),
+        portray_clause(violation_candidates_stream,
+                       violation_candidate(Rule, CulpritsRev, D)).
 
 %% TODO: take into accout (e.g. with a warning) symbols (constants)
 %% that are inlined in LLVM IR code and, as a result, do not always

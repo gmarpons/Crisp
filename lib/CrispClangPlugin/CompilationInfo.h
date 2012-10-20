@@ -49,11 +49,11 @@ namespace crisp {
 
       MangleContext* getMangleContext();
 
+      const char* getMainFileName();
+
       void setNormalDiagnosticConsumer();
 
       void setLlvmDiagnosticConsumer();
-
-      llvm::raw_ostream& getLlvmFactsOStream();
 
       llvm::raw_ostream& getLlvmDiagsOStream();
 
@@ -72,8 +72,6 @@ namespace crisp {
                        ->getName())
         , LlvmDiagsOStream((MainFileName + Twine(".diags")).str().c_str(),
                            ErrorInfoDiags)
-        , LlvmFactsOStream((MainFileName + Twine(".pl")).str().c_str(),
-                           ErrorInfoFacts)
         , NormalDiagnosticConsumer(*CI.getDiagnostics().takeClient())
         , LlvmDiagnosticConsumer(LlvmDiagsOStream, CI.getDiagnosticOpts())
       {
@@ -100,7 +98,7 @@ namespace crisp {
       const char* MainFileName;
       std::string ErrorInfoDiags, ErrorInfoFacts;
       llvm::raw_fd_ostream LlvmDiagsOStream;
-      llvm::raw_fd_ostream LlvmFactsOStream;
+      // llvm::raw_fd_ostream LlvmFactsOStream;
       DiagnosticConsumer &NormalDiagnosticConsumer;
       TextDiagnosticPrinter LlvmDiagnosticConsumer;
     };
@@ -132,6 +130,10 @@ namespace crisp {
       return MangleContext;
     }
 
+    inline const char* CompilationInfo::getMainFileName() {
+      return MainFileName;
+    }
+
     inline void CompilationInfo::setNormalDiagnosticConsumer() {
       DiagnosticsEngine &DE = CompilerInstance.getDiagnostics();
       if (DE.getClient() != &NormalDiagnosticConsumer)
@@ -146,10 +148,6 @@ namespace crisp {
 
     inline llvm::raw_ostream& CompilationInfo::getLlvmDiagsOStream() {
       return LlvmDiagsOStream;
-    }
-
-    inline llvm::raw_ostream& CompilationInfo::getLlvmFactsOStream() {
-      return LlvmFactsOStream;
     }
 
   } // End namespace crisp::prolog

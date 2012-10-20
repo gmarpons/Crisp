@@ -77,7 +77,7 @@ extern "C" {
        *  the user.
        *  \param RuleT +atom with the name of the rule.
        *  \param DiagnosticsT +list of diagnostic messages.
-       *  \param EmitLlvmFactsT +bool indicating if diagnostics
+       *  \param EmitLlvmFactsT +bool indicating if diagnostics.
        *  need to be stored in a Prolog term.
        */
       foreign_t pl_reportViolation(term_t RuleT,

@@ -143,8 +143,8 @@ namespace crisp {
     /// of \c Decl/1, \c NamedDecl/1, \c Stmt/1, \c Type/1, or \c
     /// Null/0 (the last one only to indicate an inexistent source
     /// range). Not all operations are possible on any item kind.
-    foreign_t processDiagnostic(const char* Rule, term_t DiagnosticsT,
-                                bool EmitLlvmFactsT) {
+    int processDiagnostic(const char* Rule, term_t DiagnosticsT,
+                          bool EmitLlvmFactsT, term_t CulpritT) {
       // FIXME: all 'return FALSE' should be PL_warning'
       atom_t DiagKindA = PL_new_atom(""); // 'warn' or 'note'
       int Arity;
@@ -188,26 +188,34 @@ namespace crisp {
       term_t ItemPointerT = PL_new_term_ref();
       if ( !PL_get_arg(1, ArgT, ItemPointerT)) return FALSE;
       SourceLocation SrcLoc;
+      static term_t LineA = PL_new_term_ref();
+      static term_t ColA = PL_new_term_ref();
       if (ItemKind == ItemKind_Decl) {
         const Decl *D;
         if ( !PL_get_pointer(ItemPointerT, (void **) &D)) return FALSE;
         SrcLoc = D->getLocStart();
         if (EmitLlvmFactsT) {
           SrcLoc = D->getLocation();
-          getCompilationInfo()->getLlvmFactsOStream()
-            << "'" << D->getDeclKindName() << "'("
-            << SM.getExpansionLineNumber(SrcLoc) << ", "
-            << SM.getExpansionColumnNumber(SrcLoc) << ")";
+          functor_t CulpritF
+            = PL_new_functor(PL_new_atom(D->getDeclKindName()), 2);
+          if ( !PL_put_int64(LineA, SM.getExpansionLineNumber(SrcLoc)))
+            return FALSE;
+          if ( !PL_put_int64(ColA, SM.getExpansionColumnNumber(SrcLoc)))
+            return FALSE;
+          if ( !PL_cons_functor(CulpritT, CulpritF, LineA, ColA)) return FALSE;
         }
       } else {                  // ItemKind == ItemKind_Stmt
         const Stmt *S;
         if ( !PL_get_pointer(ItemPointerT, (void **) &S)) return FALSE;
         SrcLoc = S->getLocStart();
         if (EmitLlvmFactsT) {
-          getCompilationInfo()->getLlvmFactsOStream()
-            << "'" << S->getStmtClassName() << "'("
-            << SM.getExpansionLineNumber(SrcLoc) << ", "
-            << SM.getExpansionColumnNumber(SrcLoc) << ")";
+          functor_t CulpritF
+            = PL_new_functor(PL_new_atom(S->getStmtClassName()), 2);
+          if ( !PL_put_int64(LineA, SM.getExpansionLineNumber(SrcLoc)))
+            return FALSE;
+          if ( !PL_put_int64(ColA, SM.getExpansionColumnNumber(SrcLoc)))
+            return FALSE;
+          if ( !PL_cons_functor(CulpritT, CulpritF, LineA, ColA)) return FALSE;
         }
       }
 
@@ -261,7 +269,6 @@ namespace crisp {
     foreign_t pl_reportViolation(term_t RuleT,
                                  term_t DiagnosticsT,
                                  term_t EmitLlvmFactsT) {
-
       char *Rule;
       if ( !PL_get_atom_chars(RuleT, &Rule)) return FALSE;
 
@@ -279,35 +286,46 @@ namespace crisp {
       if (EmitLlvmFacts) {
         // Set file as diagnostics sink
         getCompilationInfo()->setLlvmDiagnosticConsumer();
-        // Init fact construction
-        getCompilationInfo()->getLlvmFactsOStream()
-          << "violation_candidate('" << Rule << "', [";
-        // Get initial diagnostics stream offset
         DiagsOffsetInit = getCompilationInfo()->getLlvmDiagsOStream().tell();
       } else {                  // Set stderr as diagnostics sink
         getCompilationInfo()->setNormalDiagnosticConsumer();
       }
 
+      term_t CulpritsListT = PL_new_term_ref();
+      term_t CulpritT = PL_new_term_ref();
       term_t HeadT = PL_new_term_ref();
       term_t ListT = PL_copy_term_ref(DiagnosticsT); // Copy, we need to write
       if ( !PL_get_list(ListT, HeadT, ListT)) return FALSE;
-      foreign_t Ok = processDiagnostic(Rule, HeadT, EmitLlvmFacts);
-      while (Ok && PL_get_list(ListT, HeadT, ListT)) {
-        if (EmitLlvmFacts)        // Violation candidate item separator
-          getCompilationInfo()->getLlvmFactsOStream() << ", ";
-        Ok = processDiagnostic(Rule, HeadT, EmitLlvmFacts);
+      int Ok = processDiagnostic(Rule, HeadT, EmitLlvmFacts, CulpritT);
+      if (Ok && EmitLlvmFacts) {
+        PL_put_nil(CulpritsListT);
+        Ok = PL_cons_list(CulpritsListT, CulpritT, CulpritsListT);
       }
-      if ( !Ok) return FALSE;
+      while (Ok && PL_get_list(ListT, HeadT, ListT)) {
+        Ok = processDiagnostic(Rule, HeadT, EmitLlvmFacts, CulpritT);
+        if (Ok && EmitLlvmFacts)
+          Ok = PL_cons_list(CulpritsListT, CulpritT, CulpritsListT);
+      }
 
-      if (EmitLlvmFacts) {
+      if (Ok && EmitLlvmFacts) {
         // Get final diagnostics stream offset
         DiagsOffsetFinal = getCompilationInfo()->getLlvmDiagsOStream().tell();
-        // Close fact construction
-        getCompilationInfo()->getLlvmFactsOStream()
-          << "], " << DiagsOffsetInit << ", "
-          << DiagsOffsetFinal - DiagsOffsetInit << ").\n";
+        functor_t WriteViolationCandidateF
+          = PL_new_functor(PL_new_atom("write_violation_candidate"), 4);
+        term_t WriteViolationCandidateT = PL_new_term_ref();
+        term_t DiagsOffsetInitT = PL_new_term_ref();
+        Ok = PL_put_int64(DiagsOffsetInitT, DiagsOffsetInit);
+        if ( !Ok) return FALSE;
+        term_t DiagsLengthT = PL_new_term_ref();
+        Ok = PL_put_int64(DiagsLengthT, DiagsOffsetFinal - DiagsOffsetInit);
+        if ( !Ok) return FALSE;
+        Ok = PL_cons_functor(WriteViolationCandidateT, WriteViolationCandidateF,
+                             RuleT,CulpritsListT,DiagsOffsetInitT,DiagsLengthT);
+        if ( !Ok) return FALSE;
+        Ok = PL_call(WriteViolationCandidateT, NULL);
       }
-      return TRUE;
+
+      return Ok;
     }
 
   } // End namespace crisp::prolog

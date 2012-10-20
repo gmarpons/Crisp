@@ -148,7 +148,8 @@ namespace crisp {
       newCompilationInfo(CompilerInstance);
 
       // Main Prolog analysis
-      Success = plRunTranslationUnitAnalysis("");
+      const char* TUMainFileName = getCompilationInfo()->getMainFileName();
+      Success = plRunTranslationUnitAnalysis(TUMainFileName);
 
       // When debugging, open a PROLOG interactive session if user asked one
       DEBUG(if (Success && InteractiveFlag) Success = plInteractiveSession());
