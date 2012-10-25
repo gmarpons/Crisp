@@ -73,7 +73,7 @@ namespace crisp {
         , LlvmDiagsOStream((MainFileName + Twine(".diags")).str().c_str(),
                            ErrorInfoDiags)
         , NormalDiagnosticConsumer(*CI.getDiagnostics().takeClient())
-        , LlvmDiagnosticConsumer(LlvmDiagsOStream, CI.getDiagnosticOpts())
+        , LlvmDiagnosticConsumer(LlvmDiagsOStream, &CI.getDiagnosticOpts())
       {
         DEBUG(llvm::dbgs() << "Main source file name: "<< MainFileName << "\n");
 
