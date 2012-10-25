@@ -28,7 +28,7 @@
 #include "llvm/Support/InstIterator.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Use.h"
-#include "llvm/Target/TargetData.h"
+#include "llvm/DataLayout.h"
 #include "llvm/Type.h"
 
 #include "crisp/PrologPredBaseTemplates.h"
@@ -179,8 +179,8 @@ namespace crisp {
       const Pass &P = getLLVMCompilationInfo()->getPass();
       Location L;
       if (ElementTypeOfV->isSized()) {
-        TargetData& TD = P.getAnalysis<TargetData>();
-        uint64_t Size = TD.getTypeAllocSize(ElementTypeOfV);
+        DataLayout const & DL = P.getAnalysis<DataLayout>();
+        uint64_t const Size = DL.getTypeAllocSize(ElementTypeOfV);
         L = Location(V, Size);
       } else {
         L = Location(V);
