@@ -24,7 +24,7 @@
 #include "llvm/Module.h"
 #include "llvm/Support/InstIterator.h"
 #include "llvm/Use.h"
-#include "llvm/Target/TargetData.h"
+#include "llvm/DataLayout.h"
 #include "llvm/Type.h"
 
 int main() {
