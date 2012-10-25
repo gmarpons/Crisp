@@ -31,7 +31,7 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Target/TargetData.h"
+#include "llvm/DataLayout.h"
 
 #include "crisp/RunPrologEngine.h"
 #include "crisp/Support/Environment.h"
@@ -151,7 +151,7 @@ namespace crisp {
   void CrispModulePass::getAnalysisUsage(AnalysisUsage& AU) const {
     AU.setPreservesAll();
     AU.addRequired<AliasAnalysis>();
-    AU.addRequired<TargetData>(); // Necessary to get location sizes
+    AU.addRequired<DataLayout>(); // Necessary to get location sizes
   }
 
   void CrispModulePass::releaseMemory() {
