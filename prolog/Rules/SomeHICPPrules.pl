@@ -35,7 +35,7 @@
 %% - Invocations on objects different from "this" should not be
 %%   tracked.
 %%
-%% Both points are taken into accout in the following formalization,
+%% Both points are taken into account in the following formalization,
 %% that relies on auxiliary predicates "calls" and "has
 %% functionCall". Also, the intent is that repeated violations
 %% involving the same "(Caller, Callee)" pair are ignored, as the call
@@ -60,9 +60,8 @@
 %%   rule  HICPP 3.3.13
 %%   warn  "ctor/dtor %Caller calls (maybe indirectly) virtual method %Callee",
 %%         show Caller location
-%%   note  "called virtual method %Callee", show %Callee location
-%%   vars  Caller is CXXMethodDecl
-%%         Callee is CXXMethodDecl
+%%   note  "called virtual method %Callee", show Callee location
+%%   vars  Caller, Callee is CXXMethodDecl
 %%   meet  Record is CXXRecordDecl
 %%         Record has ctor or destructor Caller
 %%         Record has method Callee
