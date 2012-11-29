@@ -1,0 +1,233 @@
+# AbstractSyntax.org -----------------------------------------------------------
+
+# Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
+
+# This file is part of Crisp.
+
+# Crisp is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Crisp is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
+
+#+PROPERTY: tangle yes
+#+PROPERTY: exports code
+
+This is an Org-mode file with Haskell code blocks that can be tangled
+(in a literate programming sense) within Emacs with C-c C-v t.
+
+Code blocks in [[*Tests][Tests]] can be loaded and executed in a GHCi session
+with C-C C-c.
+
+* Module declaration
+
+#+begin_src haskell
+  {-# LANGUAGE ExistentialQuantification,
+               GADTs,
+               KindSignatures,
+               StandaloneDeriving,
+               UnicodeSyntax
+               #-}
+  
+  module Crisp.AbstractSyntax
+  where
+  
+  import qualified Crisp.PrologSyntax as P
+#+end_src
+
+
+* Operators for Crisp abstract syntax
+
+#+begin_src haskell
+  infixl 9 :⊓
+  infixl 9 :⊔
+  infixl 9 :=
+  infixl 9 :≠
+#+end_src
+
+
+* Datatypes for Crisp abstract syntax
+
+#+begin_src haskell
+  -- | Tag type for Concept's defining a sort, and Expr's defining a
+  -- binding between a variable and a sort (base case).
+  data Sort
+  
+  -- | Tag type for Concept's not defining a sort (base case).
+  data NoSort
+    
+  -- | Expr marker
+  class                    EM a
+  instance                 EM Sort
+  instance                 EM NoSort
+  instance (EM a, EM b) => EM (a, b)
+  
+  -- | Sort marker, to mark expressions that give a sort to some
+  -- variable.
+  class    EM a         => SM a
+  instance                 SM Sort
+  instance (SM a, SM b) => SM (a, b)
+    
+  data ExprBox :: * where         -- An ExprBox contains an Expr m,
+                                  -- where m is some EM (existentially
+                                  -- quantified).
+      MkExprBox :: forall m. EM m => Expr m -> ExprBox
+  
+  data ExprSMBox :: * where       -- An ExprSMBox contains an Expr m,
+                                  -- where m is some SM (existentially
+                                  -- quantified).
+      MkExprSMBox :: forall m. SM m => Expr m -> ExprSMBox
+#+end_src
+
+#+begin_src haskell
+  data Module = Module [TopLevel]
+  
+  type TopLevelId = String
+  type RuleSet = String
+  
+  data TopLevel where
+      PredIs  :: (SM s, EM e)       =>
+                           TopLevelId -> Expr s           -> Expr e -> TopLevel
+
+      PredHas :: (SM s, SM t, EM e) =>
+                           TopLevelId -> Expr s -> Expr t -> Expr e -> TopLevel
+
+      Rule    :: (EM e)             =>
+                RuleSet -> TopLevelId -> [ExprSMBox]      -> Expr e -> TopLevel
+#+end_src
+
+Constraints:
+
+- List of =TopLevel='s of a =Module= is finite.
+- All =TopLevel='s of a =Module= have different =TopLevelId=.
+- List of =SortExprBox='s in =Rule='s is finite.
+- List of =SortExprBox='s in =Rule='s contains at least one element.
+
+#+begin_src haskell
+  type Var = String
+  type Role = String
+  
+  data Expr :: * -> * where
+      Is    :: (EM e)       => Var       -> Concept e              -> Expr e
+      Has   ::                 Var       -> Role      -> Var       -> Expr NoSort
+      HasT  ::                 Var       -> Role      -> Var       -> Expr NoSort
+      HasRT ::                 Var       -> Role      -> Var       -> Expr NoSort
+      And   :: (EM e, EM f) => Expr e    -> Expr f                 -> Expr NoSort
+      Or    :: (EM e, EM f) => Expr e    -> Expr f                 -> Expr NoSort
+      Not   :: (EM e)       => Expr e                              -> Expr NoSort
+      Top   ::                                                        Expr NoSort
+      (:=)  ::                 Var                    -> Var       -> Expr NoSort
+      (:≠)  ::                 Var                    -> Var       -> Expr NoSort
+#+end_src
+
+Observations:
+
+- The declaration for =data Expr= guarantees that the type parameter
+  for =Expr= is always in class =EM= (expression marker).
+
+#+begin_src haskell
+  type SortId = String
+  
+  -- | Adjective id.
+  type AdjId = String
+  
+  data Concept :: * -> * where
+      S    ::                 SortId                         -> Concept Sort
+      A    ::                 AdjId                          -> Concept NoSort
+      (:⊓) :: (EM e, EM f) => Concept e     -> Concept f     -> Concept e
+      (:⊔) :: (EM e, EM f) => Concept e     -> Concept f     -> Concept (e, f)
+#+end_src
+
+Observations:
+
+- The declaration for =data Concept= guarantees that the type
+  parameter for =Concept= is always in class =EM= (Expr marker).
+- A =Concept s= with =SM s= (=SM= is class "sort marker") is a concept
+  that defines a sort for a variable (it gives a "type" for that
+  variable). If parameter =s= is not in that class (e.g. =Concept
+  NoSort=), then that concept does not define a sort, so it cannot be
+  used in contexts where typing a variable is mandatory.
+- A union of concepts (constructor :⊔) has type parameter in class
+  =SM= iff both concepts have its parameter in that class.
+- In case of concept intersection (constructor :⊓), the left argument
+  determines if the concept parameter is in class =SM= or not, so =S
+  "CXXMethodDecl" :⊓ A "virtual"_= has a parameter in =SM= but =A
+  "virtual" :⊓ S "CXXMethodDecl"_= does not.
+
+
+* Translation Crisp AS -> Extended Prolog AS
+
+#+begin_src haskell
+  exprToProlog :: forall m. EM m => Expr m -> P.Formula
+  exprToProlog (Is v (S s))    = P.At $ P.Atom "is_" [P.Var v, P.Structure s []]
+  exprToProlog (Is v (A a))    = P.At $ P.Atom "is_" [P.Var v, P.Structure a []]
+  exprToProlog (Is v (c1:⊓c2)) = P.Conj (exprToProlog $ Is v c1)
+                                        (exprToProlog $ Is v c2)
+  exprToProlog (Is v (c1:⊔c2)) = P.Disj (exprToProlog $ Is v c1)
+                                        (exprToProlog $ Is v c2)
+  exprToProlog (Has   v1 r v2) = P.At $ P.Atom r [P.Var v1, P.Var v2]
+  exprToProlog (HasT  v1 r v2) = P.At $ P.Atom "call" [ P.Structure
+                                                        "trans_closure" []
+                                                      , P.Structure r []
+                                                      , P.Var v1
+                                                      , P.Var v2 ]
+  exprToProlog (HasRT v1 r v2) = P.At $ P.Atom "call" [ P.Structure 
+                                                        "refl_trans_closure" []
+                                                      , P.Structure r []
+                                                      , P.Var v1
+                                                      , P.Var v2 ]
+  exprToProlog (And e1 e2)     = P.Conj (exprToProlog e1) (exprToProlog e2)
+  exprToProlog (Or  e1 e2)     = P.Disj (exprToProlog e1) (exprToProlog e2)
+  exprToProlog (Not e)         = P.Not  (exprToProlog e)
+  exprToProlog Top             = P.Top
+  exprToProlog (v1 := v2)      = P.At $ P.Atom "call" [ P.Structure "=" []
+                                                      , P.Var v1
+                                                      , P.Var v2 ]
+  exprToProlog (v1 :≠ v2)      = P.At $ P.Atom "call" [ P.Structure "\\=" []
+                                                      , P.Var v1
+                                                      , P.Var v2 ]
+#+end_src
+
+
+* Tests
+
+Load Haskell module, first time.
+
+#+begin_src haskell :var pwd=(pwd) :tangle no :results output
+  let cd_pwd = return $ ":cd " ++ drop 10 pwd :: IO String
+  :cmd cd_pwd
+  :cd ..
+  :l Crisp.AbstractSyntax
+#+end_src
+
+Evaluate Haskell terms.
+
+#+begin_src haskell :tangle no :results output
+  :l Crisp.AbstractSyntax
+  :t PredHas "functionCall" ("Func" `Is` (S "FunctionDecl")) ("Call" `Is` (S "CallExpr")) ("Func" `Has` "body" $ "Body")
+  exprToProlog $ "Caller" `Is` (S "CXXMethodDecl")
+  exprToProlog $ ("Caller" `Has` "functionCall" $ "CallPoint") `And` ("CallPoint" `Has` "directCallee" $ "Callee")
+  :t Not $ "Caller" `Is` (A "virtual")
+  exprToProlog $ Not $ "Caller" `Is` (A "virtual")
+  exprToProlog $ "Body" `HasT` "child" $ "Call"
+#+end_src
+
+#+RESULTS:
+: [1 of 2] Compiling Crisp.PrologSyntax ( Crisp/PrologSyntax.hs, interpreted )
+: [2 of 2] Compiling Crisp.AbstractSyntax ( Crisp/AbstractSyntax.hs, interpreted )
+: Ok, modules loaded: Crisp.AbstractSyntax, Crisp.PrologSyntax.
+: PredHas "functionCall" ("Func" `Is` (S "FunctionDecl")) ("Call" `Is` (S "CallExpr")) ("Func" `Has` "body" $ "Body")
+:   :: TopLevel
+: At is_(Caller, CXXMethodDecl)
+: Conj (At functionCall(Caller, CallPoint)) (At directCallee(CallPoint, Callee))
+: Not $ "Caller" `Is` (A "virtual") :: Expr NoSort
+: Not (At is_(Caller, virtual))
+
+
