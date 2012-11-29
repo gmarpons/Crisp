@@ -1,0 +1,40 @@
+This file lists, in alphabetical order, the authors of Crisp and their
+legally significant (*) contributions.
+
+(*) See http://www.gnu.org/prep/maintain/html_node/Legally-Significant.html.
+
+
+Ángel Herranz Nieva <aherranz@babel.ls.fi.upm.es>: wrote
+  PrologSyntax.hs
+
+László Nagy <rizsotto@gmail.com>: wrote */CMakeLists.txt
+  FindClang.cmake FindSwipl.cmake lit.cfg lit.site.cfg.in
+  hicpp_3_3_13.cpp
+
+Guillem Marpons Ucero <gmarpons@babel.ls.fi.upm.es>: started the
+  project
+and wrote COPYING .dir-locals.el .gitignore LICENSE.TXT
+  Makefile.crisp.rules README.md doxygen.cfg.in doxygen.css
+  doxygen.footer doxygen.header doxygen.intro ClangPrologQueries.h
+  PrologPredBaseTemplates.h PrologPredDeclarationMacros.h
+  PrologPredRegistrationMacros.h PrologPredTemplatesForClangTypes.h
+  PrologUtilityFunctions.h RunPrologEngine.h ClangDeclarations.cpp
+  ClangPrologPredicateRegistration.c
+  ClangPrologPredicateRegistration.h ClangPrologPredicates.cpp
+  ClangPrologPredicates.h CompilationInfo.cpp CompilationInfo.h
+  CrispASTAction.cpp CrispModulePass.cpp LLVMCompilationInfo.cpp
+  LLVMCompilationInfo.h LLVMDeclarations.cpp
+  LLVMPrologPredicateRegistration.c LLVMPrologPredicateRegistration.h
+  LLVMPrologPredicates.cpp LLVMPrologPredicates.h
+  LLVMPrologQueries.cpp LLVMPrologQueries.h
+  ClangFunctionsForBootstrapping.inc DeclExtractorASTAction.cpp
+  DeclExtractorPrologPredicateRegistration.c
+  DeclExtractorPrologPredicateRegistration.h
+  DeclExtractorPrologPredicates.cpp DeclExtractorPrologPredicates.h
+  ClangPrologQueries.cpp PrologUtilityFunctions.cpp
+  RunPrologEngine.cpp PrologBootForCrispClangPlugin.pl
+  PrologBootForCrispLLVMPass.pl PrologBootForDeclExtractor.pl
+  AbstractSyntax.org
+and changed configure.ac PrologSyntax.hs
+
+
