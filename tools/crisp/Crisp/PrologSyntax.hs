@@ -61,7 +61,7 @@ newtype GP = GP [GPC]
 --  The meaning of EPC head a b is head :- a, b where a is a
 --  conjunction of literals and b is an arbitrary first order formula
 data EPC = EPC Atom [Literal] [Formula]
-           deriving (Show, Eq)
+           deriving (Eq, Show)
 
 data Formula = Top
              | Bot
@@ -73,22 +73,22 @@ data Formula = Top
              | Equiv Formula Formula
              | Forall String Formula
              | Exists String Formula
-               deriving (Show, Eq)
+               deriving (Eq, Show)
 
 newtype EP = EP [EPC]
-             deriving (Show, Eq)
+             deriving (Eq, Show)
 
 emptyEP :: Monad m => m EP
 emptyEP = return $ EP []
 
-addEPC :: Monad m => EP -> EPC -> m EP
-addEPC (EP epcs) epc = return $ EP (epc : epcs)
+addEPC :: Monad m => EPC -> EP -> m EP
+addEPC epc (EP epcs) = return $ EP (epc : epcs)
 
-addEPCs :: Monad m => EP -> [EPC] -> m EP
-addEPCs ep epcs = foldM addEPC ep epcs
+addEPCs :: Monad m => [EPC] -> EP -> m EP
+addEPCs epcs ep = foldM (flip addEPC) ep epcs
 
 unionEP :: Monad m => EP -> EP -> m EP
-unionEP ep (EP epcs) = addEPCs ep epcs
+unionEP ep (EP epcs) = addEPCs epcs ep
 
 -- | Creates a Horn clause.
 mkHC :: Atom -> [Atom] -> EPC
@@ -155,7 +155,7 @@ tlp (EPC h a (Not (Exists x w) : b)) =
     --  TODO: Lloyd-Topor transformation for existance quantification
     --  needs to generate fresh predicate names. To avoid duplicated
     --  clauses we need to create those predicates and clauses just
-    --  once. 
+    --  once.
     let an = auxPredName h
         fvs = freeVars w
         h' = Atom an (map Var fvs)
@@ -245,22 +245,17 @@ instance Show Literal where
     show (Neg a) = "\\+ " ++ show a
 
 instance Show Atom where
-    show (Atom p ts) = p ++ if null ts
-                            then ""
-                            else showAnyListWith show "(" ", " ")" ts
+    show (Atom p ts) = showQuoted p ++
+                       if null ts
+                       then ""
+                       else showAnyListWith show "(" ", " ")" ts
 
 instance Show Term where
     show (Var v) = v
-    show (Structure f ts) | f == "send" =
-                              let r = head ts
-                                  m@(Structure mi args) = head (tail ts) in
-                              case mi of
-                                "<" -> show r ++ " < " ++ show (head args)
-                                _ -> show r ++ "<--" ++ show m
-                          | otherwise =
-                              f ++ if null ts 
-                                   then ""
-                                   else showAnyListWith show "(" ", " ")" ts
+    show (Structure f ts) = showQuoted f ++
+                            if null ts
+                            then ""
+                            else showAnyListWith show "(" ", " ")" ts
     show (List ts) = showAnyListWith show "[" ", " "]" ts
     show (Tuple ts) = showAnyListWith show "(" ", " ")" ts
     show (Integer i) = show i
@@ -301,6 +296,9 @@ showAnyListWith howToShow beg sep end l =
 
 showListWith :: Show a => String -> String -> String -> [a] -> String
 showListWith = showAnyListWith show
+
+showQuoted :: String -> String
+showQuoted s = "'" ++ s ++ "'"
 
 -- | Replaces all instances of a value in a list by another value.
 replace :: Eq a =>

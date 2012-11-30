@@ -55,26 +55,43 @@ with C-C C-c.
 
 * Datatypes for Crisp abstract syntax
 
+This first code block contains some auxiliary type definitions.
+
 #+begin_src haskell
   -- | Tag type for Concept's defining a sort, and Expr's defining a
   -- binding between a variable and a sort (base case).
   data Sort
   
-  -- | Tag type for Concept's not defining a sort (base case).
+  -- | Tag type for Expr's not defining a binding between a variable and
+  -- a sort.
   data NoSort
+  
+  -- | Tag type for Concept's not defining a sort (base case).
+  data Adj
+  
+  -- | Tag type for Concept's defined as the complement of another
+  -- concept.
+  data Compl
     
   -- | Expr marker
   class                    EM a
-  instance                 EM Sort
+  instance                 EM Adj
+  instance                 EM Compl
   instance                 EM NoSort
+  instance                 EM Sort
   instance (EM a, EM b) => EM (a, b)
   
+  -- | Primitive concept marker
+  class    EM a         => PM a
+  instance                 PM Adj
+  instance                 PM Sort
+    
   -- | Sort marker, to mark expressions that give a sort to some
   -- variable.
   class    EM a         => SM a
   instance                 SM Sort
   instance (SM a, SM b) => SM (a, b)
-    
+  
   data ExprBox :: * where         -- An ExprBox contains an Expr m,
                                   -- where m is some EM (existentially
                                   -- quantified).
@@ -85,6 +102,8 @@ with C-C C-c.
                                   -- quantified).
       MkExprSMBox :: forall m. SM m => Expr m -> ExprSMBox
 #+end_src
+
+Here begins the abstract syntax for Crisp.
 
 #+begin_src haskell
   data Module = Module [TopLevel]
@@ -140,9 +159,10 @@ Observations:
   
   data Concept :: * -> * where
       S    ::                 SortId                         -> Concept Sort
-      A    ::                 AdjId                          -> Concept NoSort
+      A    ::                 AdjId                          -> Concept Adj
       (:⊓) :: (EM e, EM f) => Concept e     -> Concept f     -> Concept e
       (:⊔) :: (EM e, EM f) => Concept e     -> Concept f     -> Concept (e, f)
+      C    :: (EM e)       => Concept e                      -> Concept Compl
 #+end_src
 
 Observations:
@@ -152,7 +172,7 @@ Observations:
 - A =Concept s= with =SM s= (=SM= is class "sort marker") is a concept
   that defines a sort for a variable (it gives a "type" for that
   variable). If parameter =s= is not in that class (e.g. =Concept
-  NoSort=), then that concept does not define a sort, so it cannot be
+  Adj=), then that concept does not define a sort, so it cannot be
   used in contexts where typing a variable is mandatory.
 - A union of concepts (constructor :⊔) has type parameter in class
   =SM= iff both concepts have its parameter in that class.
@@ -165,36 +185,82 @@ Observations:
 * Translation Crisp AS -> Extended Prolog AS
 
 #+begin_src haskell
+  bindingToProlog :: Var -> Concept c -> P.Formula
+  bindingToProlog v (S s)    = P.At $ mkIsAtom v (S s)
+  bindingToProlog v (A a)    = P.At $ mkIsAtom v (A a)
+  bindingToProlog v (c1:⊓c2) = P.Conj (bindingToProlog v c1) (bindingToProlog v c2)
+  bindingToProlog v (c1:⊔c2) = P.Disj (bindingToProlog v c1) (bindingToProlog v c2)
+  bindingToProlog v (C c)    = P.Not  (bindingToProlog v c)
+#+end_src
+
+#+begin_src haskell
   exprToProlog :: forall m. EM m => Expr m -> P.Formula
-  exprToProlog (Is v (S s))    = P.At $ P.Atom "is_" [P.Var v, P.Structure s []]
-  exprToProlog (Is v (A a))    = P.At $ P.Atom "is_" [P.Var v, P.Structure a []]
-  exprToProlog (Is v (c1:⊓c2)) = P.Conj (exprToProlog $ Is v c1)
-                                        (exprToProlog $ Is v c2)
-  exprToProlog (Is v (c1:⊔c2)) = P.Disj (exprToProlog $ Is v c1)
-                                        (exprToProlog $ Is v c2)
-  exprToProlog (Has   v1 r v2) = P.At $ P.Atom r [P.Var v1, P.Var v2]
-  exprToProlog (HasT  v1 r v2) = P.At $ P.Atom "call" [ P.Structure
-                                                        "trans_closure" []
-                                                      , P.Structure r []
-                                                      , P.Var v1
-                                                      , P.Var v2 ]
-  exprToProlog (HasRT v1 r v2) = P.At $ P.Atom "call" [ P.Structure 
-                                                        "refl_trans_closure" []
-                                                      , P.Structure r []
-                                                      , P.Var v1
-                                                      , P.Var v2 ]
+  exprToProlog (Is v c)        = bindingToProlog v c
+  exprToProlog (Has   v1 r v2) = P.At $ P.Atom (idForHasRole r) [P.Var v1, P.Var v2]
+  exprToProlog (HasT  v1 r v2) = P.At $ mkCallAtom "trans_closure"
+                                 [P.Structure r [], P.Var v1, P.Var v2]
+  exprToProlog (HasRT v1 r v2) = P.At $ mkCallAtom "refl_trans_closure"
+                                 [P.Structure r [], P.Var v1, P.Var v2]
   exprToProlog (And e1 e2)     = P.Conj (exprToProlog e1) (exprToProlog e2)
   exprToProlog (Or  e1 e2)     = P.Disj (exprToProlog e1) (exprToProlog e2)
   exprToProlog (Not e)         = P.Not  (exprToProlog e)
   exprToProlog Top             = P.Top
-  exprToProlog (v1 := v2)      = P.At $ P.Atom "call" [ P.Structure "=" []
-                                                      , P.Var v1
-                                                      , P.Var v2 ]
-  exprToProlog (v1 :≠ v2)      = P.At $ P.Atom "call" [ P.Structure "\\=" []
-                                                      , P.Var v1
-                                                      , P.Var v2 ]
+  exprToProlog (v1 := v2)      = P.At $ mkCallAtom "=" [P.Var v1, P.Var v2]
+  exprToProlog (v1 :≠ v2)      = P.At $ mkCallAtom "\\=" [P.Var v1, P.Var v2]
 #+end_src
 
+#+begin_src haskell
+  topLevelToProlog :: TopLevel -> P.EPC
+  topLevelToProlog (PredIs   id s   es)
+      = P.mkEPC (mkHeadFromVars (idForIsRole id) [var s])
+        $ mkBody [MkExprSMBox s] es
+  topLevelToProlog (PredHas  id s t es)
+      = P.mkEPC (mkHeadFromVars (idForHasRole id) [var s, var t])
+        $ mkBody [MkExprSMBox s, MkExprSMBox t] es
+  topLevelToProlog (Rule set id ss  es) 
+      = P.mkEPC (mkRuleHead set id (vars ss)) (mkBody ss es)
+#+end_src
+
+Auxiliary definitions in the following code block.
+
+#+begin_src haskell
+  type PredName = String
+  
+  mkIsAtom :: forall p. PM p => Var -> Concept p -> P.Atom
+  mkIsAtom v (S s) = P.Atom "is_" [P.Var v, P.Structure s []]
+  mkIsAtom v (A a) = P.Atom "is_" [P.Var v, P.Structure a []]
+  
+  mkCallAtom :: PredName -> [P.Term] -> P.Atom
+  mkCallAtom p l = P.Atom "call" $ (P.Structure p []) : l
+  
+  idForIsRole :: Role -> String
+  idForIsRole = ("is_" ++)
+  
+  idForHasRole :: Role -> String
+  idForHasRole = ("has_" ++)
+  
+  mkHeadFromVars :: PredName -> [Var] -> P.Atom
+  mkHeadFromVars name vars = P.Atom name $ map P.Var vars
+  
+  mkRuleHead :: RuleSet -> TopLevelId -> [Var] -> P.Atom
+  mkRuleHead set id vars
+      = let qualifiedRuleName = set ++ " " ++ id
+        in P.Atom "violation" $ (P.Structure qualifiedRuleName []) : map P.Var vars
+  
+  mkSignature :: [ExprSMBox] -> P.Formula
+  mkSignature bindings = P.mkConj $ map getBind bindings
+      where getBind (MkExprSMBox se) = exprToProlog se
+  
+  mkBody :: EM e => [ExprSMBox] -> Expr e -> P.Formula
+  mkBody signature meet
+      = mkSignature signature `P.Conj` exprToProlog meet
+  
+  var :: SM s => Expr s -> Var
+  var (Is v _) = v
+  
+  vars :: [ExprSMBox] -> [Var]
+  vars = map (\(MkExprSMBox e) -> var e)
+#+end_src
 
 * Tests
 
@@ -207,27 +273,67 @@ Load Haskell module, first time.
   :l Crisp.AbstractSyntax
 #+end_src
 
+#+RESULTS:
+: Loading package ghc-prim ... linking ... done.
+: Loading package integer-gmp ... linking ... done.
+: Loading package base ... linking ... done.
+
 Evaluate Haskell terms.
 
 #+begin_src haskell :tangle no :results output
   :l Crisp.AbstractSyntax
   :t PredHas "functionCall" ("Func" `Is` (S "FunctionDecl")) ("Call" `Is` (S "CallExpr")) ("Func" `Has` "body" $ "Body")
-  exprToProlog $ "Caller" `Is` (S "CXXMethodDecl")
-  exprToProlog $ ("Caller" `Has` "functionCall" $ "CallPoint") `And` ("CallPoint" `Has` "directCallee" $ "Callee")
-  :t Not $ "Caller" `Is` (A "virtual")
+  :t Not $ "Caller" `Is` C (A "virtual")
+  let a = "Caller" `Is` (S "CXXMethodDecl")
+  let b = ("Caller" `Has` "functionCall" $ "CallPoint") `And` ("CallPoint" `Has` "directCallee" $ "Callee")
   exprToProlog $ Not $ "Caller" `Is` (A "virtual")
   exprToProlog $ "Body" `HasT` "child" $ "Call"
+  let p1 = PredHas "functionCall" ("Func" `Is` S "FunctionDecl") ("Call" `Is` S "CallExpr") (("Func" `Has` "body" $ "Body") `And` ("Body" `HasT` "child" $ "Call"))
+  let p2 = PredHas "callee" ("Caller" `Is` S "FunctionDecl") ("Callee" `Is` S "FunctionDecl") (("Caller" `Has` "functionCall" $ "CallPoint") `And` ("CallPoint" `Has` "directCallee" $ "Callee"))
+  let r1 = Rule "HICPP" "3.3.13" [MkExprSMBox $ "Caller" `Is` S "FunctionDecl", MkExprSMBox $ "Caller" `Is` S "FunctionDecl"] (("Record" `Is` S "CXXRecordDecl") `And` (("Record" `Has` "ctor" $ "Caller") `Or`("Record" `Has` "destructor" $ "Caller")) `And` ("Record" `Has` "method" $ "Callee") `And` ("Callee" `Is` A "virtual"))
+  -- Lloyd-topor
+  putStrLn ""
+  do { ep <- P.emptyEP; ep <- P.addEPCs (map topLevelToProlog [p1, p2, r1]) ep; return $ P.transLloydTopor ep }
+  putStrLn "END"
 #+end_src
 
 #+RESULTS:
-: [1 of 2] Compiling Crisp.PrologSyntax ( Crisp/PrologSyntax.hs, interpreted )
-: [2 of 2] Compiling Crisp.AbstractSyntax ( Crisp/AbstractSyntax.hs, interpreted )
-: Ok, modules loaded: Crisp.AbstractSyntax, Crisp.PrologSyntax.
-: PredHas "functionCall" ("Func" `Is` (S "FunctionDecl")) ("Call" `Is` (S "CallExpr")) ("Func" `Has` "body" $ "Body")
-:   :: TopLevel
-: At is_(Caller, CXXMethodDecl)
-: Conj (At functionCall(Caller, CallPoint)) (At directCallee(CallPoint, Callee))
-: Not $ "Caller" `Is` (A "virtual") :: Expr NoSort
-: Not (At is_(Caller, virtual))
+#+begin_example
+[1 of 2] Compiling Crisp.PrologSyntax ( Crisp/PrologSyntax.hs, interpreted )
+[2 of 2] Compiling Crisp.AbstractSyntax ( Crisp/AbstractSyntax.hs, interpreted )
+Ok, modules loaded: Crisp.AbstractSyntax, Crisp.PrologSyntax.
+PredHas "functionCall" ("Func" `Is` (S "FunctionDecl")) ("Call" `Is` (S "CallExpr")) ("Func" `Has` "body" $ "Body")
+  :: TopLevel
+Not $ "Caller" `Is` C (A "virtual") :: Expr NoSort
+Not (At 'is_'(Caller, 'virtual'))
+At 'call'('trans_closure', 'child', Body, Call)
+*Crisp.AbstractSyntax> *Crisp.AbstractSyntax> *Crisp.AbstractSyntax> *Crisp.AbstractSyntax>
+'violation'('HICPP 3.3.13', Caller, Caller) :-
+   'is_'(Caller, 'FunctionDecl'),
+   'is_'(Caller, 'FunctionDecl'),
+   'is_'(Record, 'CXXRecordDecl'),
+   'has_ctor'(Record, Caller),
+   'has_method'(Record, Callee),
+   'is_'(Callee, 'virtual').
 
+'violation'('HICPP 3.3.13', Caller, Caller) :-
+   'is_'(Caller, 'FunctionDecl'),
+   'is_'(Caller, 'FunctionDecl'),
+   'is_'(Record, 'CXXRecordDecl'),
+   'has_destructor'(Record, Caller),
+   'has_method'(Record, Callee),
+   'is_'(Callee, 'virtual').
+
+'has_callee'(Caller, Callee) :-
+   'is_'(Caller, 'FunctionDecl'),
+   'is_'(Callee, 'FunctionDecl'),
+   'has_functionCall'(Caller, CallPoint),
+   'has_directCallee'(CallPoint, Callee).
+
+'has_functionCall'(Func, Call) :-
+   'is_'(Func, 'FunctionDecl'),
+   'is_'(Call, 'CallExpr'),
+   'has_body'(Func, Body),
+   'call'('trans_closure', 'child', Body, Call).
+#+end_example
 
