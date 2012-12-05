@@ -29,12 +29,14 @@ with C-C C-c.
 * Module declaration
 
 #+begin_src haskell
-  {-# LANGUAGE ExistentialQuantification,
-               GADTs,
-               KindSignatures,
-               StandaloneDeriving,
-               UnicodeSyntax
-               #-}
+  {-# LANGUAGE 
+    ExistentialQuantification,
+    FlexibleContexts,
+    GADTs,
+    KindSignatures,
+    StandaloneDeriving,
+    UnicodeSyntax
+    #-}
   
   module Crisp.AbstractSyntax
   where
@@ -95,12 +97,32 @@ This first code block contains some auxiliary type definitions.
   data ExprBox :: * where         -- An ExprBox contains an Expr m,
                                   -- where m is some EM (existentially
                                   -- quantified).
-      MkExprBox :: forall m. EM m => Expr m -> ExprBox
+      MkExprBox :: forall m. (EM m, Show (Expr m)) => Expr m -> ExprBox
+  
+  deriving instance Show ExprBox
   
   data ExprSMBox :: * where       -- An ExprSMBox contains an Expr m,
                                   -- where m is some SM (existentially
                                   -- quantified).
-      MkExprSMBox :: forall m. SM m => Expr m -> ExprSMBox
+      MkExprSMBox :: forall m. (SM m, Show (Expr m)) => Expr m -> ExprSMBox
+  
+  deriving instance Show ExprSMBox
+  
+  data ConceptBox :: * where      -- A ConceptBox contains a Concept m,
+                                  -- where m is some EM
+                                  -- (existentially quantified).
+      MkConceptBox :: forall m. (EM m, Show (Concept m)) =>
+                      Concept m -> ConceptBox
+  
+  deriving instance Show ConceptBox
+  
+  data ConceptSMBox :: * where    -- A ConceptSMBox contains a Concept m
+                                  -- where m is some SM
+                                  -- (existentially quantified).
+      MkConceptSMBox :: forall m. (SM m, Show (Concept m)) =>
+                        Concept m -> ConceptSMBox
+  
+  deriving instance Show ConceptSMBox
 #+end_src
 
 Here begins the abstract syntax for Crisp.
@@ -144,6 +166,8 @@ Constraints:
       Top   ::                                                        Expr NoSort
       (:=)  ::                 Var                    -> Var       -> Expr NoSort
       (:≠)  ::                 Var                    -> Var       -> Expr NoSort
+  
+  deriving instance Show (Expr a)
 #+end_src
 
 Observations:
@@ -163,6 +187,8 @@ Observations:
       (:⊓) :: (EM e, EM f) => Concept e     -> Concept f     -> Concept e
       (:⊔) :: (EM e, EM f) => Concept e     -> Concept f     -> Concept (e, f)
       C    :: (EM e)       => Concept e                      -> Concept Compl
+  
+  deriving instance Show (Concept a)
 #+end_src
 
 Observations:
@@ -261,6 +287,7 @@ Auxiliary definitions in the following code block.
   vars :: [ExprSMBox] -> [Var]
   vars = map (\(MkExprSMBox e) -> var e)
 #+end_src
+
 
 * Tests
 
