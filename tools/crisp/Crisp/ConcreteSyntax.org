@@ -1,0 +1,222 @@
+# ConcreteSyntax.org -----------------------------------------------------------
+
+# Copyright (C) 2011, 2012 Guillem Marpons <gmarpons@babel.ls.fi.upm.es>
+#
+# This file is part of Crisp.
+#
+# Crisp is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Crisp is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
+
+#+PROPERTY: tangle yes
+#+PROPERTY: exports code
+
+This is an Org-mode file with Haskell code blocks that can be tangled
+(in a literate programming sense) within Emacs with C-c C-v t.
+
+Code blocks in [[*Tests][Tests]] can be loaded and executed in a GHCi session
+with C-C C-c.
+
+* Module declaration
+
+#+begin_src haskell
+  {-# LANGUAGE
+    FlexibleContexts,
+    FlexibleInstances,
+    MultiParamTypeClasses,
+    NoMonomorphismRestriction,
+    Rank2Types,
+    TypeSynonymInstances
+    #-}
+  
+  module Crisp.ConcreteSyntax where
+  
+  import Crisp.AbstractSyntax
+  import Text.ParserCombinators.UU.BasicInstances
+  import Text.ParserCombinators.UU.Core
+  import Text.ParserCombinators.UU.Derived
+  import Text.ParserCombinators.UU.Utils hiding (pLParen, pRParen, pParens, pSpaces)
+#+end_src
+
+
+* Parsers for non-terminal symbols
+  
+#+begin_src haskell
+  -- | Both 'and' and 'or' are left-associative. Neither one of them
+  -- bind stronger than the other, so explicit parenthesizing is needed
+  -- to mix them.
+  pConceptSort :: Parser ConceptSMBox
+  pConceptSort =     pConceptSortIntersection
+                 <|> pConceptSortUnion `micro` 1 -- Solves ambiguity for
+                                                 -- unary concept expressions
+      where pConceptSortIntersection :: Parser ConceptSMBox
+            pConceptSortIntersection = (intersection <$ pKeyword "and") 
+                                       `pChainl` (pSortId <|> pParens pConceptSort)
+            intersection (MkConceptSMBox x) (MkConceptSMBox y) = MkConceptSMBox (x:⊓y)
+            pConceptSortUnion :: Parser ConceptSMBox
+            pConceptSortUnion = (union <$ pKeyword "or")
+                                `pChainl` (pSortId <|> pParens pConceptSort)
+            union (MkConceptSMBox x) (MkConceptSMBox y) = MkConceptSMBox (x:⊔y)
+#+end_src
+
+
+* Parsers for terminal symbols, lexical analysis
+
+All parsers for terminal symbols are responsible of munching
+whitespace after them and take care of possible comments.
+
+#+begin_src haskell
+  -- | At the moment we only support sort names beginning with an upper
+  -- case letter (no "_", etc.)
+  pSortId :: Parser ConceptSMBox
+  pSortId = MkConceptSMBox . S <$> pUpperId
+  
+  -- | At the moment we only support adjective names beginning with a lower
+  -- case letter (no "_", etc.)
+  pAdjId :: Parser AdjId
+  pAdjId = pLowerId
+  
+  pKeyword :: String -> Parser ()
+  pKeyword keyword = pTerminal $ const () <$> pToken keyword `micro` 1
+
+  pParens :: ParserTrafo a a
+  pParens p = pLParen *> p <* pRParen
+#+end_src
+
+Auxiliary functions.
+
+#+begin_src haskell
+  pLParen, pRParen :: Parser ()
+  pLParen = pTerminal $ const () <$> pSym '('
+  pRParen = pTerminal $ const () <$> pSym ')'
+  
+  pLowerId :: Parser String
+  pLowerId = pTerminal $ (:) <$> pLower <*> pList pIdChar `micro` 2
+  
+  pUpperId :: Parser String
+  pUpperId = pTerminal $ (:) <$> pUpper <*> pList pIdChar `micro` 2
+  
+  pIdChar :: Parser Char
+  pIdChar = pLower <|> pUpper <|> pDigit <|> pAnySym "_'"
+  
+  -- | This parser hides the one in UU.Utils, because in our lexer
+  -- newlines are semantically significant and we don't allow tabs
+  -- outside comments.
+  pSpaces :: Parser ()
+  pSpaces = const () <$> pMunch (`elem` " \r") <?> "Whitespace"
+  
+  -- | Taken from UU.Examples.
+  pManyTill :: Parser a -> Parser b -> Parser [a]
+  pManyTill p end = [] <$ end <<|> (:) <$> p <*> pManyTill p end
+  
+  pOneLineComment :: Parser ()
+  pOneLineComment = const () <$> pToken "--" <* pMunch (/= '\n')
+  
+  -- | Any symbol is allowed in a multiline comment. If EOF is reached
+  -- before the comment is closed, a '$' symbol will be inserted. This
+  -- is an arbitrary choice, in fact no symbol insertion can repair the
+  -- input, closing the comment with "-}" is the only solution. No
+  -- nested multiline comments are allowed. New lines inside a multiline
+  -- comment are not accounted.
+  pMultilineComment :: Parser ()
+  pMultilineComment = const ()
+                      <$> pToken "{-"
+                      <*  pManyTill 
+                              (pSatisfy (const True) (Insertion "Ignore '$'" '$' 0)) 
+                              (pToken "-}")
+  
+  pTerminal :: ParserTrafo a a
+  pTerminal p = id <$> p <* pSpaces <* interTokenGlue
+      where interTokenGlue = pOneLineComment <|> pMultilineComment <* pSpaces `opt` ()
+#+end_src
+
+
+* File handling
+
+#+begin_src haskell
+  -- translateFile :: String -> IO ()
+  -- translateFile fileName = do
+  --   result <- parseFromFileEx rulesFile fileName
+  --   case result of
+  --     Failure diags -> unless (Seq.null diags) $ displayLn diags
+  --     Success diags translation -> do
+  --                            unless (Seq.null diags) $ displayLn diags
+  --                            print translation
+#+end_src
+
+
+* Tests
+
+Load Haskell module, first time.
+
+#+begin_src haskell :var pwd=(pwd) :tangle no :results output
+  let cd_pwd = return $ ":cd " ++ drop 10 pwd :: IO String
+  :cmd cd_pwd
+  :cd ..
+  :l Crisp.ConcreteSyntax
+#+end_src
+
+#+RESULTS:
+: i, version 7.4.1: http://www.haskell.org/ghc/  :? for help
+: Loading package ghc-prim ... linking ... done.
+: Loading package integer-gmp ... linking ... done.
+: Loading package base ... linking ... done.
+
+#+begin_src haskell
+  run :: Show t => Parser t -> String -> IO ()
+  run p inp =
+      do let r@(a, errors) = parse 
+                             ((,) <$ pSpaces <*> p <*> pEnd) 
+                             (createStr (LineColPos 0 0 0) inp)
+         putStrLn ("--  Result: " ++ show a)
+         if null errors then return ()
+         else do putStr ("--  Correcting steps: \n")
+                 show_errors errors
+         putStrLn "-- "
+      where show_errors :: (Show a) => [a] -> IO ()
+            show_errors = sequence_ . (map (putStrLn . show))
+  
+  pa :: Parser String 
+  pa = (:[]) <$> pSym 'a'
+#+end_src
+
+#+begin_src haskell :tangle no :results output
+  let a = "   CXXMethodDecl"
+  let b = "FunctionDecl"
+  let c = "a"
+  mapM_ (run pa) [c]
+  putStrLn "END"
+#+end_src
+
+#+RESULTS:
+#+begin_example
+
+*Crisp.ConcreteSyntax> *Crisp.ConcreteSyntax> --  Result: "a"
+--  Correcting steps: 
+--    Deleted   'F' at position LineColPos 0 0 0 expecting 'a'
+--    Deleted   'u' at position LineColPos 0 1 1 expecting 'a'
+--    Deleted   'n' at position LineColPos 0 2 2 expecting 'a'
+--    Deleted   'c' at position LineColPos 0 3 3 expecting 'a'
+--    Deleted   't' at position LineColPos 0 4 4 expecting 'a'
+--    Deleted   'i' at position LineColPos 0 5 5 expecting 'a'
+--    Deleted   'o' at position LineColPos 0 6 6 expecting 'a'
+--    Deleted   'n' at position LineColPos 0 7 7 expecting 'a'
+--    Deleted   'D' at position LineColPos 0 8 8 expecting 'a'
+--    Deleted   'e' at position LineColPos 0 9 9 expecting 'a'
+--    Deleted   'c' at position LineColPos 0 10 10 expecting 'a'
+--    Deleted   'l' at position LineColPos 0 11 11 expecting 'a'
+--    Inserted  'a' at position LineColPos 0 12 12 expecting 'a'
+-- 
+--  Result: "a"
+--
+#+end_example
+

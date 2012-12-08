@@ -186,7 +186,7 @@ Observations:
       A    ::                 AdjId                          -> Concept Adj
       (:⊓) :: (EM e, EM f) => Concept e     -> Concept f     -> Concept e
       (:⊔) :: (EM e, EM f) => Concept e     -> Concept f     -> Concept (e, f)
-      C    :: (EM e)       => Concept e                      -> Concept Compl
+      -- C    :: (EM e)       => Concept e                      -> Concept Compl
   
   deriving instance Show (Concept a)
 #+end_src
@@ -216,7 +216,7 @@ Observations:
   bindingToProlog v (A a)    = P.At $ mkIsAtom v (A a)
   bindingToProlog v (c1:⊓c2) = P.Conj (bindingToProlog v c1) (bindingToProlog v c2)
   bindingToProlog v (c1:⊔c2) = P.Disj (bindingToProlog v c1) (bindingToProlog v c2)
-  bindingToProlog v (C c)    = P.Not  (bindingToProlog v c)
+  -- bindingToProlog v (C c)    = P.Not  (bindingToProlog v c)
 #+end_src
 
 #+begin_src haskell
