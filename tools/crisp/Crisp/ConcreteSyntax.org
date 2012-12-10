@@ -41,6 +41,8 @@ with C-C C-c.
   module Crisp.ConcreteSyntax where
   
   import Crisp.AbstractSyntax
+  import Data.Char
+      (isAsciiUpper, isAsciiLower, isDigit)
   import Text.ParserCombinators.UU.BasicInstances
   import Text.ParserCombinators.UU.Core
   import Text.ParserCombinators.UU.Derived
@@ -51,21 +53,50 @@ with C-C C-c.
 * Parsers for non-terminal symbols
   
 #+begin_src haskell
-  -- | Both 'and' and 'or' are left-associative. Neither one of them
-  -- bind stronger than the other, so explicit parenthesizing is needed
+  -- | Both 'and' and 'or' are right-associative. Neither one of them
+  -- binds stronger than the other, so explicit parenthesizing is needed
   -- to mix them.
   pConceptSort :: Parser ConceptSMBox
-  pConceptSort =     pConceptSortIntersection
-                 <|> pConceptSortUnion `micro` 1 -- Solves ambiguity for
-                                                 -- unary concept expressions
-      where pConceptSortIntersection :: Parser ConceptSMBox
-            pConceptSortIntersection = (intersection <$ pKeyword "and") 
-                                       `pChainl` (pSortId <|> pParens pConceptSort)
-            intersection (MkConceptSMBox x) (MkConceptSMBox y) = MkConceptSMBox (x:⊓y)
-            pConceptSortUnion :: Parser ConceptSMBox
-            pConceptSortUnion = (union <$ pKeyword "or")
-                                `pChainl` (pSortId <|> pParens pConceptSort)
-            union (MkConceptSMBox x) (MkConceptSMBox y) = MkConceptSMBox (x:⊔y)
+  pConceptSort = 
+          pIntersection
+      <|> pUnion
+      where pIntersection, pUnion :: Parser ConceptSMBox
+            pIntersection = intersectionSM
+                            <$> pExpSort
+                            <*  pKeyword "and"
+                            <*> (intersection <$ pKeyword "and") `pChainr` pExpAny
+            pUnion = (union <$ pKeyword "or") `pChainr` pExpSort
+            pExpSort =     pSortId
+                       <|> pParens pConceptSort
+            pExpAny  =     rebox <$> pSortId
+                       <|> pAdjId
+                       <|> pParens pConceptAny -- The only dependency
+                                               -- between pConceptSort
+                                               -- and pConceptAny
+            intersection   (MkConceptBox x)   (MkConceptBox y)   = MkConceptBox   (x:⊓y)
+            intersectionSM (MkConceptSMBox x) (MkConceptBox y)   = MkConceptSMBox (x:⊓y)
+            union          (MkConceptSMBox x) (MkConceptSMBox y) = MkConceptSMBox (x:⊔y)
+            rebox          (MkConceptSMBox x)                    = MkConceptBox   x
+  
+  -- | Both 'and' and 'or' are right-associative. Neither one of them
+  -- binds stronger than the other, so explicit parenthesizing is needed
+  -- to mix them.
+  pConceptAny :: Parser ConceptBox
+  pConceptAny =
+          pIntersection
+      <|> pUnion
+      where pIntersection, pUnion :: Parser ConceptBox
+            pIntersection = intersection
+                            <$> pExpAny
+                            <*  pKeyword "and"
+                            <*> (intersection <$ pKeyword "and") `pChainr` pExpAny
+            pUnion = (union <$ pKeyword "or") `pChainr` pExpAny
+            pExpAny =    rebox <$> pSortId
+                     <|> pAdjId
+                     <|> pParens pConceptAny
+            intersection (MkConceptBox x)   (MkConceptBox y) = MkConceptBox (x:⊓y)
+            union        (MkConceptBox x)   (MkConceptBox y) = MkConceptBox (x:⊔y)
+            rebox        (MkConceptSMBox x)                  = MkConceptBox x
 #+end_src
 
 
@@ -82,8 +113,8 @@ whitespace after them and take care of possible comments.
   
   -- | At the moment we only support adjective names beginning with a lower
   -- case letter (no "_", etc.)
-  pAdjId :: Parser AdjId
-  pAdjId = pLowerId
+  pAdjId :: Parser ConceptBox
+  pAdjId = MkConceptBox . A <$> pLowerId
   
   pKeyword :: String -> Parser ()
   pKeyword keyword = pTerminal $ const () <$> pToken keyword `micro` 1
@@ -100,13 +131,15 @@ Auxiliary functions.
   pRParen = pTerminal $ const () <$> pSym ')'
   
   pLowerId :: Parser String
-  pLowerId = pTerminal $ (:) <$> pLower <*> pList pIdChar `micro` 2
+  -- pLowerId = pTerminal $ (:) <$> pLower <*> pList pIdChar --`micro` 2
+  pLowerId = pTerminal $ (:) <$> pLower <*> pMunch idChar `micro` 2
   
   pUpperId :: Parser String
-  pUpperId = pTerminal $ (:) <$> pUpper <*> pList pIdChar `micro` 2
+  -- pUpperId = pTerminal $ (:) <$> pUpper <*> pList pIdChar --`micro` 2
+  pUpperId = pTerminal $ (:) <$> pUpper <*> pMunch idChar `micro` 2
   
-  pIdChar :: Parser Char
-  pIdChar = pLower <|> pUpper <|> pDigit <|> pAnySym "_'"
+  idChar :: Char -> Bool
+  idChar c = or $ map ($ c) [isAsciiLower, isAsciiUpper, isDigit, (=='\''), (=='_')]
   
   -- | This parser hides the one in UU.Utils, because in our lexer
   -- newlines are semantically significant and we don't allow tabs
@@ -116,7 +149,8 @@ Auxiliary functions.
   
   -- | Taken from UU.Examples.
   pManyTill :: Parser a -> Parser b -> Parser [a]
-  pManyTill p end = [] <$ end <<|> (:) <$> p <*> pManyTill p end
+  pManyTill p end =      [] <$ end
+                    <<|> (:) <$> p <*> pManyTill p end
   
   pOneLineComment :: Parser ()
   pOneLineComment = const () <$> pToken "--" <* pMunch (/= '\n')
@@ -136,7 +170,8 @@ Auxiliary functions.
   
   pTerminal :: ParserTrafo a a
   pTerminal p = id <$> p <* pSpaces <* interTokenGlue
-      where interTokenGlue = pOneLineComment <|> pMultilineComment <* pSpaces `opt` ()
+      where interTokenGlue =     pOneLineComment
+                             <|> pMultilineComment <* pSpaces `opt` ()
 #+end_src
 
 
@@ -190,33 +225,72 @@ Load Haskell module, first time.
 #+end_src
 
 #+begin_src haskell :tangle no :results output
-  let a = "   CXXMethodDecl"
-  let b = "FunctionDecl"
-  let c = "a"
-  mapM_ (run pa) [c]
+  let a = "FunctionDecl   or CXXMethodDecl"
+  let b = "CXXMethodDecl and virtual and abstract"
+  let c = "  virtual and CXXMethodDecl and abstract"
+  let d = "CXXRecordDecl"
+  let e = "(CXXRecordDecl)"
+  let f = " (CXXMethodDecl and virtual) or CXXConstructorDecl   "
+  let g = "CXXMethodDecl and FunctionDecl or  CXXConstructorDecl"
+  let h = "CXXMethodDecl or  FunctionDecl and CXXConstructorDecl"
+  putStrLn "OK"
+  mapM_ (run pConceptSort) [a, b,    d, e, f]
+  mapM_ (run pConceptAny)  [a, b, c, d, e, f]
+  putStrLn "KO"
+  mapM_ (run pConceptSort) [c, g, h]
+  mapM_ (run pConceptSort) [   g, h]
   putStrLn "END"
 #+end_src
 
 #+RESULTS:
 #+begin_example
 
-*Crisp.ConcreteSyntax> *Crisp.ConcreteSyntax> --  Result: "a"
---  Correcting steps: 
---    Deleted   'F' at position LineColPos 0 0 0 expecting 'a'
---    Deleted   'u' at position LineColPos 0 1 1 expecting 'a'
---    Deleted   'n' at position LineColPos 0 2 2 expecting 'a'
---    Deleted   'c' at position LineColPos 0 3 3 expecting 'a'
---    Deleted   't' at position LineColPos 0 4 4 expecting 'a'
---    Deleted   'i' at position LineColPos 0 5 5 expecting 'a'
---    Deleted   'o' at position LineColPos 0 6 6 expecting 'a'
---    Deleted   'n' at position LineColPos 0 7 7 expecting 'a'
---    Deleted   'D' at position LineColPos 0 8 8 expecting 'a'
---    Deleted   'e' at position LineColPos 0 9 9 expecting 'a'
---    Deleted   'c' at position LineColPos 0 10 10 expecting 'a'
---    Deleted   'l' at position LineColPos 0 11 11 expecting 'a'
---    Inserted  'a' at position LineColPos 0 12 12 expecting 'a'
+*Crisp.ConcreteSyntax> *Crisp.ConcreteSyntax> *Crisp.ConcreteSyntax> *Crisp.ConcreteSyntax> *Crisp.ConcreteSyntax> *Crisp.ConcreteSyntax> *Crisp.ConcreteSyntax> OK
+--  Result: MkConceptSMBox ((:⊔) (S "FunctionDecl") (S "CXXMethodDecl"))
 -- 
---  Result: "a"
+--  Result: MkConceptSMBox ((:⊓) (S "CXXMethodDecl") ((:⊓) (A "virtual") (A "abstract")))
+-- 
+--  Result: MkConceptSMBox (S "CXXRecordDecl")
+-- 
+--  Result: MkConceptSMBox (S "CXXRecordDecl")
+-- 
+--  Result: MkConceptSMBox ((:⊔) ((:⊓) (S "CXXMethodDecl") (A "virtual")) (S "CXXConstructorDecl"))
+--
+--  Result: MkConceptBox ((:⊔) (S "FunctionDecl") (S "CXXMethodDecl"))
+-- 
+--  Result: MkConceptBox ((:⊓) (S "CXXMethodDecl") ((:⊓) (A "virtual") (A "abstract")))
+-- 
+--  Result: MkConceptBox ((:⊓) (A "virtual") ((:⊓) (S "CXXMethodDecl") (A "abstract")))
+-- 
+--  Result: MkConceptBox (S "CXXRecordDecl")
+-- 
+--  Result: MkConceptBox (S "CXXRecordDecl")
+-- 
+--  Result: MkConceptBox ((:⊔) ((:⊓) (S "CXXMethodDecl") (A "virtual")) (S "CXXConstructorDecl"))
+--
+KO
+--  Result: MkConceptSMBox (S "Avirtual")
+--  Correcting steps: 
+--    Inserted  'A' at position LineColPos 0 2 2 expecting one of ['(', 'A'..'Z', '(', 'A'..'Z']
+--    Inserted  "--" at position LineColPos 0 10 10 expecting one of ["{-", "--", "or"]
+-- 
+--  Result: MkConceptSMBox ((:⊓) (S "CXXMethodDecl") ((:⊓) (S "FunctionDecl") ((:⊓) (A "or") (S "CXXConstructorDecl"))))
+--  Correcting steps: 
+--    Inserted  "and" at position LineColPos 0 31 31 expecting one of ["{-", "--", "and"]
+--    Inserted  "and" at position LineColPos 0 35 35 expecting one of ["{-", "--", "and"]
+-- 
+--  Result: MkConceptSMBox ((:⊔) (S "CXXMethodDecl") (S "FunctionDecl"))
+--  Correcting steps: 
+--    Inserted  "--" at position LineColPos 0 31 31 expecting one of ["{-", "--", "or"]
+--
+--  Result: MkConceptSMBox ((:⊓) (S "CXXMethodDecl") ((:⊓) (S "FunctionDecl") ((:⊓) (A "or") (S "CXXConstructorDecl"))))
+--  Correcting steps: 
+--    Inserted  "and" at position LineColPos 0 31 31 expecting one of ["{-", "--", "and"]
+--    Inserted  "and" at position LineColPos 0 35 35 expecting one of ["{-", "--", "and"]
+-- 
+--  Result: MkConceptSMBox ((:⊔) (S "CXXMethodDecl") (S "FunctionDecl"))
+--  Correcting steps: 
+--    Inserted  "--" at position LineColPos 0 31 31 expecting one of ["{-", "--", "or"]
 --
 #+end_example
 
