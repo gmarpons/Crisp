@@ -57,6 +57,9 @@ with C-C C-c.
   pFormulaDomain :: Parser (Formula Domain)
   pFormulaDomain = ConceptAssert <$> pVar <* pKeyword "is" <*> pConceptDomain
   
+  --pFormulaFilter :: Parser (Formula Filter)
+  --pFormulaFilter = ConceptAssert <$> pVar <* pKeyword "is" <*> pConceptFilter
+  
   -- | Both 'and' and 'or' are right-associative. Neither one of them
   -- binds stronger than the other, so explicit parenthesizing is needed
   -- to mix them.
@@ -129,7 +132,7 @@ whitespace after them and take care of possible comments.
   
   pKeyword :: String -> Parser ()
   pKeyword keyword =
-      pTerminal $ const () <$> pToken keyword <* pMunch idChar
+      pTerminal $ const () <$> pToken keyword <* pMaybe (pMunch idChar <* pFail)
   
   pParens :: ParserTrafo a a
   pParens p = pLParen *> p <* pRParen
@@ -148,10 +151,10 @@ Auxiliary functions.
   pRParen = pTerminal $ const () <$> pSym ')'
   
   pLowerId :: Parser String
-  pLowerId = pTerminal $ (:) <$> pLower <*> pMunch idChar --`micro` 2
+  pLowerId = pTerminal $ (:) <$> pLower <*> pMunch idChar
   
   pUpperId :: Parser String
-  pUpperId = pTerminal $ (:) <$> pUpper <*> pMunch idChar --`micro` 2
+  pUpperId = pTerminal $ (:) <$> pUpper <*> pMunch idChar
   
   idChar :: Char -> Bool
   idChar c = or $ map ($ c) [isAsciiLower, isAsciiUpper, isDigit, (=='\''), (=='_')]
