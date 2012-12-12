@@ -30,6 +30,7 @@ with C-C C-c.
 
 #+begin_src haskell
   {-# LANGUAGE
+    GADTs,
     FlexibleContexts,
     FlexibleInstances,
     MultiParamTypeClasses,
@@ -53,50 +54,57 @@ with C-C C-c.
 * Parsers for non-terminal symbols
   
 #+begin_src haskell
-  -- | Both 'and' and 'or' are right-associative. Neither one of them
-  -- binds stronger than the other, so explicit parenthesizing is needed
-  -- to mix them.
-  pConceptSort :: Parser ConceptSMBox
-  pConceptSort = 
-          pIntersection
-      <|> pUnion
-      where pIntersection, pUnion :: Parser ConceptSMBox
-            pIntersection = intersectionSM
-                            <$> pExpSort
-                            <*  pKeyword "and"
-                            <*> (intersection <$ pKeyword "and") `pChainr` pExpAny
-            pUnion = (union <$ pKeyword "or") `pChainr` pExpSort
-            pExpSort =     pSortId
-                       <|> pParens pConceptSort
-            pExpAny  =     rebox <$> pSortId
-                       <|> pAdjId
-                       <|> pParens pConceptAny -- The only dependency
-                                               -- between pConceptSort
-                                               -- and pConceptAny
-            intersection   (MkConceptBox x)   (MkConceptBox y)   = MkConceptBox   (x:⊓y)
-            intersectionSM (MkConceptSMBox x) (MkConceptBox y)   = MkConceptSMBox (x:⊓y)
-            union          (MkConceptSMBox x) (MkConceptSMBox y) = MkConceptSMBox (x:⊔y)
-            rebox          (MkConceptSMBox x)                    = MkConceptBox   x
+  pFormulaDomain :: Parser (Formula Domain)
+  pFormulaDomain = ConceptAssert <$> pVar <* pKeyword "is" <*> pConceptDomain
   
   -- | Both 'and' and 'or' are right-associative. Neither one of them
   -- binds stronger than the other, so explicit parenthesizing is needed
   -- to mix them.
-  pConceptAny :: Parser ConceptBox
-  pConceptAny =
+  pConceptDomain :: Parser (BConcept Domain)
+  pConceptDomain = 
           pIntersection
       <|> pUnion
-      where pIntersection, pUnion :: Parser ConceptBox
-            pIntersection = intersection
-                            <$> pExpAny
+      where pIntersection, pUnion, pElemDomain :: Parser (BConcept Domain)
+            pElemFilter :: Parser (BConcept Filter)
+            pIntersection = isectD
+                            <$> pElemDomain
                             <*  pKeyword "and"
-                            <*> (intersection <$ pKeyword "and") `pChainr` pExpAny
-            pUnion = (union <$ pKeyword "or") `pChainr` pExpAny
-            pExpAny =    rebox <$> pSortId
-                     <|> pAdjId
-                     <|> pParens pConceptAny
-            intersection (MkConceptBox x)   (MkConceptBox y) = MkConceptBox (x:⊓y)
-            union        (MkConceptBox x)   (MkConceptBox y) = MkConceptBox (x:⊔y)
-            rebox        (MkConceptSMBox x)                  = MkConceptBox x
+                            <*> (isectF <$ pKeyword "and") `pChainr` pElemFilter
+            pUnion        = (union <$ pKeyword "or") `pChainr` pElemDomain
+            pElemDomain =     pDomainId
+                          <|> pParens pConceptDomain                  -- Recursion
+            pElemFilter =     rebox <$> pDomainId
+                          <|> pFilterId
+                          <|> pParens pConceptFilter                  -- Only dep. with
+                                                                      -- pConceptFilter
+                          <|> compl <$ pKeyword "not" <*> pElemFilter -- Recursion
+            isectF (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x:⊓y)
+            isectD (MkBConceptDomain x) (MkBConceptFilter y) = MkBConceptDomain (x:⊓y)
+            union  (MkBConceptDomain x) (MkBConceptDomain y) = MkBConceptDomain (x:⊔y)
+            compl  (MkBConceptFilter x)                      = MkBConceptFilter (C x)
+            rebox  (MkBConceptDomain x)                      = MkBConceptFilter x
+  
+  -- | Both 'and' and 'or' are right-associative. Neither one of them
+  -- binds stronger than the other, so explicit parenthesizing is needed
+  -- to mix them.
+  pConceptFilter :: Parser (BConcept Filter)
+  pConceptFilter =
+          pIntersection
+      <|> pUnion
+      where pIntersection, pUnion, pElem :: Parser (BConcept Filter)
+            pIntersection = isect
+                            <$> pElem
+                            <*  pKeyword "and"
+                            <*> (isect <$ pKeyword "and") `pChainr` pElem
+            pUnion        = (union <$ pKeyword "or") `pChainr` pElem
+            pElem =     rebox <$> pDomainId
+                    <|> pFilterId
+                    <|> pParens pConceptFilter            -- Recursion
+                    <|> compl <$ pKeyword "not" <*> pElem -- Recursion
+            isect (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x:⊓y)
+            union (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x:⊔y)
+            compl (MkBConceptFilter x)                      = MkBConceptFilter (C x)
+            rebox (MkBConceptDomain x)                      = MkBConceptFilter x
 #+end_src
 
 
@@ -106,15 +114,18 @@ All parsers for terminal symbols are responsible of munching
 whitespace after them and take care of possible comments.
 
 #+begin_src haskell
+  pVar :: Parser Var
+  pVar = pUpperId
+  
   -- | At the moment we only support sort names beginning with an upper
   -- case letter (no "_", etc.)
-  pSortId :: Parser ConceptSMBox
-  pSortId = MkConceptSMBox . S <$> pUpperId
+  pDomainId :: Parser (BConcept Domain)
+  pDomainId = MkBConceptDomain . D <$> pUpperId
   
   -- | At the moment we only support adjective names beginning with a lower
   -- case letter (no "_", etc.)
-  pAdjId :: Parser ConceptBox
-  pAdjId = MkConceptBox . A <$> pLowerId
+  pFilterId :: Parser (BConcept Filter)
+  pFilterId = MkBConceptFilter . F <$> pLowerId
   
   pKeyword :: String -> Parser ()
   pKeyword keyword =
@@ -190,12 +201,6 @@ Load Haskell module, first time.
   :l Crisp.ConcreteSyntax
 #+end_src
 
-#+RESULTS:
-: i, version 7.4.1: http://www.haskell.org/ghc/  :? for help
-: Loading package ghc-prim ... linking ... done.
-: Loading package integer-gmp ... linking ... done.
-: Loading package base ... linking ... done.
-
 #+begin_src haskell
   run :: Show t => Parser t -> String -> IO ()
   run p inp =
@@ -216,71 +221,20 @@ Load Haskell module, first time.
 
 #+begin_src haskell :tangle no :results output
   let a = "FunctionDecl   or CXXMethodDecl"
-  let b = "CXXMethodDecl and virtual and abstract"
+  let b = "  CXXMethodDecl and virtual and abstract"
   let c = "  virtual and CXXMethodDecl and abstract"
   let d = "CXXRecordDecl"
-  let e = "(CXXRecordDecl)"
+  let e = " (CXXRecordDecl)"
   let f = " (CXXMethodDecl and virtual) or CXXConstructorDecl   "
   let g = "CXXMethodDecl and FunctionDecl or  CXXConstructorDecl"
   let h = "CXXMethodDecl or  FunctionDecl and CXXConstructorDecl"
   putStrLn "OK"
-  mapM_ (run pConceptSort) [a, b,    d, e, f]
-  mapM_ (run pConceptAny)  [a, b, c, d, e, f]
+  mapM_ (run pConceptDomain) [a, b,    d, e, f]
+  mapM_ (run pConceptFilter) [a, b, c, d, e, f]
+  mapM_ (run pFormulaDomain) $ map ("X is " ++) [a, b,    d, e, f]
   putStrLn "KO"
-  mapM_ (run pConceptSort) [c, g, h]
-  mapM_ (run pConceptSort) [   g, h]
+  mapM_ (run pConceptDomain) [c, g, h]
+  mapM_ (run pConceptFilter) [   g, h]
+  mapM_ (run pFormulaDomain) $ map ("X is " ++) [c, g, h]
   putStrLn "END"
 #+end_src
-
-#+RESULTS:
-#+begin_example
-
-*Crisp.ConcreteSyntax> *Crisp.ConcreteSyntax> *Crisp.ConcreteSyntax> *Crisp.ConcreteSyntax> *Crisp.ConcreteSyntax> *Crisp.ConcreteSyntax> *Crisp.ConcreteSyntax> OK
---  Result: MkConceptSMBox ((:⊔) (S "FunctionDecl") (S "CXXMethodDecl"))
--- 
---  Result: MkConceptSMBox ((:⊓) (S "CXXMethodDecl") ((:⊓) (A "virtual") (A "abstract")))
--- 
---  Result: MkConceptSMBox (S "CXXRecordDecl")
--- 
---  Result: MkConceptSMBox (S "CXXRecordDecl")
--- 
---  Result: MkConceptSMBox ((:⊔) ((:⊓) (S "CXXMethodDecl") (A "virtual")) (S "CXXConstructorDecl"))
---
---  Result: MkConceptBox ((:⊔) (S "FunctionDecl") (S "CXXMethodDecl"))
--- 
---  Result: MkConceptBox ((:⊓) (S "CXXMethodDecl") ((:⊓) (A "virtual") (A "abstract")))
--- 
---  Result: MkConceptBox ((:⊓) (A "virtual") ((:⊓) (S "CXXMethodDecl") (A "abstract")))
--- 
---  Result: MkConceptBox (S "CXXRecordDecl")
--- 
---  Result: MkConceptBox (S "CXXRecordDecl")
--- 
---  Result: MkConceptBox ((:⊔) ((:⊓) (S "CXXMethodDecl") (A "virtual")) (S "CXXConstructorDecl"))
---
-KO
---  Result: MkConceptSMBox (S "Avirtual")
---  Correcting steps: 
---    Inserted  'A' at position LineColPos 0 2 2 expecting one of ['(', 'A'..'Z', '(', 'A'..'Z']
---    Inserted  "--" at position LineColPos 0 10 10 expecting one of ["{-", "--", "or"]
--- 
---  Result: MkConceptSMBox ((:⊓) (S "CXXMethodDecl") ((:⊓) (S "FunctionDecl") ((:⊓) (A "or") (S "CXXConstructorDecl"))))
---  Correcting steps: 
---    Inserted  "and" at position LineColPos 0 31 31 expecting one of ["{-", "--", "and"]
---    Inserted  "and" at position LineColPos 0 35 35 expecting one of ["{-", "--", "and"]
--- 
---  Result: MkConceptSMBox ((:⊔) (S "CXXMethodDecl") (S "FunctionDecl"))
---  Correcting steps: 
---    Inserted  "--" at position LineColPos 0 31 31 expecting one of ["{-", "--", "or"]
---
---  Result: MkConceptSMBox ((:⊓) (S "CXXMethodDecl") ((:⊓) (S "FunctionDecl") ((:⊓) (A "or") (S "CXXConstructorDecl"))))
---  Correcting steps: 
---    Inserted  "and" at position LineColPos 0 31 31 expecting one of ["{-", "--", "and"]
---    Inserted  "and" at position LineColPos 0 35 35 expecting one of ["{-", "--", "and"]
--- 
---  Result: MkConceptSMBox ((:⊔) (S "CXXMethodDecl") (S "FunctionDecl"))
---  Correcting steps: 
---    Inserted  "--" at position LineColPos 0 31 31 expecting one of ["{-", "--", "or"]
---
-#+end_example
-

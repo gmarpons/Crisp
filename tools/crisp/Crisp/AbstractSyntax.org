@@ -61,69 +61,52 @@ with C-C C-c.
 This first code block contains some auxiliary type definitions.
 
 #+begin_src haskell
-  -- | Tag type for Concept's defining a sort, and Formula's defining a
-  -- binding between a variable and a sort (base case).
-  data Sort
+  -- | Class marker used in @BConcept@s and @Formula@s. This class has
+  -- two instances: @Domain@ and @Filter@, that are tag types.
+  class BM a
   
-  -- | Tag type for Formula's not defining a binding between a variable
-  -- and a sort.
-  data NoSort
+  -- | Tag type for @BConcept@s defining a search domain, and @Formula@s
+  -- defining a binding between a variable and a domain.
+  data Domain
   
-  -- | Tag type for Concept's not defining a sort (base case).
-  data Adj
+  -- | Tag type for @Formula@s not defining a binding between a variable
+  -- and a domain, and @BConcept@s defining a search filter (instead of
+  -- a domain).
+  data Filter
   
-  -- | Tag type for Concept's defined as the complement of another
-  -- concept.
-  data Compl
-    
-  -- | Formula marker
-  class                    FM a
-  instance                 FM Adj
-  instance                 FM Compl
-  instance                 FM NoSort
-  instance                 FM Sort
-  instance (FM a, FM b) => FM (a, b)
+  instance BM Domain
+  instance BM Filter
   
-  -- | Primitive concept marker
-  class    FM a         => PM a
-  instance                 PM Adj
-  instance                 PM Sort
-    
-  -- | Sort marker, to mark formulas that give a sort to some
-  -- variable.
-  class    FM a         => SM a
-  instance                 SM Sort
-  instance (SM a, SM b) => SM (a, b)
+  -- | Class marker used in @Concept@s, for a number of tag types used
+  -- to statically compute if a @Concept@ instance can be used as a
+  -- search domain or not (i.e., is a filter).
+  class                    AM a
   
-  data FormulaBox :: * where     -- An FormulaBox contains an Formula m,
-                                 -- where m is some FM (existentially
-                                 -- quantified).
-      MkFormulaBox :: forall m. (FM m, Show (Formula m)) => Formula m -> FormulaBox
+  data                     C
+  data                     D
+  data                     F
   
-  deriving instance Show FormulaBox
+  instance                 AM C
+  instance                 AM D
+  instance                 AM F
+  instance (AM a, AM b) => AM (a, b)
   
-  data FormulaSMBox :: * where    -- An FormulaSMBox contains an Formula
-                                  -- m, where m is some SM
-                                  -- (existentially quantified).
-      MkFormulaSMBox :: forall m. (SM m, Show (Formula m)) => Formula m -> FormulaSMBox
+  -- | Sub-class of @AM@ for types of @Concept@ that can be used as a
+  -- search domain.
+  class    AM a         => DM a
+  instance                 DM D
+  instance (DM a, DM b) => DM (a, b)
   
-  deriving instance Show FormulaSMBox
+  -- | Boxed concept.
+  data BConcept :: * -> * where        
+      -- A BConcept contains a 'Concept a', where 'a' is some AM
+      -- (existentially quantified in both constructors).
+      MkBConceptFilter :: forall a. (AM a, Show (Concept a)) =>
+                          Concept a -> BConcept Filter
+      MkBConceptDomain :: forall d. (DM d, Show (Concept d)) =>
+                          Concept d -> BConcept Domain
   
-  data ConceptBox :: * where      -- A ConceptBox contains a Concept m,
-                                  -- where m is some FM (existentially
-                                  -- quantified).
-      MkConceptBox :: forall m. (FM m, Show (Concept m)) =>
-                      Concept m -> ConceptBox
-  
-  deriving instance Show ConceptBox
-  
-  data ConceptSMBox :: * where    -- A ConceptSMBox contains a Concept m
-                                  -- where m is some SM (existentially
-                                  -- quantified).
-      MkConceptSMBox :: forall m. (SM m, Show (Concept m)) =>
-                        Concept m -> ConceptSMBox
-  
-  deriving instance Show ConceptSMBox
+  deriving instance Show (BConcept c)
 #+end_src
 
 Here begins the abstract syntax for Crisp.
@@ -145,38 +128,38 @@ Here begins the abstract syntax for Crisp.
   
   type RuleSetId = String
   
-  data Relation where
-      ConceptDef :: FM f => ConceptId -> OneElemList  FormulaSMBox -> Formula f -> Relation
-      RoleDef    :: FM f => RoleId    -> TwoElemList  FormulaSMBox -> Formula f -> Relation
-      Rule       :: FM f => RuleId    -> NonEmptyList FormulaSMBox -> Formula f -> Relation
+  data Relation :: * where
+      ConceptDef :: ConceptId -> OneElemList  (Formula Domain) -> Formula Filter -> Relation
+      RoleDef    :: RoleId    -> TwoElemList  (Formula Domain) -> Formula Filter -> Relation
+      Rule       :: RuleId    -> NonEmptyList (Formula Domain) -> Formula Filter -> Relation
 #+end_src
 
 Constraints:
 
 - List of =Relation='s of a =Module= is finite.
-- All =Relation='s of a =Module= have different =RelationId=.
-- List of =FormulaSMBox='s in =Rule='s is finite.
-- List of =FormulaSMBox='s in =Rule='s contains at least one element.
+- All =Relation='s of a =Module= have a different identifier.
+- List of =Formula Domain='s in a =Rule= is finite.
+- List of =Formula Domain='s in a =Rule= contains at least one element.
 
 #+begin_src haskell
   type Var = String
   
   -- | A concept assertion contains a true concept definition (that can
   -- be a complex concept referencing both primitive concepts and
-  -- user-defined - with 'ConceptDef'- concepts). On the contrary, role
-  -- assertions do not allow inline definitions of roles, they only
-  -- reference a role (either primitive or user-defined) by its 'RoleId'.
+  -- user-defined concepts). On the contrary, role assertions do not
+  -- allow inline definitions of roles, they only reference a role
+  -- (either primitive or user-defined) by its 'RoleId'.
   data Formula :: * -> * where
-      ConceptAssert :: (FM e)       => Var       -> Concept e        -> Formula e
-      RoleAssert    ::                 Var       -> RoleId    -> Var -> Formula NoSort
-      RoleAssertT   ::                 Var       -> RoleId    -> Var -> Formula NoSort
-      RoleAssertRT  ::                 Var       -> RoleId    -> Var -> Formula NoSort
-      And           :: (FM e, FM f) => Formula e -> Formula f        -> Formula NoSort
-      Or            :: (FM e, FM f) => Formula e -> Formula f        -> Formula NoSort
-      Not           :: (FM e)       => Formula e                     -> Formula NoSort
-      Top           ::                                                  Formula NoSort
-      (:=)          ::                 Var                    -> Var -> Formula NoSort
-      (:≠)          ::                 Var                    -> Var -> Formula NoSort
+      ConceptAssert :: (BM b) => Var        -> BConcept b         -> Formula b
+      RoleAssert    ::           Var        -> RoleId      -> Var -> Formula Filter
+      RoleAssertT   ::           Var        -> RoleId      -> Var -> Formula Filter
+      RoleAssertRT  ::           Var        -> RoleId      -> Var -> Formula Filter
+      (:=)          ::           Var                       -> Var -> Formula Filter
+      (:≠)          ::           Var                       -> Var -> Formula Filter
+      And           ::           Formula Filter -> Formula Filter -> Formula Filter
+      Or            ::           Formula Filter -> Formula Filter -> Formula Filter
+      Not           ::           Formula Filter                   -> Formula Filter
+      Top           ::                                               Formula Filter
   
   deriving instance Show (Formula a)
 #+end_src
@@ -184,20 +167,19 @@ Constraints:
 Observations:
 
 - The declaration for =data Formula= guarantees that the type parameter
-  for =Formula= is always in class =FM= (formula marker).
+  for =Formula= is always in class =BM= (=BConcept= marker).
 
 #+begin_src haskell
-  type SortId = String
+  type DomainId = String
   
-  -- | Adjective id.
-  type AdjId = String
+  type FilterId = String
   
   data Concept :: * -> * where
-      S    ::                 SortId                         -> Concept Sort
-      A    ::                 AdjId                          -> Concept Adj
-      (:⊓) :: (FM e, FM f) => Concept e     -> Concept f     -> Concept e
-      (:⊔) :: (FM e, FM f) => Concept e     -> Concept f     -> Concept (e, f)
-      -- C    :: (FM e)       => Concept e                      -> Concept Compl
+      D    ::                 DomainId                       -> Concept D
+      F    ::                 FilterId                       -> Concept F
+      (:⊓) :: (AM a, AM b) => Concept a     -> Concept b     -> Concept a
+      (:⊔) :: (AM a, AM b) => Concept a     -> Concept b     -> Concept (a, b)
+      C    :: (AM a)       => Concept a                      -> Concept C
   
   deriving instance Show (Concept a)
 #+end_src
@@ -205,34 +187,36 @@ Observations:
 Observations:
 
 - The declaration for =data Concept= guarantees that the type
-  parameter for =Concept= is always in class =FM= (Formula marker).
-- A =Concept s= with =SM s= (=SM= is class "sort marker") is a concept
-  that defines a sort for a variable (it gives a "type" for that
-  variable). If parameter =s= is not in that class (e.g. =Concept
-  Adj=), then that concept does not define a sort, so it cannot be
-  used in contexts where typing a variable is mandatory.
+  parameter for =Concept= is always in class =AM= ("any" concept
+  marker).
+- A =Concept d= with =DM d= is a concept that defines a domain for a
+  variable (it gives a "type" for that variable). If parameter =d= is
+  not in that class (e.g. =Concept F=), then that concept does not
+  define a domain, so it cannot be used in contexts where typing a
+  variable is mandatory.
 - A union of concepts (constructor :⊔) has type parameter in class
-  =SM= iff both concepts have its parameter in that class.
+  =DM= iff both concepts have its parameter in that class.
 - In case of concept intersection (constructor :⊓), the left argument
-  determines if the concept parameter is in class =SM= or not, so =S
-  "CXXMethodDecl" :⊓ A "virtual"_= has a parameter in =SM= but =A
-  "virtual" :⊓ S "CXXMethodDecl"_= does not.
+  determines if the concept parameter is in class =DM= or not, so =D
+  "CXXMethodDecl" :⊓ F "virtual"_= has a parameter in =DM= but =F
+  "virtual" :⊓ D "CXXMethodDecl"_= does not.
 
 
 * Translation Crisp AS -> Extended Prolog AS
 
 #+begin_src haskell
-  bindingToProlog :: Var -> Concept c -> P.Formula
-  bindingToProlog v (S s)    = P.At $ mkIsAtom v (S s)
-  bindingToProlog v (A a)    = P.At $ mkIsAtom v (A a)
+  bindingToProlog :: forall a. AM a => Var -> Concept a -> P.Formula
+  bindingToProlog v (D s)    = P.At $ P.Atom "isA" [P.Var v, P.Structure s []]
+  bindingToProlog v (F a)    = P.At $ P.Atom ("is_" ++ a) [P.Var v]
   bindingToProlog v (c1:⊓c2) = P.Conj (bindingToProlog v c1) (bindingToProlog v c2)
   bindingToProlog v (c1:⊔c2) = P.Disj (bindingToProlog v c1) (bindingToProlog v c2)
-  -- bindingToProlog v (C c)    = P.Not  (bindingToProlog v c)
+  bindingToProlog v (C c)    = P.Not  (bindingToProlog v c)
 #+end_src
 
-#+begin_src haskell
-  formulaToProlog :: forall f. FM f => Formula f -> P.Formula
-  formulaToProlog (ConceptAssert v  c)    = bindingToProlog v c
+#+begin_src haskell :tangle no
+  formulaToProlog :: Formula f -> P.Formula
+  formulaToProlog (ConceptAssert v (MkBConceptDomain c)) = bindingToProlog v c
+  formulaToProlog (ConceptAssert v (MkBConceptFilter c)) = bindingToProlog v c
   formulaToProlog (RoleAssert    v1 r v2) = P.At $ P.Atom (roleIdToProlog r)
                                             [P.Var v1, P.Var v2]
   formulaToProlog (RoleAssertT   v1 r v2) = P.At $ mkCallAtom "trans_closure"
@@ -241,45 +225,38 @@ Observations:
   formulaToProlog (RoleAssertRT  v1 r v2) = P.At $ mkCallAtom "refl_trans_closure"
                                             [ P.Structure (roleIdToProlog r) []
                                             , P.Var v1, P.Var v2]
+  formulaToProlog (v1 := v2)  = P.At $ mkCallAtom "="   [P.Var v1, P.Var v2]
+  formulaToProlog (v1 :≠ v2)  = P.At $ mkCallAtom "\\=" [P.Var v1, P.Var v2]
   formulaToProlog (And e1 e2) = P.Conj (formulaToProlog e1) (formulaToProlog e2)
   formulaToProlog (Or  e1 e2) = P.Disj (formulaToProlog e1) (formulaToProlog e2)
   formulaToProlog (Not e)     = P.Not  (formulaToProlog e)
   formulaToProlog Top         = P.Top
-  formulaToProlog (v1 := v2)  = P.At $ mkCallAtom "=" [P.Var v1, P.Var v2]
-  formulaToProlog (v1 :≠ v2)  = P.At $ mkCallAtom "\\=" [P.Var v1, P.Var v2]
+
+  type PredName = String
+  
+  mkCallAtom :: PredName -> [P.Term] -> P.Atom
+  mkCallAtom p l = P.Atom "call" $ (P.Structure p []) : l
+  
+  roleIdToProlog :: RoleId -> String
+  roleIdToProlog (roleName, hasPrefix)
+      = if hasPrefix then "has_" ++ roleName else roleName
 #+end_src
 
 #+begin_src haskell :tangle no
   topLevelToProlog :: Relation -> P.EPC
   topLevelToProlog (PredIs   id s   es)
       = P.mkEPC (mkHeadFromVars (idForIsRole id) [var s])
-        $ mkBody [MkFormulaSMBox s] es
+        $ mkBody [MkFormulaDMBox s] es
   topLevelToProlog (PredHas  id s t es)
       = P.mkEPC (mkHeadFromVars (idForHasRole id) [var s, var t])
-        $ mkBody [MkFormulaSMBox s, MkFormulaSMBox t] es
+        $ mkBody [MkFormulaDMBox s, MkFormulaDMBox t] es
   topLevelToProlog (Rule set id ss  es) 
       = P.mkEPC (mkRuleHead set id (vars ss)) (mkBody ss es)
 #+end_src
 
 Auxiliary definitions in the following code block.
 
-#+begin_src haskell
-  type PredName = String
-  
-  mkIsAtom :: forall p. PM p => Var -> Concept p -> P.Atom
-  mkIsAtom v (S s) = P.Atom "is_" [P.Var v, P.Structure s []]
-  mkIsAtom v (A a) = P.Atom "is_" [P.Var v, P.Structure a []]
-  
-  mkCallAtom :: PredName -> [P.Term] -> P.Atom
-  mkCallAtom p l = P.Atom "call" $ (P.Structure p []) : l
-  
-  -- idForIsRole :: Role -> String
-  -- idForIsRole = ("is_" ++)
-  
-  roleIdToProlog :: RoleId -> String
-  roleIdToProlog (roleName, hasPrefix)
-      = if hasPrefix then "has_" ++ roleName else roleName
-  
+#+begin_src haskell :tangle no
   mkHeadFromVars :: PredName -> [Var] -> P.Atom
   mkHeadFromVars name vars = P.Atom name $ map P.Var vars
   
@@ -288,19 +265,19 @@ Auxiliary definitions in the following code block.
       = let qualifiedRuleName = set ++ " " ++ id
         in P.Atom "violation" $ (P.Structure qualifiedRuleName []) : map P.Var vars
   
-  mkSignature :: [FormulaSMBox] -> P.Formula
+  mkSignature :: [FormulaDMBox] -> P.Formula
   mkSignature bindings = P.mkConj $ map getBind bindings
-      where getBind (MkFormulaSMBox se) = formulaToProlog se
+      where getBind (MkFormulaDMBox se) = formulaToProlog se
   
-  mkBody :: FM e => [FormulaSMBox] -> Formula e -> P.Formula
+  mkBody :: FM e => [FormulaDMBox] -> Formula e -> P.Formula
   mkBody signature meet
       = mkSignature signature `P.Conj` formulaToProlog meet
   
-  var :: SM s => Formula s -> Var
+  var :: DM d => Formula d -> Var
   var (ConceptAssert v _) = v
   
-  vars :: [FormulaSMBox] -> [Var]
-  vars = map (\(MkFormulaSMBox e) -> var e)
+  vars :: [FormulaDMBox] -> [Var]
+  vars = map (\(MkFormulaDMBox e) -> var e)
 #+end_src
 
 
@@ -319,15 +296,15 @@ Evaluate Haskell terms.
 
 #+begin_src haskell :tangle no :results output
   :l Crisp.AbstractSyntax
-  :t PredHas "functionCall" ("Func" `Is` (S "FunctionDecl")) ("Call" `Is` (S "CallExpr")) ("Func" `Has` "body" $ "Body")
+  -- :t PredHas "functionCall" ("Func" `Is` (S "FunctionDecl")) ("Call" `Is` (S "CallExpr")) ("Func" `Has` "body" $ "Body")
   -- :t Not $ "Caller" `Is` C (A "virtual")
   let a = "Caller" `Is` (S "CXXMethodDecl")
   let b = ("Caller" `Has` "functionCall" $ "CallPoint") `And` ("CallPoint" `Has` "directCallee" $ "Callee")
   formulaToProlog $ Not $ "Caller" `Is` (A "virtual")
   formulaToProlog $ "Body" `HasT` "child" $ "Call"
-  let p1 = PredHas "functionCall" ("Func" `Is` S "FunctionDecl") ("Call" `Is` S "CallExpr") (("Func" `Has` "body" $ "Body") `And` ("Body" `HasT` "child" $ "Call"))
-  let p2 = PredHas "callee" ("Caller" `Is` S "FunctionDecl") ("Callee" `Is` S "FunctionDecl") (("Caller" `Has` "functionCall" $ "CallPoint") `And` ("CallPoint" `Has` "directCallee" $ "Callee"))
-  let r1 = Rule "HICPP" "3.3.13" [MkFormulaSMBox $ "Caller" `Is` S "FunctionDecl", MkFormulaSMBox $ "Caller" `Is` S "FunctionDecl"] (("Record" `Is` S "CXXRecordDecl") `And` (("Record" `Has` "ctor" $ "Caller") `Or`("Record" `Has` "destructor" $ "Caller")) `And` ("Record" `Has` "method" $ "Callee") `And` ("Callee" `Is` A "virtual"))
+  let p1 = PredHas "functionCall" ("Func" `Is` D "FunctionDecl") ("Call" `Is` D "CallExpr") (("Func" `Has` "body" $ "Body") `And` ("Body" `HasT` "child" $ "Call"))
+  let p2 = PredHas "callee" ("Caller" `Is` D "FunctionDecl") ("Callee" `Is` D "FunctionDecl") (("Caller" `Has` "functionCall" $ "CallPoint") `And` ("CallPoint" `Has` "directCallee" $ "Callee"))
+  let r1 = Rule "HICPP" "3.3.13" [MkFormulaDMBox $ "Caller" `Is` D "FunctionDecl", MkFormulaDMBox $ "Caller" `Is` D "FunctionDecl"] (("Record" `Is` D "CXXRecordDecl") `And` (("Record" `Has` "ctor" $ "Caller") `Or`("Record" `Has` "destructor" $ "Caller")) `And` ("Record" `Has` "method" $ "Callee") `And` ("Callee" `Is` F "virtual"))
   -- Lloyd-topor
   putStrLn ""
   do { ep <- P.emptyEP; ep <- P.addEPCs (map topLevelToProlog [p1, p2, r1]) ep; return $ P.transLloydTopor ep }
