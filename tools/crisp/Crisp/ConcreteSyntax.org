@@ -117,8 +117,9 @@ whitespace after them and take care of possible comments.
   pAdjId = MkConceptBox . A <$> pLowerId
   
   pKeyword :: String -> Parser ()
-  pKeyword keyword = pTerminal $ const () <$> pToken keyword `micro` 1
-
+  pKeyword keyword =
+      pTerminal $ const () <$> pToken keyword <* pMunch idChar
+  
   pParens :: ParserTrafo a a
   pParens p = pLParen *> p <* pRParen
 #+end_src
@@ -126,17 +127,20 @@ whitespace after them and take care of possible comments.
 Auxiliary functions.
 
 #+begin_src haskell
+  pTerminal :: ParserTrafo a a
+  pTerminal p = p <* pSpaces <* (pComment `opt` ())
+      where pComment =     pOneLineComment
+                       <|> pMultilineComment
+  
   pLParen, pRParen :: Parser ()
   pLParen = pTerminal $ const () <$> pSym '('
   pRParen = pTerminal $ const () <$> pSym ')'
   
   pLowerId :: Parser String
-  -- pLowerId = pTerminal $ (:) <$> pLower <*> pList pIdChar --`micro` 2
-  pLowerId = pTerminal $ (:) <$> pLower <*> pMunch idChar `micro` 2
+  pLowerId = pTerminal $ (:) <$> pLower <*> pMunch idChar --`micro` 2
   
   pUpperId :: Parser String
-  -- pUpperId = pTerminal $ (:) <$> pUpper <*> pList pIdChar --`micro` 2
-  pUpperId = pTerminal $ (:) <$> pUpper <*> pMunch idChar `micro` 2
+  pUpperId = pTerminal $ (:) <$> pUpper <*> pMunch idChar --`micro` 2
   
   idChar :: Char -> Bool
   idChar c = or $ map ($ c) [isAsciiLower, isAsciiUpper, isDigit, (=='\''), (=='_')]
@@ -147,31 +151,17 @@ Auxiliary functions.
   pSpaces :: Parser ()
   pSpaces = const () <$> pMunch (`elem` " \r") <?> "Whitespace"
   
-  -- | Taken from UU.Examples.
-  pManyTill :: Parser a -> Parser b -> Parser [a]
-  pManyTill p end =      [] <$ end
-                    <<|> (:) <$> p <*> pManyTill p end
-  
   pOneLineComment :: Parser ()
   pOneLineComment = const () <$> pToken "--" <* pMunch (/= '\n')
   
-  -- | Any symbol is allowed in a multiline comment. If EOF is reached
-  -- before the comment is closed, a '$' symbol will be inserted. This
-  -- is an arbitrary choice, in fact no symbol insertion can repair the
-  -- input, closing the comment with "-}" is the only solution. No
-  -- nested multiline comments are allowed. New lines inside a multiline
-  -- comment are not accounted.
+  -- | Any printable symbol is allowed in a multiline comment. No nested
+  -- multiline comments are allowed. New lines inside a multiline
+  -- comment are not taken into account.
   pMultilineComment :: Parser ()
-  pMultilineComment = const ()
-                      <$> pToken "{-"
-                      <*  pManyTill 
-                              (pSatisfy (const True) (Insertion "Ignore '$'" '$' 0)) 
-                              (pToken "-}")
-  
-  pTerminal :: ParserTrafo a a
-  pTerminal p = id <$> p <* pSpaces <* interTokenGlue
-      where interTokenGlue =     pOneLineComment
-                             <|> pMultilineComment <* pSpaces `opt` ()
+  pMultilineComment =
+      const () <$> pToken "{-" <* pMunch (/= '-') <* pSym '-' <* pAux <* pSpaces
+      where pAux =      pSym '}'
+                   <<|> pMunch (/= '-') *> pSym '-' <* pAux
 #+end_src
 
 
