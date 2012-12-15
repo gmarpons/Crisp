@@ -122,9 +122,13 @@ Here begins the abstract syntax for Crisp.
   
   -- | The boolean value states if the word "has" must prepended to the
   -- role name.
-  type RoleId = (String, Bool)
+  type RoleId = (RoleName, Bool)
   
-  type RuleId = (RuleSetId, String)
+  type RuleId = (RuleSetId, RuleName)
+  
+  type RoleName = String
+  
+  type RuleName = String
   
   type RuleSetId = String
   

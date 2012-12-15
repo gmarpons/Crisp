@@ -71,16 +71,15 @@ with C-C C-c.
             pElemFilter :: Parser (BConcept Filter)
             pIntersection = isectD
                             <$> pElemDomain
-                            <*  pKeyword "and"
-                            <*> (isectF <$ pKeyword "and") `pChainr` pElemFilter
-            pUnion        = (union <$ pKeyword "or") `pChainr` pElemDomain
+                            <*  pK "and"
+                            <*> (isectF <$ pK "and") `pChainr` pElemFilter
+            pUnion        = (union <$ pK "or") `pChainr` pElemDomain
             pElemDomain =     pDomainId
-                          <|> pParens pConceptDomain                  -- Recursion
+                          <|> pParens pConceptDomain -- Recursion
             pElemFilter =     rebox <$> pDomainId
                           <|> pFilterId
-                          <|> pParens pConceptFilter                  -- Only dep. with
-                                                                      -- pConceptFilter
-                          <|> compl <$ pKeyword "not" <*> pElemFilter -- Recursion
+                          <|> pParens pConceptFilter -- Only dep. with pConceptFilter
+                          <|> compl <$ pK "not" <*> pElemFilter -- Recursion
             isectF (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x:⊓y)
             isectD (MkBConceptDomain x) (MkBConceptFilter y) = MkBConceptDomain (x:⊓y)
             union  (MkBConceptDomain x) (MkBConceptDomain y) = MkBConceptDomain (x:⊔y)
@@ -97,13 +96,13 @@ with C-C C-c.
       where pIntersection, pUnion, pElem :: Parser (BConcept Filter)
             pIntersection = isect
                             <$> pElem
-                            <*  pKeyword "and"
-                            <*> (isect <$ pKeyword "and") `pChainr` pElem
-            pUnion        = (union <$ pKeyword "or") `pChainr` pElem
+                            <*  pK "and"
+                            <*> (isect <$ pK "and") `pChainr` pElem
+            pUnion        = (union <$ pK "or") `pChainr` pElem
             pElem =     rebox <$> pDomainId
                     <|> pFilterId
-                    <|> pParens pConceptFilter            -- Recursion
-                    <|> compl <$ pKeyword "not" <*> pElem -- Recursion
+                    <|> pParens pConceptFilter          -- Recursion
+                    <|> compl <$ pK "not" <*> pElem     -- Recursion
             isect (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x:⊓y)
             union (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x:⊔y)
             compl (MkBConceptFilter x)                      = MkBConceptFilter (C x)
@@ -119,20 +118,33 @@ whitespace after them and take care of possible comments.
 #+begin_src haskell
   pVar :: Parser Var
   pVar = pUpperId
-  
+
+  pRoleName :: Parser RoleName
+  pRoleName = pLowerId
+
   -- | At the moment we only support sort names beginning with an upper
   -- case letter (no "_", etc.)
   pDomainId :: Parser (BConcept Domain)
   pDomainId = MkBConceptDomain . D <$> pUpperId
   
-  -- | At the moment we only support adjective names beginning with a lower
+  -- | At the moment we only support filter names beginning with a lower
   -- case letter (no "_", etc.)
   pFilterId :: Parser (BConcept Filter)
   pFilterId = MkBConceptFilter . F <$> pLowerId
   
-  pKeyword :: String -> Parser ()
-  pKeyword keyword =
+  -- | Parser for keywords.
+  pK :: String -> Parser ()
+  pK keyword =
       pTerminal $ const () <$> pToken keyword <* pMaybe (pMunch idChar <* pFail)
+
+  -- | Parser for operators.
+  pO :: String -> Parser ()
+  pO operator =
+      pTerminal $ const () <$> pToken operator
+
+  -- | Parser for new lines.
+  pN :: Parser [Char]
+  pN = pSome $ pTerminal (pSym '\n')
   
   pParens :: ParserTrafo a a
   pParens p = pLParen *> p <* pRParen
