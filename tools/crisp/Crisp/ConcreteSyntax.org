@@ -44,6 +44,8 @@ with C-C C-c.
   import Crisp.AbstractSyntax
   import Data.Char
       (isAsciiUpper, isAsciiLower, isDigit)
+  import Data.Maybe
+      (isJust)
   import Text.ParserCombinators.UU.BasicInstances
   import Text.ParserCombinators.UU.Core
   import Text.ParserCombinators.UU.Derived
@@ -55,10 +57,62 @@ with C-C C-c.
   
 #+begin_src haskell
   pFormulaDomain :: Parser (Formula Domain)
-  pFormulaDomain = ConceptAssert <$> pVar <* pKeyword "is" <*> pConceptDomain
+  pFormulaDomain = ConceptAssert <$> pVar <* pK "is" <*> pConceptDomain
   
-  --pFormulaFilter :: Parser (Formula Filter)
-  --pFormulaFilter = ConceptAssert <$> pVar <* pKeyword "is" <*> pConceptFilter
+  -- | Lines are conjunctively chained (association to the right). There
+  -- are two kinds of line: assertion lines, and lines for
+  -- (dis-)equality relations. Both kinds of line begin with a
+  -- variable. (Dis-)equality relations cannot appear in an assertion
+  -- line.
+  pFormulaFilter :: Parser (Formula Filter)
+  pFormulaFilter = (And <$ pN) `pChainr` pLine
+      where 
+        pLine :: Parser (Formula Filter)
+        pRHS  :: Parser (Var -> Formula Filter)
+        pLine = pVar <**> pRHS
+        pRHS  =     pAsserts
+                <|> pEqRelations
+  
+  -- | This parser receives a variable found at the beginning of a line
+  -- (LHS variable) and parses a number of conjunctively chained
+  -- (right-associative) assertions about this variable.
+  pAsserts :: Parser (Var -> Formula Filter)
+  pAsserts = (lineAnd <$ pO ",") `pChainr` pAssertElem
+      where
+        pAssertElem ::Parser (Var -> Formula Filter)
+        pRoleId     :: Parser RoleId
+        pAssertElem =     flip    ConceptAssert <$  pK "is" <*> pConceptFilter
+                      <|> reorder RoleAssert    <$> pRoleId             <*> pVar
+                      <|> reorder RoleAssertT   <$> pRoleId <*  pO "+"  <*> pVar
+                      <|> reorder RoleAssertRT  <$> pRoleId <*  pO "*"  <*> pVar
+        pRoleId     = flip (,) <$> isJust <$> pMaybe (pK "has") <*> pRoleName
+        lineAnd  :: (Var -> Formula Filter) -> (Var -> Formula Filter)
+                 ->  Var -> Formula Filter
+        reorder :: (a -> b -> c -> d) -> b -> c-> a -> d
+        lineAnd f g varLHS = And (f varLHS) (g varLHS)
+        reorder f b c a = f a b c
+  
+  -- | This parser receives a variable found at the beginning of a line
+  -- (LHS variable) and parses a number of (dis-)equalities with that
+  -- variable. Any number of chained equalities is allowed (e.g. of
+  -- three chained equalities: X = Y = Z), but a maximum of one explicit
+  -- disequality can appear in a line. All the variables to the left
+  -- (resp. right) of the disequality symbol are unified. All the
+  -- variables to the left of the disequality symbol are declared
+  -- different from all the variables to the right.
+  pEqRelations :: Parser (Var -> Formula Filter)
+  pEqRelations =     lineAnd <$> pEqualities <*> (pDiseqAndEqs `opt` const Top)
+                 <|> pDiseqAndEqs
+      where
+        pDiseqAndEqs, pEqualities, pEquality :: Parser (Var -> Formula Filter)
+        pDiseqAndEqs = diseqAnd <$ pO "/=" <*> pVar <*> (pEqualities `opt` const Top)
+        pEqualities  = pO "=" *> (lineAnd <$ pO "=") `pChainr` pEquality
+        pEquality    = flip (:=) <$> pVar
+        diseqAnd :: Var -> (Var -> Formula Filter) -> Var -> Formula Filter
+        lineAnd  :: (Var -> Formula Filter) -> (Var -> Formula Filter)
+                 ->  Var -> Formula Filter
+        diseqAnd varDiseq f varLHS= And (varLHS :≠ varDiseq) (f varDiseq)
+        lineAnd f g varLHS = And (f varLHS) (g varLHS)
   
   -- | Both 'and' and 'or' are right-associative. Neither one of them
   -- binds stronger than the other, so explicit parenthesizing is needed
