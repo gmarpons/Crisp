@@ -47,9 +47,14 @@ with C-C C-c.
   import Data.Maybe
       (isJust)
   import Text.ParserCombinators.UU.BasicInstances
+      (createStr, LineColPos(LineColPos), pMunch, pSym, pToken, Parser, ParserTrafo)
   import Text.ParserCombinators.UU.Core
+      ((*>), (<$), (<$>), (<*), (<**>), (<*>), (<<|>), (<?>), (<|>),
+       opt, parse, pEnd)
   import Text.ParserCombinators.UU.Derived
-  import Text.ParserCombinators.UU.Utils hiding (pLParen, pRParen, pParens, pSpaces)
+      (pChainr, pFail, pMaybe, pSome)
+  import Text.ParserCombinators.UU.Utils
+      (pLower, pUpper)
 #+end_src
 
 
