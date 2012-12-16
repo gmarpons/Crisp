@@ -187,21 +187,21 @@ whitespace after them and take care of possible comments.
   pFilterId = MkBConceptFilter . F <$> pLowerId
   
   -- | Parser for keywords.
-  pK :: String -> Parser ()
+  pK :: String -> Parser String
   pK keyword =
-      pTerminal $ const () <$> pToken keyword <* pMaybe (pMunch idChar <* pFail)
+      pTerminal $ pToken keyword <* pMaybe (pMunch idChar <* pFail)
 
   -- | Parser for operators.
-  pO :: String -> Parser ()
+  pO :: String -> Parser String
   pO operator =
-      pTerminal $ const () <$> pToken operator
+      pTerminal $ pToken operator
 
   -- | Parser for new lines.
   pN :: Parser [Char]
   pN = pSome $ pTerminal (pSym '\n')
   
   pParens :: ParserTrafo a a
-  pParens p = pLParen *> p <* pRParen
+  pParens p = pTerminal (pSym '(') *> p <* pTerminal (pSym ')')
 #+end_src
 
 Auxiliary functions.
@@ -211,10 +211,6 @@ Auxiliary functions.
   pTerminal p = p <* pSpaces <* (pComment `opt` ())
       where pComment =     pOneLineComment
                        <|> pMultilineComment
-  
-  pLParen, pRParen :: Parser ()
-  pLParen = pTerminal $ const () <$> pSym '('
-  pRParen = pTerminal $ const () <$> pSym ')'
   
   pLowerId :: Parser String
   pLowerId = pTerminal $ (:) <$> pLower <*> pMunch idChar
