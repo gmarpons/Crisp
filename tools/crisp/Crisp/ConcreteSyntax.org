@@ -118,49 +118,49 @@ with C-C C-c.
   -- binds stronger than the other, so explicit parenthesizing is needed
   -- to mix them.
   pConceptDomain :: Parser (BConcept Domain)
-  pConceptDomain = 
-          pIntersection
-      <|> pUnion
-      where pIntersection, pUnion, pElemDomain :: Parser (BConcept Domain)
-            pElemFilter :: Parser (BConcept Filter)
-            pIntersection = isectD
-                            <$> pElemDomain
-                            <*  pK "and"
-                            <*> (isectF <$ pK "and") `pChainr` pElemFilter
-            pUnion        = (union <$ pK "or") `pChainr` pElemDomain
-            pElemDomain =     pDomainId
-                          <|> pParens pConceptDomain -- Recursion
-            pElemFilter =     rebox <$> pDomainId
-                          <|> pFilterId
-                          <|> pParens pConceptFilter -- Only dep. with pConceptFilter
-                          <|> compl <$ pK "not" <*> pElemFilter -- Recursion
-            isectF (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x:⊓y)
-            isectD (MkBConceptDomain x) (MkBConceptFilter y) = MkBConceptDomain (x:⊓y)
-            union  (MkBConceptDomain x) (MkBConceptDomain y) = MkBConceptDomain (x:⊔y)
-            compl  (MkBConceptFilter x)                      = MkBConceptFilter (C x)
-            rebox  (MkBConceptDomain x)                      = MkBConceptFilter x
+  pConceptDomain =     pIntersection
+                   <|> pUnion
+      where 
+        pIntersection, pUnion, pElemDomain :: Parser (BConcept Domain)
+        pElemFilter :: Parser (BConcept Filter)
+        pIntersection =   isectD
+                          <$> pElemDomain
+                          <*  pK "and"
+                          <*> (isectF <$ pK "and") `pChainr` pElemFilter
+        pUnion      =     (union <$ pK "or") `pChainr` pElemDomain
+        pElemDomain =     pDomainId
+                      <|> pParens pConceptDomain -- Recursion
+        pElemFilter =     rebox <$> pDomainId
+                      <|> pFilterId
+                      <|> pParens pConceptFilter -- Only dep. with pConceptFilter
+                      <|> compl <$ pK "not" <*> pElemFilter -- Recursion
+        isectF (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x :⊓ y)
+        isectD (MkBConceptDomain x) (MkBConceptFilter y) = MkBConceptDomain (x :⊓ y)
+        union  (MkBConceptDomain x) (MkBConceptDomain y) = MkBConceptDomain (x :⊔ y)
+        compl  (MkBConceptFilter x)                      = MkBConceptFilter (C x)
+        rebox  (MkBConceptDomain x)                      = MkBConceptFilter x
   
   -- | Both 'and' and 'or' are right-associative. Neither one of them
   -- binds stronger than the other, so explicit parenthesizing is needed
   -- to mix them.
   pConceptFilter :: Parser (BConcept Filter)
-  pConceptFilter =
-          pIntersection
-      <|> pUnion
-      where pIntersection, pUnion, pElem :: Parser (BConcept Filter)
-            pIntersection = isect
-                            <$> pElem
-                            <*  pK "and"
-                            <*> (isect <$ pK "and") `pChainr` pElem
-            pUnion        = (union <$ pK "or") `pChainr` pElem
-            pElem =     rebox <$> pDomainId
+  pConceptFilter =     pIntersection
+                   <|> pUnion
+      where 
+        pIntersection, pUnion, pElem :: Parser (BConcept Filter)
+        pIntersection = isect
+                        <$> pElem
+                        <*  pK "and"
+                        <*> (isect <$ pK "and") `pChainr` pElem
+        pUnion =        (union <$ pK "or") `pChainr` pElem
+        pElem  =        rebox <$> pDomainId
                     <|> pFilterId
                     <|> pParens pConceptFilter          -- Recursion
                     <|> compl <$ pK "not" <*> pElem     -- Recursion
-            isect (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x:⊓y)
-            union (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x:⊔y)
-            compl (MkBConceptFilter x)                      = MkBConceptFilter (C x)
-            rebox (MkBConceptDomain x)                      = MkBConceptFilter x
+        isect (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x:⊓y)
+        union (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x:⊔y)
+        compl (MkBConceptFilter x)                      = MkBConceptFilter (C x)
+        rebox (MkBConceptDomain x)                      = MkBConceptFilter x
 #+end_src
 
 
