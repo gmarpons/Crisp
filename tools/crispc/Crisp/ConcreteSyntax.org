@@ -36,6 +36,7 @@ with C-C C-c.
     MultiParamTypeClasses,
     NoMonomorphismRestriction,
     Rank2Types,
+    TypeOperators,
     TypeSynonymInstances
     #-}
   
@@ -44,17 +45,46 @@ with C-C C-c.
   import Crisp.AbstractSyntax
   import Data.Char
       (isAsciiUpper, isAsciiLower, isDigit)
+  import qualified Data.ListLike.Base as LL
+      (ListLike)
   import Data.Maybe
       (isJust)
   import Text.ParserCombinators.UU.BasicInstances
-      (createStr, LineColPos(LineColPos), pMunch, pSym, pToken, Parser, ParserTrafo)
+      (createStr, Error(Inserted), pMunch, pos, pSym, pToken, Str(Str))
   import Text.ParserCombinators.UU.Core
       ((*>), (<$), (<$>), (<*), (<**>), (<*>), (<<|>), (<?>), (<|>),
-       opt, parse, pEnd)
+       empty, IsLocationUpdatedBy(..), Nat(..), opt, P, parse,
+       pEnd, pSymExt, pSwitch, Steps(Fail))
   import Text.ParserCombinators.UU.Derived
-      (pChainr, pFail, pMaybe, pSome)
+      (pChainr, pFoldr, pMaybe)
   import Text.ParserCombinators.UU.Utils
-      (pLower, pUpper)
+      (pLower, pSpaces, pUpper)
+#+end_src
+
+
+* Location datatype
+
+We replace type synonims =Parser= and =ParserTrafo= from
+=Text.ParserCombinators.UU.BasicInstances= to more specific versions
+that use a special location datatype, =LineColPosIndent=, designed to
+allow parsing based on layout (indentation).
+
+#+begin_src haskell
+  data LineColPosIndent = LineColPosIndent !Int !Int !Int !Int deriving Show
+  
+  instance LineColPosIndent `IsLocationUpdatedBy` Char where
+     advance (LineColPosIndent line col pos indent) c
+         | c == '\n' = LineColPosIndent (line + 1) 0         (pos + 1) indent
+         | c == '\t' = LineColPosIndent line       tabCol    (pos + 1) indent
+         | otherwise = LineColPosIndent line       (col + 1) (pos + 1) indent
+         where tabCol = col + 8 - (col - 1) `mod` 8
+  
+  createStrIndent :: LL.ListLike s Char => s -> Str Char s LineColPosIndent
+  createStrIndent inp = createStr (LineColPosIndent 0 0 0 (-1)) inp
+  
+  type Parser a = LL.ListLike s Char => P (Str Char s LineColPosIndent) a
+  
+  type ParserTrafo a b = Parser a -> Parser b
 #+end_src
 
 
@@ -70,11 +100,11 @@ with C-C C-c.
   -- variable. (Dis-)equality relations cannot appear in an assertion
   -- line.
   pFormulaFilter :: Parser (Formula Filter)
-  pFormulaFilter = (And <$ pN) `pChainr` pLine
+  pFormulaFilter = indented $ pFoldr (And, Top) pLine
       where 
         pLine :: Parser (Formula Filter)
         pRHS  :: Parser (Var -> Formula Filter)
-        pLine = pVar <**> pRHS
+        pLine = atIndent pVar <**> pRHS
         pRHS  =     pAsserts
                 <|> pEqRelations
   
@@ -172,15 +202,51 @@ with C-C C-c.
 * Parsers for terminal symbols, lexical analysis
 
 All parsers for terminal symbols are responsible of munching
-whitespace after them and take care of possible comments.
+whitespace after them and take care of possible comments, usually by
+means of the =lexeme= parser transformer.
 
 #+begin_src haskell
+  
+  -- | Sets indentation at current column and parses @p@ with that
+  -- indentation: all tokens in @p@ must start at a grater column than
+  -- that indentation, except those marked with @atIndent@, that must
+  -- start at this very same column. Token parsers fail if the wrong
+  -- indentation is found.
+  indented :: ParserTrafo a a
+  indented p =
+      pSwitch (\old ->
+                   (         old {pos = setIndentAtCurrentCol (pos old)}
+                   , \new -> new {pos = copyIndent (pos old) (pos new) }
+                   )
+               ) p
+          where
+            setIndentAtCurrentCol (LineColPosIndent l c p _) =
+                LineColPosIndent l c p c
+            copyIndent (LineColPosIndent _ _ _ i) (LineColPosIndent l c p _) =
+                LineColPosIndent l c p i
+  
+  -- | If an indentation has been previously fixed with @indented@,
+  -- @atIndent p@ accepts @p@ only if it starts at the very same column
+  -- fixed by that indentation.
+  atIndent :: ParserTrafo a a
+  atIndent p =
+      pCheckIndent (==)
+      *> pSwitch (\old ->
+                      (         old {pos = resetIndent (pos old)         }
+                      , \new -> new {pos = copyIndent (pos old) (pos new)}
+                      )
+                 ) p
+          where
+            resetIndent (LineColPosIndent l c p _) = LineColPosIndent l c p (-1)
+            copyIndent (LineColPosIndent _ _ _ i) (LineColPosIndent l c p _) =
+                LineColPosIndent l c p i
+  
   pVar :: Parser Var
   pVar = pUpperId
-
+  
   pRoleName :: Parser RoleName
   pRoleName = pLowerId
-
+  
   -- | At the moment we only support sort names beginning with an upper
   -- case letter (no "_", etc.)
   pDomainId :: Parser (BConcept Domain)
@@ -194,43 +260,50 @@ whitespace after them and take care of possible comments.
   -- | Parser for keywords.
   pK :: String -> Parser String
   pK keyword =
-      pTerminal $ pToken keyword <* pMaybe (pMunch idChar <* pFail)
-
+      lexeme $ pToken keyword <* pMaybe (pMunch idChar <* empty)
+  
   -- | Parser for operators.
   pO :: String -> Parser String
   pO operator =
-      pTerminal $ pToken operator
-
-  -- | Parser for new lines.
-  pN :: Parser [Char]
-  pN = pSome $ pTerminal (pSym '\n')
+      lexeme $ pToken operator
   
   pParens :: ParserTrafo a a
-  pParens p = pTerminal (pSym '(') *> p <* pTerminal (pSym ')')
+  pParens p = lexeme (pSym '(') *> p <* lexeme (pSym ')')
 #+end_src
 
 Auxiliary functions.
 
 #+begin_src haskell
-  pTerminal :: ParserTrafo a a
-  pTerminal p = p <* pSpaces <* (pComment `opt` ())
-      where pComment =     pOneLineComment
-                       <|> pMultilineComment
+  pCheckIndent :: (Int -> Int -> Bool) -> Parser ()
+  pCheckIndent comp = pSymExt splitState (Zero Infinite) Nothing
+      where
+        splitState :: forall st r . (LL.ListLike st Char) =>
+                      (() -> (Str Char st LineColPosIndent) -> Steps r)
+                          -> (Str Char st LineColPosIndent) -> Steps r
+        splitState k inp@(Str tts msgs pos@(LineColPosIndent l c p i) delOk) =
+            if c `comp` i
+            then k () inp
+            else let msg = "or deleted whitespace"
+                     ins exp =
+                         (3, k () (Str tts (msgs ++ [Inserted msg pos exp]) pos delOk))
+                 in Fail ["Different indentation"] [ins]
+  
+  -- | Replaces @lexeme@ in @Text.ParserCombinators.UU.Utils@. This
+  -- version is intended to skip comments, in addition to trailing
+  -- whitespace.
+  lexeme :: ParserTrafo a a
+  lexeme p = pCheckIndent (>) *> p <* pSpaces -- <* (pComment `opt` ())
+      -- where pComment =     pOneLineComment
+      --                  <|> pMultilineComment
   
   pLowerId :: Parser String
-  pLowerId = pTerminal $ (:) <$> pLower <*> pMunch idChar
+  pLowerId = lexeme $ (:) <$> pLower <*> pMunch idChar
   
   pUpperId :: Parser String
-  pUpperId = pTerminal $ (:) <$> pUpper <*> pMunch idChar
+  pUpperId = lexeme $ (:) <$> pUpper <*> pMunch idChar
   
   idChar :: Char -> Bool
   idChar c = or $ map ($ c) [isAsciiLower, isAsciiUpper, isDigit, (=='\''), (=='_')]
-  
-  -- | This parser hides the one in UU.Utils, because in our lexer
-  -- newlines are semantically significant and we don't allow tabs
-  -- outside comments.
-  pSpaces :: Parser ()
-  pSpaces = const () <$> pMunch (`elem` " \r") <?> "Whitespace"
   
   pOneLineComment :: Parser ()
   pOneLineComment = const () <$> pToken "--" <* pMunch (/= '\n')
@@ -274,16 +347,14 @@ Load Haskell module, first time.
 #+begin_src haskell
   run :: Show t => Parser t -> String -> IO ()
   run p inp =
-      do let r@(a, errors) = parse 
-                             ((,) <$ pSpaces <*> p <*> pEnd) 
-                             (createStr (LineColPos 0 0 0) inp)
+      do let r@(a, errors) =
+                 parse ((,) <$ pSpaces <*> p <*> pEnd) (createStrIndent inp)
+             show_errors :: (Show a) => [a] -> IO ()
+             show_errors = sequence_ . (map (putStrLn . show))
          putStrLn ("--  Result: " ++ show a)
          if null errors then return ()
          else do putStr ("--  Correcting steps: \n")
                  show_errors errors
-         putStrLn "-- "
-      where show_errors :: (Show a) => [a] -> IO ()
-            show_errors = sequence_ . (map (putStrLn . show))
   
   pa :: Parser String 
   pa = (:[]) <$> pSym 'a'
