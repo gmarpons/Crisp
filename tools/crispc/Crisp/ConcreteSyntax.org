@@ -104,9 +104,20 @@ allow parsing based on layout (indentation).
       where 
         pLine :: Parser (Formula Filter)
         pRHS  :: Parser (Var -> Formula Filter)
-        pLine = atIndent pVar <**> pRHS
+        pLine =     atIndent pVar <**> pRHS     -- pVar begins with upper case
+                <|> pDisjunction                -- pDisjunction begins with "e"
         pRHS  =     pAsserts
                 <|> pEqRelations
+  
+  pDisjunction :: Parser (Formula Filter)
+  pDisjunction = Or <$> pLeftDisj <*> pRightDisj
+      where
+        pLeftDisj  :: Parser (Formula Filter)
+        pRightDisj :: Parser (Formula Filter)
+        pOtherDisj :: Parser (Formula Filter)
+        pLeftDisj  = atIndent (pK "either") *> pFormulaFilter             -- Mut. rec.
+        pRightDisj = atIndent (pK "or") *> pOtherDisj
+        pOtherDisj = (Or <$ atIndent (pK "or")) `pChainr` pFormulaFilter  -- Mut. rec.
   
   -- | This parser receives a variable found at the beginning of a line
   -- (LHS variable) and parses a number of conjunctively chained
