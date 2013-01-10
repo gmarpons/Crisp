@@ -24,7 +24,7 @@ This is an Org-mode file with Haskell code blocks that can be tangled
 (in a literate programming sense) within Emacs with C-c C-v t.
 
 Code blocks in [[*Tests][Tests]] can be loaded and executed in a GHCi session
-with C-C C-c.
+with C-c C-c.
 
 * Module declaration
 
@@ -289,7 +289,7 @@ Auxiliary definitions in the following code block.
 
 Load Haskell module, first time.
 
-#+begin_src haskell :var pwd=(pwd) :tangle no :results output
+#+begin_src haskell :var pwd=(pwd) :tangle no :results output silent
   let cd_pwd = return $ ":cd " ++ drop 10 pwd :: IO String
   :cmd cd_pwd
   :cd ..
@@ -298,7 +298,7 @@ Load Haskell module, first time.
 
 Evaluate Haskell terms.
 
-#+begin_src haskell :tangle no :results output
+#+begin_src haskell :tangle no :results output silent
   :l Crisp.AbstractSyntax
   -- :t PredHas "functionCall" ("Func" `Is` (S "FunctionDecl")) ("Call" `Is` (S "CallExpr")) ("Func" `Has` "body" $ "Body")
   -- :t Not $ "Caller" `Is` C (A "virtual")

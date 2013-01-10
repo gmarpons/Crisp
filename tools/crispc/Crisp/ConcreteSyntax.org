@@ -24,7 +24,7 @@ This is an Org-mode file with Haskell code blocks that can be tangled
 (in a literate programming sense) within Emacs with C-c C-v t.
 
 Code blocks in [[*Tests][Tests]] can be loaded and executed in a GHCi session
-with C-C C-c.
+with C-c C-c.
 
 * Module declaration
 
@@ -348,7 +348,7 @@ Auxiliary functions.
 
 Load Haskell module, first time.
 
-#+begin_src haskell :var pwd=(pwd) :tangle no :results output
+#+begin_src haskell :var pwd=(pwd) :tangle no :results output silent
   let cd_pwd = return $ ":cd " ++ drop 10 pwd :: IO String
   :cmd cd_pwd
   :cd ..
@@ -371,7 +371,7 @@ Load Haskell module, first time.
   pa = (:[]) <$> pSym 'a'
 #+end_src
 
-#+begin_src haskell :tangle no :results output
+#+begin_src haskell :tangle no :results output silent
   let a = "FunctionDecl   or CXXMethodDecl"
   let b = "  CXXMethodDecl and virtual and abstract"
   let c = "  virtual and CXXMethodDecl and abstract"
