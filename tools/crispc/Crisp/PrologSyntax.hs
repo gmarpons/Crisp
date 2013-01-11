@@ -17,6 +17,11 @@
 -- You should have received a copy of the GNU General Public License
 -- along with Crisp.  If not, see <http://www.gnu.org/licenses/>.
 
+{-# LANGUAGE 
+  NoImplicitPrelude,
+  OverloadedStrings
+  #-}
+
 module Crisp.PrologSyntax (
                    Term (..)
                  , Atom (..)
@@ -31,17 +36,28 @@ module Crisp.PrologSyntax (
                  )
 where
 
+import ClassyPrelude hiding (delete, show)
+import qualified ClassyPrelude as P
+    (show)
 import Control.Monad
 import Data.List
+    (delete, foldl, foldr1, union)
+import Data.Text
+    (Text)
+-- import Text.Show
 
-data Term = Var String
-          | Structure String [Term]
+-- infixr 5 ++
+-- (++) :: Text -> Text -> Text
+-- t1 ++ t2 = t1 `append` t2
+
+data Term = Var Text
+          | Structure Text [Term]
           | List [Term]
           | Tuple [Term]
           | Integer Integer
             deriving (Eq)
 
-data Atom = Atom String [Term]
+data Atom = Atom Text [Term]
             deriving (Eq)
 
 data Literal = Pos Atom
@@ -50,7 +66,7 @@ data Literal = Pos Atom
 
 --  Clauses in general programs
 data GPC = GPC Atom [Literal]
-         | GPCDec String
+         | GPCDec Text
            deriving (Eq)
 
 newtype GP = GP [GPC]
@@ -61,7 +77,7 @@ newtype GP = GP [GPC]
 --  The meaning of EPC head a b is head :- a, b where a is a
 --  conjunction of literals and b is an arbitrary first order formula
 data EPC = EPC Atom [Literal] [Formula]
-           deriving (Eq, Show)
+           deriving (Eq)
 
 data Formula = Top
              | Bot
@@ -71,12 +87,12 @@ data Formula = Top
              | Disj Formula Formula
              | Impl Formula Formula
              | Equiv Formula Formula
-             | Forall String Formula
-             | Exists String Formula
-               deriving (Eq, Show)
+             | Forall Text Formula
+             | Exists Text Formula
+               deriving (Eq)
 
 newtype EP = EP [EPC]
-             deriving (Eq, Show)
+             deriving (Eq)
 
 emptyEP :: Monad m => m EP
 emptyEP = return $ EP []
@@ -199,7 +215,7 @@ tlp (EPC h a (Forall x w : b)) =
 tlp (EPC h a (Exists _ w : b)) =
     tlp (EPC h a (w : b))
 
-freeVars :: Formula -> [String]
+freeVars :: Formula -> [Text]
 freeVars Top = []
 freeVars Bot = []
 freeVars (At at) =
@@ -215,24 +231,27 @@ freeVars (Impl w v) =
 freeVars (Equiv w v) =
     union (freeVars w) (freeVars v)
 freeVars (Forall x w) =
-    Data.List.delete x (freeVars w)
+    delete x (freeVars w)
 freeVars (Exists x w) =
-    Data.List.delete x (freeVars w)
+    delete x (freeVars w)
 
-varsInTerm :: Term -> [String]
+varsInTerm :: Term -> [Text]
 varsInTerm (Var x) = [x]
 varsInTerm (Structure _ ts) = foldl union [] (map varsInTerm ts)
 varsInTerm (List ts) = foldl union [] (map varsInTerm ts)
 varsInTerm (Tuple ts) = foldl union [] (map varsInTerm ts)
 varsInTerm (Integer _) = []
 
-varsInAtom :: Atom -> [String]
+varsInAtom :: Atom -> [Text]
 varsInAtom (Atom _ ts) = foldl union [] (map varsInTerm ts)
 
-instance Show GP where
+class ShowText a where
+    show :: a -> Text
+
+instance ShowText GP where
     show (GP gpcs) = showAnyListWith show "" "\n\n" "" gpcs
 
-instance Show GPC where
+instance ShowText GPC where
     show (GPC h b) = show h ++
                      if null b
                      then "."
@@ -240,17 +259,17 @@ instance Show GPC where
                           ++ showAnyListWith show "   " ",\n   " "." b
     show (GPCDec d) = ":- " ++ d ++ "."
 
-instance Show Literal where
+instance ShowText Literal where
     show (Pos a) = show a
     show (Neg a) = "\\+ " ++ show a
 
-instance Show Atom where
+instance ShowText Atom where
     show (Atom p ts) = showQuoted p ++
                        if null ts
                        then ""
                        else showAnyListWith show "(" ", " ")" ts
 
-instance Show Term where
+instance ShowText Term where
     show (Var v) = v
     show (Structure f ts) = showQuoted f ++
                             if null ts
@@ -258,25 +277,25 @@ instance Show Term where
                             else showAnyListWith show "(" ", " ")" ts
     show (List ts) = showAnyListWith show "[" ", " "]" ts
     show (Tuple ts) = showAnyListWith show "(" ", " ")" ts
-    show (Integer i) = show i
+    show (Integer i) = P.show i
 
 -- | Given an atom, it generates an auxiliar predicate name to be used
 -- in Lloyd-Topor.
 
 -- Highly coupled with show in order to print an empty head of a
 -- clause and discontiguous in prefix form
-mkDiscontiguous :: String -> Int -> [GPC]
+mkDiscontiguous :: Text -> Int -> [GPC]
 mkDiscontiguous p n =
-    [ GPCDec ("discontiguous " ++ p ++ "/" ++ show n) ]
+    [ GPCDec ("discontiguous " ++ p ++ "/" ++ P.show n) ]
 
-auxPredName :: Atom -> String
+auxPredName :: Atom -> Text
 auxPredName (Atom p ts) =
     p ++ "_" ++ headsOfTerms ts
 
-headsOfTerms :: [Term] -> String
+headsOfTerms :: [Term] -> Text
 headsOfTerms ts = showAnyListWith headOfTerm "" "_" "" ts
 
-headOfTerm :: Term -> String
+headOfTerm :: Term -> Text
 headOfTerm (Var v) = v
 headOfTerm (Structure f _) =
     case f of
@@ -284,20 +303,21 @@ headOfTerm (Structure f _) =
       _ -> f
 headOfTerm (List ts) = headsOfTerms ts
 headOfTerm (Tuple ts) = headsOfTerms ts
-headOfTerm (Integer i) = show i
+headOfTerm (Integer i) = P.show i
 
-showAnyListWith :: (a -> String) -> String -> String -> String -> [a] -> String
+showAnyListWith :: (a -> Text) -> Text -> Text -> Text -> [a] -> Text
 showAnyListWith howToShow beg sep end l =
   beg
   ++ (if null l
       then ""
+      -- TODO: avoid using foldr1 partial function
       else foldr1 (\x s -> x ++ sep ++ s) (map howToShow l))
   ++ end
 
-showListWith :: Show a => String -> String -> String -> [a] -> String
+showListWith :: ShowText a => Text -> Text -> Text -> [a] -> Text
 showListWith = showAnyListWith show
 
-showQuoted :: String -> String
+showQuoted :: Text -> Text
 showQuoted s = "'" ++ s ++ "'"
 
 -- | Replaces all instances of a value in a list by another value.

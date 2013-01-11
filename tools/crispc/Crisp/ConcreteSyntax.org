@@ -32,25 +32,36 @@ with C-c C-c.
   {-# LANGUAGE
     GADTs,
     FlexibleContexts,
-    FlexibleInstances,
     MultiParamTypeClasses,
+    NoImplicitPrelude,
     NoMonomorphismRestriction,
+    OverloadedStrings,
     Rank2Types,
-    TypeOperators,
-    TypeSynonymInstances
+    TypeOperators
     #-}
   
   module Crisp.ConcreteSyntax where
   
+  import ClassyPrelude hiding (empty)
   import Crisp.AbstractSyntax
   import Data.Char
       (isAsciiUpper, isAsciiLower, isDigit)
+  import Data.Foldable
+      (or, sequence_)
   import qualified Data.ListLike.Base as LL
-      (ListLike)
-  import Data.Maybe
-      (isJust)
+      (ListLike(fromList, head, null, singleton, tail, toList))
+  import qualified Data.ListLike.FoldableLL as LL
+      (FoldableLL(foldl, foldr))
+  import qualified Data.Text as TextPartialFunctions
+      (head, tail)
+  import Data.Text
+      (cons, foldl, foldr)
+  import Data.Text.IO
+      (putStr, putStrLn)
+  import qualified Text.ParserCombinators.UU.BasicInstances as UU
+      (pMunch, pTokenCost)
   import Text.ParserCombinators.UU.BasicInstances
-      (createStr, Error(Inserted), pMunch, pos, pSym, pToken, Str(Str))
+      (createStr, Error(Inserted), pos, pSym, Str(Str))
   import Text.ParserCombinators.UU.Core
       ((*>), (<$), (<$>), (<*), (<**>), (<*>), (<<|>), (<?>), (<|>),
        empty, IsLocationUpdatedBy(..), Nat(..), opt, P, parse,
@@ -78,6 +89,16 @@ allow parsing based on layout (indentation).
          | c == '\t' = LineColPosIndent line       tabCol    (pos + 1) indent
          | otherwise = LineColPosIndent line       (col + 1) (pos + 1) indent
          where tabCol = col + 8 - (col - 1) `mod` 8
+  
+  instance LL.FoldableLL Text Char where
+      foldl = foldl
+      foldr = foldr
+  
+  instance LL.ListLike Text Char where
+      singleton = singleton
+      head = TextPartialFunctions.head
+      tail = TextPartialFunctions.tail
+      null = null
   
   createStrIndent :: LL.ListLike s Char => s -> Str Char s LineColPosIndent
   createStrIndent inp = createStr (LineColPosIndent 0 0 0 (-1)) inp
@@ -269,12 +290,12 @@ means of the =lexeme= parser transformer.
   pFilterId = MkBConceptFilter . F <$> pLowerId
   
   -- | Parser for keywords.
-  pK :: String -> Parser String
+  pK :: Text -> Parser Text
   pK keyword =
       lexeme $ pToken keyword <* pMaybe (pMunch idChar <* empty)
   
   -- | Parser for operators.
-  pO :: String -> Parser String
+  pO :: Text -> Parser Text
   pO operator =
       lexeme $ pToken operator
   
@@ -299,19 +320,11 @@ Auxiliary functions.
                          (3, k () (Str tts (msgs ++ [Inserted msg pos exp]) pos delOk))
                  in Fail ["Different indentation"] [ins]
   
-  -- | Replaces @lexeme@ in @Text.ParserCombinators.UU.Utils@. This
-  -- version is intended to skip comments, in addition to trailing
-  -- whitespace.
-  lexeme :: ParserTrafo a a
-  lexeme p = pCheckIndent (>) *> p <* pSpaces -- <* (pComment `opt` ())
-      -- where pComment =     pOneLineComment
-      --                  <|> pMultilineComment
+  pLowerId :: Parser Text
+  pLowerId = lexeme $ cons <$> pLower <*> pMunch idChar
   
-  pLowerId :: Parser String
-  pLowerId = lexeme $ (:) <$> pLower <*> pMunch idChar
-  
-  pUpperId :: Parser String
-  pUpperId = lexeme $ (:) <$> pUpper <*> pMunch idChar
+  pUpperId :: Parser Text
+  pUpperId = lexeme $ cons <$> pUpper <*> pMunch idChar
   
   idChar :: Char -> Bool
   idChar c = or $ map ($ c) [isAsciiLower, isAsciiUpper, isDigit, (=='\''), (=='_')]
@@ -329,11 +342,39 @@ Auxiliary functions.
                    <<|> pMunch (/= '-') *> pSym '-' <* pAux
 #+end_src
 
+The following functions replace an analogous function in
+Text.ParserCombinators.UU.[BasicInstances|Utils]. The original version
+works with String, whereas this version has Data.Text in the
+signature, but uses String internally. My understanding of
+Text.ParserCombinators.UU is that it doesn't support Data.Text at the
+low level, as functions like =pToken= and =pMunch= return a list of
+something.
+
+#+begin_src haskell
+  -- | Replaces @lexeme@ in @Text.ParserCombinators.UU.Utils@. This
+  -- version is intended to skip comments, in addition to trailing
+  -- whitespace, and supports layout-based (i.e. indentation-based)
+  -- parsing.
+  lexeme :: ParserTrafo a a
+  lexeme p = pCheckIndent (>) *> p <* pSpaces -- <* (pComment `opt` ())
+      -- where pComment =     pOneLineComment
+      --                  <|> pMultilineComment
+  
+  pTokenCost :: Text -> Int -> Parser Text
+  pTokenCost tk cost = fromList <$> UU.pTokenCost (toList tk) cost
+  
+  pToken :: Text -> Parser Text
+  pToken tk = pTokenCost tk 5
+    
+  pMunch :: (Char -> Bool) -> Parser Text
+  pMunch pred = fromList <$> UU.pMunch pred
+#+end_src
+
 
 * File handling
 
 #+begin_src haskell
-  -- translateFile :: String -> IO ()
+  -- translateFile :: Text -> IO ()
   -- translateFile fileName = do
   --   result <- parseFromFileEx rulesFile fileName
   --   case result of
@@ -356,7 +397,7 @@ Load Haskell module, first time.
 #+end_src
 
 #+begin_src haskell
-  run :: Show t => Parser t -> String -> IO ()
+  run :: Show t => Parser t -> Text -> IO ()
   run p inp =
       do let r@(a, errors) =
                  parse ((,) <$ pSpaces <*> p <*> pEnd) (createStrIndent inp)
@@ -366,12 +407,11 @@ Load Haskell module, first time.
          if null errors then return ()
          else do putStr ("--  Correcting steps: \n")
                  show_errors errors
-  
-  pa :: Parser String 
-  pa = (:[]) <$> pSym 'a'
 #+end_src
 
 #+begin_src haskell :tangle no :results output silent
+  :set -XOverloadedStrings
+  :set -XNoMonomorphismRestriction
   let a = "FunctionDecl   or CXXMethodDecl"
   let b = "  CXXMethodDecl and virtual and abstract"
   let c = "  virtual and CXXMethodDecl and abstract"

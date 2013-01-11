@@ -34,6 +34,8 @@ with C-c C-c.
     FlexibleContexts,
     GADTs,
     KindSignatures,
+    NoImplicitPrelude,
+    OverloadedStrings,
     StandaloneDeriving,
     UnicodeSyntax
     #-}
@@ -41,6 +43,7 @@ with C-c C-c.
   module Crisp.AbstractSyntax
   where
   
+  import ClassyPrelude
   import qualified Crisp.PrologSyntax as P
   import qualified Data.NonEmpty as NE
 #+end_src
@@ -118,7 +121,7 @@ Here begins the abstract syntax for Crisp.
   type OneElemList  = NE.T NE.Empty
   type TwoElemList  = NE.T (NE.T NE.Empty)
   
-  type ConceptId = String
+  type ConceptId = Text
   
   -- | The boolean value states if the word "has" must prepended to the
   -- role name.
@@ -126,11 +129,11 @@ Here begins the abstract syntax for Crisp.
   
   type RuleId = (RuleSetId, RuleName)
   
-  type RoleName = String
+  type RoleName = Text
   
-  type RuleName = String
+  type RuleName = Text
   
-  type RuleSetId = String
+  type RuleSetId = Text
   
   data Relation :: * where
       ConceptDef :: ConceptId -> OneElemList  (Formula Domain) -> Formula Filter -> Relation
@@ -146,7 +149,7 @@ Constraints:
 - List of =Formula Domain='s in a =Rule= contains at least one element.
 
 #+begin_src haskell
-  type Var = String
+  type Var = Text
   
   -- | A concept assertion contains a true concept definition (that can
   -- be a complex concept referencing both primitive concepts and
@@ -174,9 +177,9 @@ Observations:
   for =Formula= is always in class =BM= (=BConcept= marker).
 
 #+begin_src haskell
-  type DomainId = String
+  type DomainId = Text
   
-  type FilterId = String
+  type FilterId = Text
   
   data Concept :: * -> * where
       D    ::                 DomainId                       -> Concept D
@@ -236,12 +239,12 @@ Observations:
   formulaToProlog (Not e)     = P.Not  (formulaToProlog e)
   formulaToProlog Top         = P.Top
 
-  type PredName = String
+  type PredName = Text
   
   mkCallAtom :: PredName -> [P.Term] -> P.Atom
   mkCallAtom p l = P.Atom "call" $ (P.Structure p []) : l
   
-  roleIdToProlog :: RoleId -> String
+  roleIdToProlog :: RoleId -> Text
   roleIdToProlog (roleName, hasPrefix)
       = if hasPrefix then "has_" ++ roleName else roleName
 #+end_src
@@ -290,7 +293,7 @@ Auxiliary definitions in the following code block.
 Load Haskell module, first time.
 
 #+begin_src haskell :var pwd=(pwd) :tangle no :results output silent
-  let cd_pwd = return $ ":cd " ++ drop 10 pwd :: IO String
+  let cd_pwd = return $ ":cd " ++ drop 10 pwd :: IO Text
   :cmd cd_pwd
   :cd ..
   :l Crisp.AbstractSyntax
