@@ -33,11 +33,12 @@ module Crisp.PrologSyntax (
                  , emptyEP, addEPC, addEPCs, unionEP
                  , transLloydTopor
                  , headsOfTerms, headOfTerm
+                 , ShowText (show)
                  )
 where
 
 import ClassyPrelude hiding (delete, show)
-import qualified ClassyPrelude as P
+import qualified ClassyPrelude as CP
     (show)
 import Control.Monad
 import Data.List
@@ -55,10 +56,10 @@ data Term = Var Text
           | List [Term]
           | Tuple [Term]
           | Integer Integer
-            deriving (Eq)
+            deriving (Eq, Show)
 
 data Atom = Atom Text [Term]
-            deriving (Eq)
+            deriving (Eq, Show)
 
 data Literal = Pos Atom
              | Neg Atom
@@ -89,7 +90,7 @@ data Formula = Top
              | Equiv Formula Formula
              | Forall Text Formula
              | Exists Text Formula
-               deriving (Eq)
+               deriving (Eq, Show)
 
 newtype EP = EP [EPC]
              deriving (Eq)
@@ -277,7 +278,7 @@ instance ShowText Term where
                             else showAnyListWith show "(" ", " ")" ts
     show (List ts) = showAnyListWith show "[" ", " "]" ts
     show (Tuple ts) = showAnyListWith show "(" ", " ")" ts
-    show (Integer i) = P.show i
+    show (Integer i) = CP.show i
 
 -- | Given an atom, it generates an auxiliar predicate name to be used
 -- in Lloyd-Topor.
@@ -286,7 +287,7 @@ instance ShowText Term where
 -- clause and discontiguous in prefix form
 mkDiscontiguous :: Text -> Int -> [GPC]
 mkDiscontiguous p n =
-    [ GPCDec ("discontiguous " ++ p ++ "/" ++ P.show n) ]
+    [ GPCDec ("discontiguous " ++ p ++ "/" ++ CP.show n) ]
 
 auxPredName :: Atom -> Text
 auxPredName (Atom p ts) =
@@ -303,7 +304,7 @@ headOfTerm (Structure f _) =
       _ -> f
 headOfTerm (List ts) = headsOfTerms ts
 headOfTerm (Tuple ts) = headsOfTerms ts
-headOfTerm (Integer i) = P.show i
+headOfTerm (Integer i) = CP.show i
 
 showAnyListWith :: (a -> Text) -> Text -> Text -> Text -> [a] -> Text
 showAnyListWith howToShow beg sep end l =

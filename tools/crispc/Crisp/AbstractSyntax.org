@@ -40,8 +40,7 @@ with C-c C-c.
     UnicodeSyntax
     #-}
   
-  module Crisp.AbstractSyntax
-  where
+  module Crisp.AbstractSyntax where
   
   import ClassyPrelude
   import qualified Crisp.PrologSyntax as P
@@ -89,9 +88,9 @@ This first code block contains some auxiliary type definitions.
   data                     D
   data                     F
   
-  instance                 AM C
-  instance                 AM D
-  instance                 AM F
+  instance                 AM C   -- Complement
+  instance                 AM D   -- Primitive Concept Domain
+  instance                 AM F   -- Primitive Concept Filter
   instance (AM a, AM b) => AM (a, b)
   
   -- | Sub-class of @AM@ for types of @Concept@ that can be used as a
@@ -161,10 +160,8 @@ Constraints:
       RoleAssert    ::           Var        -> RoleId      -> Var -> Formula Filter
       RoleAssertT   ::           Var        -> RoleId      -> Var -> Formula Filter
       RoleAssertRT  ::           Var        -> RoleId      -> Var -> Formula Filter
-      (:=)          ::           Var                       -> Var -> Formula Filter
-      (:≠)          ::           Var                       -> Var -> Formula Filter
-      And           ::           Formula Filter -> Formula Filter -> Formula Filter
-      Or            ::           Formula Filter -> Formula Filter -> Formula Filter
+      (:=), (:≠)    ::           Var                       -> Var -> Formula Filter
+      And, Or       ::           Formula Filter -> Formula Filter -> Formula Filter
       Not           ::           Formula Filter                   -> Formula Filter
       Top           ::                                               Formula Filter
   
@@ -212,15 +209,32 @@ Observations:
 * Translation Crisp AS -> Extended Prolog AS
 
 #+begin_src haskell
-  bindingToProlog :: forall a. AM a => Var -> Concept a -> P.Formula
-  bindingToProlog v (D s)    = P.At $ P.Atom "isA" [P.Var v, P.Structure s []]
-  bindingToProlog v (F a)    = P.At $ P.Atom ("is_" ++ a) [P.Var v]
-  bindingToProlog v (c1:⊓c2) = P.Conj (bindingToProlog v c1) (bindingToProlog v c2)
-  bindingToProlog v (c1:⊔c2) = P.Disj (bindingToProlog v c1) (bindingToProlog v c2)
-  bindingToProlog v (C c)    = P.Not  (bindingToProlog v c)
+  mkRelationHead :: RoleId -> TwoElemList (Formula Domain) -> P.Atom
+  mkRelationHead (roleName, needsHas) bindings = P.Atom functor $ fmap P.Var vars
+      where functor = prefix ++ roleName
+            prefix = if needsHas then "has_" else ""
+            vars = NE.toList $ fmap getVar bindings
+            getVar (ConceptAssert var _) = var
+  
+  mkRelationBody :: TwoElemList (Formula Domain) -> Formula Filter -> P.Formula
+  mkRelationBody bindings conditions
+      = P.mkConj (NE.toList $ fmap formulaToProlog bindings) `P.Conj` formulaToProlog conditions
+  
+  relationToProlog :: Relation -> P.EPC
+  relationToProlog (RoleDef id bindings conditions)
+      = P.mkEPC (mkRelationHead id bindings) (mkRelationBody bindings conditions)
+  
+  -- relationToProlog (PredIs   id s   es)
+  --     = P.mkEPC (mkHeadFromVars (idForIsRole id) [var s])
+  --       $ mkBody [MkFormulaDMBox s] es
+  -- relationToProlog (PredHas  id s t es)
+  --     = P.mkEPC (mkHeadFromVars (idForHasRole id) [var s, var t])
+  --       $ mkBody [MkFormulaDMBox s, MkFormulaDMBox t] es
+  -- relationToProlog (Rule set id ss  es) 
+  --     = P.mkEPC (mkRuleHead set id (vars ss)) (mkBody ss es)
 #+end_src
 
-#+begin_src haskell :tangle no
+#+begin_src haskell
   formulaToProlog :: Formula f -> P.Formula
   formulaToProlog (ConceptAssert v (MkBConceptDomain c)) = bindingToProlog v c
   formulaToProlog (ConceptAssert v (MkBConceptFilter c)) = bindingToProlog v c
@@ -238,7 +252,7 @@ Observations:
   formulaToProlog (Or  e1 e2) = P.Disj (formulaToProlog e1) (formulaToProlog e2)
   formulaToProlog (Not e)     = P.Not  (formulaToProlog e)
   formulaToProlog Top         = P.Top
-
+  
   type PredName = Text
   
   mkCallAtom :: PredName -> [P.Term] -> P.Atom
@@ -249,16 +263,13 @@ Observations:
       = if hasPrefix then "has_" ++ roleName else roleName
 #+end_src
 
-#+begin_src haskell :tangle no
-  topLevelToProlog :: Relation -> P.EPC
-  topLevelToProlog (PredIs   id s   es)
-      = P.mkEPC (mkHeadFromVars (idForIsRole id) [var s])
-        $ mkBody [MkFormulaDMBox s] es
-  topLevelToProlog (PredHas  id s t es)
-      = P.mkEPC (mkHeadFromVars (idForHasRole id) [var s, var t])
-        $ mkBody [MkFormulaDMBox s, MkFormulaDMBox t] es
-  topLevelToProlog (Rule set id ss  es) 
-      = P.mkEPC (mkRuleHead set id (vars ss)) (mkBody ss es)
+#+begin_src haskell
+  bindingToProlog :: forall a. AM a => Var -> Concept a -> P.Formula
+  bindingToProlog v (D s)    = P.At $ P.Atom "isA" [P.Var v, P.Structure s []]
+  bindingToProlog v (F a)    = P.At $ P.Atom ("is_" ++ a) [P.Var v]
+  bindingToProlog v (c1:⊓c2) = P.Conj (bindingToProlog v c1) (bindingToProlog v c2)
+  bindingToProlog v (c1:⊔c2) = P.Disj (bindingToProlog v c1) (bindingToProlog v c2)
+  bindingToProlog v (C c)    = P.Not  (bindingToProlog v c)
 #+end_src
 
 Auxiliary definitions in the following code block.
@@ -293,7 +304,7 @@ Auxiliary definitions in the following code block.
 Load Haskell module, first time.
 
 #+begin_src haskell :var pwd=(pwd) :tangle no :results output silent
-  let cd_pwd = return $ ":cd " ++ drop 10 pwd :: IO Text
+  let cd_pwd = return $ ":cd " ++ drop 10 pwd :: IO String
   :cmd cd_pwd
   :cd ..
   :l Crisp.AbstractSyntax
@@ -302,18 +313,24 @@ Load Haskell module, first time.
 Evaluate Haskell terms.
 
 #+begin_src haskell :tangle no :results output silent
-  :l Crisp.AbstractSyntax
+  :set -XOverloadedStrings
   -- :t PredHas "functionCall" ("Func" `Is` (S "FunctionDecl")) ("Call" `Is` (S "CallExpr")) ("Func" `Has` "body" $ "Body")
   -- :t Not $ "Caller" `Is` C (A "virtual")
-  let a = "Caller" `Is` (S "CXXMethodDecl")
-  let b = ("Caller" `Has` "functionCall" $ "CallPoint") `And` ("CallPoint" `Has` "directCallee" $ "Callee")
-  formulaToProlog $ Not $ "Caller" `Is` (A "virtual")
-  formulaToProlog $ "Body" `HasT` "child" $ "Call"
-  let p1 = PredHas "functionCall" ("Func" `Is` D "FunctionDecl") ("Call" `Is` D "CallExpr") (("Func" `Has` "body" $ "Body") `And` ("Body" `HasT` "child" $ "Call"))
-  let p2 = PredHas "callee" ("Caller" `Is` D "FunctionDecl") ("Callee" `Is` D "FunctionDecl") (("Caller" `Has` "functionCall" $ "CallPoint") `And` ("CallPoint" `Has` "directCallee" $ "Callee"))
-  let r1 = Rule "HICPP" "3.3.13" [MkFormulaDMBox $ "Caller" `Is` D "FunctionDecl", MkFormulaDMBox $ "Caller" `Is` D "FunctionDecl"] (("Record" `Is` D "CXXRecordDecl") `And` (("Record" `Has` "ctor" $ "Caller") `Or`("Record" `Has` "destructor" $ "Caller")) `And` ("Record" `Has` "method" $ "Callee") `And` ("Callee" `Is` F "virtual"))
+  let c1 = ConceptAssert "Caller" $ MkBConceptDomain (D "CXXMethodDecl")
+  let c2 = ConceptAssert "Callee" $ MkBConceptDomain (D "CXXMethodDecl")
+  let a1 = RoleAssert "Caller" ("functionCall", True) "CallPoint" `And` RoleAssert "CallPoint" ("directCallee", True) "Callee"
+  let n1 = Not $ ConceptAssert "Caller" $ MkBConceptFilter (F "virtual")
+  formulaToProlog c1
+  formulaToProlog c2
+  formulaToProlog a1
+  formulaToProlog n1
+  let p1 = RoleDef ("calls", False) (c1 NE.!: c2 NE.!: NE.Empty) a1
+  -- let p1 = PredHas "functionCall" ("Func" `Is` D "FunctionDecl") ("Call" `Is` D "CallExpr") (("Func" `Has` "body" $ "Body") `And` ("Body" `HasT` "child" $ "Call"))
+  -- let p2 = PredHas "callee" ("Caller" `Is` D "FunctionDecl") ("Callee" `Is` D "FunctionDecl") (("Caller" `Has` "functionCall" $ "CallPoint") `And` ("CallPoint" `Has` "directCallee" $ "Callee"))
+  -- let r1 = Rule "HICPP" "3.3.13" [MkFormulaDMBox $ "Caller" `Is` D "FunctionDecl", MkFormulaDMBox $ "Caller" `Is` D "FunctionDecl"] (("Record" `Is` D "CXXRecordDecl") `And` (("Record" `Has` "ctor" $ "Caller") `Or`("Record" `Has` "destructor" $ "Caller")) `And` ("Record" `Has` "method" $ "Callee") `And` ("Callee" `Is` F "virtual"))
   -- Lloyd-topor
   putStrLn ""
-  do { ep <- P.emptyEP; ep <- P.addEPCs (map topLevelToProlog [p1, p2, r1]) ep; return $ P.transLloydTopor ep }
+  prologCode <- do { ep <- P.emptyEP; ep <- P.addEPCs (map relationToProlog [p1]) ep; return $ P.transLloydTopor ep }
+  P.show prologCode
   putStrLn "END"
 #+end_src
