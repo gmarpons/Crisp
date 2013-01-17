@@ -44,9 +44,10 @@ with C-c C-c.
   
   module Crisp.AbstractSyntax where
   
-  import ClassyPrelude
+  import ClassyPrelude hiding (toList)
   import qualified Crisp.PrologSyntax as P
-  import qualified Data.NonEmpty as NE
+  import Data.List.NonEmpty
+      (NonEmpty((:|)), toList)
 #+end_src
 
 
@@ -118,10 +119,6 @@ Here begins the abstract syntax for Crisp.
 #+begin_src haskell
   data Module = Module [Relation]
   
-  type OneElemList  = NE.T NE.Empty
-  type TwoElemList  = NE.T (NE.T NE.Empty)
-  type SomeElemList = NE.T []
-  
   type ConceptId = Text
   
   -- | The boolean value states if the word "has" must prepended to the
@@ -151,9 +148,9 @@ Here begins the abstract syntax for Crisp.
           = ruleSetId ++ "::" ++ ruleName
   
   data Relation :: * where
-      ConceptDef :: ConceptId -> OneElemList  (Formula Domain) -> Formula Filter -> Relation
-      RoleDef    :: RoleId    -> TwoElemList  (Formula Domain) -> Formula Filter -> Relation
-      Rule       :: RuleId    -> SomeElemList (Formula Domain) -> Formula Filter -> Relation
+      ConceptDef :: ConceptId -> Formula Domain                   -> Formula Filter -> Relation
+      RoleDef    :: RoleId    -> (Formula Domain, Formula Domain) -> Formula Filter -> Relation
+      Rule       :: RuleId    -> NonEmpty (Formula Domain)        -> Formula Filter -> Relation
 #+end_src
 
 Constraints:
@@ -228,16 +225,18 @@ Observations:
   relationToProlog :: Relation -> P.EPC
   relationToProlog = mkEPC
       where 
-        mkEPC (ConceptDef id domains filter) = mkEPC' id domains filter
-        mkEPC (RoleDef    id domains filter) = mkEPC' id domains filter
-        mkEPC (Rule       id domains filter) = mkEPC' id domains filter
+        mkEPC (ConceptDef id d        filter) = mkEPC' id (d  :| [])   filter
+        mkEPC (RoleDef    id (d1, d2) filter) = mkEPC' id (d1 :| [d2]) filter
+        mkEPC (Rule       id ds       filter) = mkEPC' id ds           filter
+        mkEPC' :: RelationIdToProlog i =>
+                  i -> NonEmpty (Formula Domain) -> Formula Filter -> P.EPC
         mkEPC' id domains filter
             = P.mkEPC (mkRelationHead id domains) (mkRelationBody domains filter)
         mkRelationHead id domains = P.Atom (idToProlog id) $ fmap P.Var (vars domains)
         mkRelationBody domains filter
-            = P.mkConj (NE.toList $ fmap formulaToProlog domains)
-              `P.Conj` formulaToProlog filter
-        vars domains = NE.toList $ fmap getVar domains
+            = domainsToProlog domains `P.Conj` formulaToProlog filter
+        domainsToProlog domains = P.mkConj $ toList (fmap formulaToProlog domains)
+        vars domains = toList $ fmap getVar domains
         getVar (ConceptAssert var _) = var
 #+end_src
 
@@ -300,9 +299,9 @@ Evaluate Haskell terms.
   formulaToProlog ca2
   formulaToProlog ra1
   formulaToProlog no1
-  let pd1 = ConceptDef "caller"            (ca1 NE.!: NE.Empty)           ra1
-  let rd1 = RoleDef    ("calls", False)    (ca1 NE.!: ca2 NE.!: NE.Empty) ra1
-  let ru1 = Rule       ("HICPP", "3.3.13") (ca1 `NE.cons` NE.Cons ca2 []) ra1
+  let pd1 = ConceptDef "caller"            ca1            ra1
+  let rd1 = RoleDef    ("calls", False)    (ca1, ca2)     ra1
+  let ru1 = Rule       ("HICPP", "3.3.13") (ca1 :| [ca2]) ra1
   
   -- Lloyd-topor
   putStrLn "Lloyd-topor: BEGIN"
