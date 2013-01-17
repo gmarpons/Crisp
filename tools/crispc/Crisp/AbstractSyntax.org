@@ -32,11 +32,13 @@ with C-c C-c.
   {-# LANGUAGE 
     ExistentialQuantification,
     FlexibleContexts,
+    FlexibleInstances,
     GADTs,
     KindSignatures,
     NoImplicitPrelude,
     OverloadedStrings,
     StandaloneDeriving,
+    TypeSynonymInstances,
     UnicodeSyntax
     #-}
   
@@ -116,9 +118,9 @@ Here begins the abstract syntax for Crisp.
 #+begin_src haskell
   data Module = Module [Relation]
   
-  type NonEmptyList = NE.T []
   type OneElemList  = NE.T NE.Empty
   type TwoElemList  = NE.T (NE.T NE.Empty)
+  type SomeElemList = NE.T []
   
   type ConceptId = Text
   
@@ -134,10 +136,24 @@ Here begins the abstract syntax for Crisp.
   
   type RuleSetId = Text
   
+  class RelationIdToProlog a where
+      idToProlog :: a -> Text
+  
+  instance RelationIdToProlog ConceptId where
+      idToProlog = id
+  
+  instance RelationIdToProlog RoleId where
+      idToProlog (roleName, hasPrefix)
+          = if hasPrefix then "has_" ++ roleName else roleName
+  
+  instance RelationIdToProlog RuleId where
+      idToProlog (ruleSetId, ruleName)
+          = ruleSetId ++ "::" ++ ruleName
+  
   data Relation :: * where
       ConceptDef :: ConceptId -> OneElemList  (Formula Domain) -> Formula Filter -> Relation
       RoleDef    :: RoleId    -> TwoElemList  (Formula Domain) -> Formula Filter -> Relation
-      Rule       :: RuleId    -> NonEmptyList (Formula Domain) -> Formula Filter -> Relation
+      Rule       :: RuleId    -> SomeElemList (Formula Domain) -> Formula Filter -> Relation
 #+end_src
 
 Constraints:
@@ -209,42 +225,33 @@ Observations:
 * Translation Crisp AS -> Extended Prolog AS
 
 #+begin_src haskell
-  mkRelationHead :: RoleId -> TwoElemList (Formula Domain) -> P.Atom
-  mkRelationHead (roleName, needsHas) bindings = P.Atom functor $ fmap P.Var vars
-      where functor = prefix ++ roleName
-            prefix = if needsHas then "has_" else ""
-            vars = NE.toList $ fmap getVar bindings
-            getVar (ConceptAssert var _) = var
-  
-  mkRelationBody :: TwoElemList (Formula Domain) -> Formula Filter -> P.Formula
-  mkRelationBody bindings conditions
-      = P.mkConj (NE.toList $ fmap formulaToProlog bindings) `P.Conj` formulaToProlog conditions
-  
   relationToProlog :: Relation -> P.EPC
-  relationToProlog (RoleDef id bindings conditions)
-      = P.mkEPC (mkRelationHead id bindings) (mkRelationBody bindings conditions)
-  
-  -- relationToProlog (PredIs   id s   es)
-  --     = P.mkEPC (mkHeadFromVars (idForIsRole id) [var s])
-  --       $ mkBody [MkFormulaDMBox s] es
-  -- relationToProlog (PredHas  id s t es)
-  --     = P.mkEPC (mkHeadFromVars (idForHasRole id) [var s, var t])
-  --       $ mkBody [MkFormulaDMBox s, MkFormulaDMBox t] es
-  -- relationToProlog (Rule set id ss  es) 
-  --     = P.mkEPC (mkRuleHead set id (vars ss)) (mkBody ss es)
+  relationToProlog = mkEPC
+      where 
+        mkEPC (ConceptDef id domains filter) = mkEPC' id domains filter
+        mkEPC (RoleDef    id domains filter) = mkEPC' id domains filter
+        mkEPC (Rule       id domains filter) = mkEPC' id domains filter
+        mkEPC' id domains filter
+            = P.mkEPC (mkRelationHead id domains) (mkRelationBody domains filter)
+        mkRelationHead id domains = P.Atom (idToProlog id) $ fmap P.Var (vars domains)
+        mkRelationBody domains filter
+            = P.mkConj (NE.toList $ fmap formulaToProlog domains)
+              `P.Conj` formulaToProlog filter
+        vars domains = NE.toList $ fmap getVar domains
+        getVar (ConceptAssert var _) = var
 #+end_src
 
 #+begin_src haskell
   formulaToProlog :: Formula f -> P.Formula
   formulaToProlog (ConceptAssert v (MkBConceptDomain c)) = bindingToProlog v c
   formulaToProlog (ConceptAssert v (MkBConceptFilter c)) = bindingToProlog v c
-  formulaToProlog (RoleAssert    v1 r v2) = P.At $ P.Atom (roleIdToProlog r)
+  formulaToProlog (RoleAssert    v1 r v2) = P.At $ P.Atom (idToProlog r)
                                             [P.Var v1, P.Var v2]
   formulaToProlog (RoleAssertT   v1 r v2) = P.At $ mkCallAtom "trans_closure"
-                                            [ P.Structure (roleIdToProlog r) []
+                                            [ P.Structure (idToProlog r) []
                                             , P.Var v1, P.Var v2]
   formulaToProlog (RoleAssertRT  v1 r v2) = P.At $ mkCallAtom "refl_trans_closure"
-                                            [ P.Structure (roleIdToProlog r) []
+                                            [ P.Structure (idToProlog r) []
                                             , P.Var v1, P.Var v2]
   formulaToProlog (v1 := v2)  = P.At $ mkCallAtom "="   [P.Var v1, P.Var v2]
   formulaToProlog (v1 :≠ v2)  = P.At $ mkCallAtom "\\=" [P.Var v1, P.Var v2]
@@ -257,10 +264,6 @@ Observations:
   
   mkCallAtom :: PredName -> [P.Term] -> P.Atom
   mkCallAtom p l = P.Atom "call" $ (P.Structure p []) : l
-  
-  roleIdToProlog :: RoleId -> Text
-  roleIdToProlog (roleName, hasPrefix)
-      = if hasPrefix then "has_" ++ roleName else roleName
 #+end_src
 
 #+begin_src haskell
@@ -270,32 +273,6 @@ Observations:
   bindingToProlog v (c1:⊓c2) = P.Conj (bindingToProlog v c1) (bindingToProlog v c2)
   bindingToProlog v (c1:⊔c2) = P.Disj (bindingToProlog v c1) (bindingToProlog v c2)
   bindingToProlog v (C c)    = P.Not  (bindingToProlog v c)
-#+end_src
-
-Auxiliary definitions in the following code block.
-
-#+begin_src haskell :tangle no
-  mkHeadFromVars :: PredName -> [Var] -> P.Atom
-  mkHeadFromVars name vars = P.Atom name $ map P.Var vars
-  
-  mkRuleHead :: RuleId -> [Var] -> P.Atom
-  mkRuleHead (set, id) vars
-      = let qualifiedRuleName = set ++ " " ++ id
-        in P.Atom "violation" $ (P.Structure qualifiedRuleName []) : map P.Var vars
-  
-  mkSignature :: [FormulaDMBox] -> P.Formula
-  mkSignature bindings = P.mkConj $ map getBind bindings
-      where getBind (MkFormulaDMBox se) = formulaToProlog se
-  
-  mkBody :: FM e => [FormulaDMBox] -> Formula e -> P.Formula
-  mkBody signature meet
-      = mkSignature signature `P.Conj` formulaToProlog meet
-  
-  var :: DM d => Formula d -> Var
-  var (ConceptAssert v _) = v
-  
-  vars :: [FormulaDMBox] -> [Var]
-  vars = map (\(MkFormulaDMBox e) -> var e)
 #+end_src
 
 
@@ -314,23 +291,22 @@ Evaluate Haskell terms.
 
 #+begin_src haskell :tangle no :results output silent
   :set -XOverloadedStrings
-  -- :t PredHas "functionCall" ("Func" `Is` (S "FunctionDecl")) ("Call" `Is` (S "CallExpr")) ("Func" `Has` "body" $ "Body")
-  -- :t Not $ "Caller" `Is` C (A "virtual")
-  let c1 = ConceptAssert "Caller" $ MkBConceptDomain (D "CXXMethodDecl")
-  let c2 = ConceptAssert "Callee" $ MkBConceptDomain (D "CXXMethodDecl")
-  let a1 = RoleAssert "Caller" ("functionCall", True) "CallPoint" `And` RoleAssert "CallPoint" ("directCallee", True) "Callee"
-  let n1 = Not $ ConceptAssert "Caller" $ MkBConceptFilter (F "virtual")
-  formulaToProlog c1
-  formulaToProlog c2
-  formulaToProlog a1
-  formulaToProlog n1
-  let p1 = RoleDef ("calls", False) (c1 NE.!: c2 NE.!: NE.Empty) a1
-  -- let p1 = PredHas "functionCall" ("Func" `Is` D "FunctionDecl") ("Call" `Is` D "CallExpr") (("Func" `Has` "body" $ "Body") `And` ("Body" `HasT` "child" $ "Call"))
-  -- let p2 = PredHas "callee" ("Caller" `Is` D "FunctionDecl") ("Callee" `Is` D "FunctionDecl") (("Caller" `Has` "functionCall" $ "CallPoint") `And` ("CallPoint" `Has` "directCallee" $ "Callee"))
-  -- let r1 = Rule "HICPP" "3.3.13" [MkFormulaDMBox $ "Caller" `Is` D "FunctionDecl", MkFormulaDMBox $ "Caller" `Is` D "FunctionDecl"] (("Record" `Is` D "CXXRecordDecl") `And` (("Record" `Has` "ctor" $ "Caller") `Or`("Record" `Has` "destructor" $ "Caller")) `And` ("Record" `Has` "method" $ "Callee") `And` ("Callee" `Is` F "virtual"))
+  
+  let ca1 = ConceptAssert "Caller" $ MkBConceptDomain (D "CXXMethodDecl")
+  let ca2 = ConceptAssert "Callee" $ MkBConceptDomain (D "CXXMethodDecl")
+  let ra1 = RoleAssert "Caller" ("functionCall", True) "CallPoint" `And` RoleAssert "CallPoint" ("directCallee", True) "Callee"
+  let no1 = Not $ ConceptAssert "Caller" $ MkBConceptFilter (F "virtual")
+  formulaToProlog ca1
+  formulaToProlog ca2
+  formulaToProlog ra1
+  formulaToProlog no1
+  let pd1 = ConceptDef "caller"            (ca1 NE.!: NE.Empty)           ra1
+  let rd1 = RoleDef    ("calls", False)    (ca1 NE.!: ca2 NE.!: NE.Empty) ra1
+  let ru1 = Rule       ("HICPP", "3.3.13") (ca1 `NE.cons` NE.Cons ca2 []) ra1
+  
   -- Lloyd-topor
-  putStrLn ""
-  prologCode <- do { ep <- P.emptyEP; ep <- P.addEPCs (map relationToProlog [p1]) ep; return $ P.transLloydTopor ep }
+  putStrLn "Lloyd-topor: BEGIN"
+  prologCode <- do { ep <- P.emptyEP; ep <- P.addEPCs (map relationToProlog [rd1, ru1]) ep; return $ P.transLloydTopor ep }
   P.show prologCode
   putStrLn "END"
 #+end_src
