@@ -76,7 +76,7 @@ with C-c C-c.
   import Text.ParserCombinators.UU.MergeAndPermute
       ((<||>), mkGram, mkParserM)
   import Text.ParserCombinators.UU.Utils
-      (pLower, pSpaces, pUpper)
+      (pAnySym, pLower, pSpaces, pUpper)
     
   import qualified Crisp.PrologSyntax as P
 #+end_src
@@ -373,6 +373,35 @@ means of the =lexeme= parser transformer.
   pParens p = lexeme (pSym '(') *> p <* lexeme (pSym ')')
 #+end_src
 
+The following functions replace an analogous function in
+Text.ParserCombinators.UU.[BasicInstances|Utils]. The original version
+works with String, whereas this version has Data.Text in the
+signature, but uses String internally. My understanding of
+Text.ParserCombinators.UU is that it doesn't support Data.Text at the
+low level, as functions like =pToken= and =pMunch= return a list of
+something.
+
+#+begin_src haskell
+  -- | Replaces @lexeme@ in @Text.ParserCombinators.UU.Utils@. This
+  -- version is intended to skip comments, in addition to trailing
+  -- whitespace, and supports layout-based (i.e. indentation-based)
+  -- parsing.
+  lexeme :: ParserTrafo a a
+  lexeme p = pCheckIndent (>) *> p <* (pMany pComment <<|> pure [()])
+      where pComment =      const () <$ pAnySym (" \r\n\t") <*> pSpaces
+                       <<|> pMultilineComment
+                       <|>  pOneLineComment
+  
+  pTokenCost :: Text -> Int -> Parser Text
+  pTokenCost tk cost = fromList <$> UU.pTokenCost (toList tk) cost
+  
+  pToken :: Text -> Parser Text
+  pToken tk = pTokenCost tk 5
+    
+  pMunch :: (Char -> Bool) -> Parser Text
+  pMunch pred = fromList <$> UU.pMunch pred
+#+end_src
+
 Auxiliary functions.
 
 #+begin_src haskell
@@ -400,44 +429,16 @@ Auxiliary functions.
   idChar c = or $ map ($ c) [isAsciiLower, isAsciiUpper, isDigit, (=='\''), (=='_')]
   
   pOneLineComment :: Parser ()
-  pOneLineComment = const () <$> pToken "--" <* pMunch (/= '\n')
+  pOneLineComment = const () <$> pToken "//" <* pMunch (/= '\n')
   
   -- | Any printable symbol is allowed in a multiline comment. No nested
   -- multiline comments are allowed. New lines inside a multiline
   -- comment are not taken into account.
   pMultilineComment :: Parser ()
   pMultilineComment =
-      const () <$> pToken "{-" <* pMunch (/= '-') <* pSym '-' <* pAux <* pSpaces
-      where pAux =      pSym '}'
-                   <<|> pMunch (/= '-') *> pSym '-' <* pAux
-#+end_src
-
-The following functions replace an analogous function in
-Text.ParserCombinators.UU.[BasicInstances|Utils]. The original version
-works with String, whereas this version has Data.Text in the
-signature, but uses String internally. My understanding of
-Text.ParserCombinators.UU is that it doesn't support Data.Text at the
-low level, as functions like =pToken= and =pMunch= return a list of
-something.
-
-#+begin_src haskell
-  -- | Replaces @lexeme@ in @Text.ParserCombinators.UU.Utils@. This
-  -- version is intended to skip comments, in addition to trailing
-  -- whitespace, and supports layout-based (i.e. indentation-based)
-  -- parsing.
-  lexeme :: ParserTrafo a a
-  lexeme p = pCheckIndent (>) *> p <* pSpaces -- <* (pComment `opt` ())
-      -- where pComment =     pOneLineComment
-      --                  <|> pMultilineComment
-  
-  pTokenCost :: Text -> Int -> Parser Text
-  pTokenCost tk cost = fromList <$> UU.pTokenCost (toList tk) cost
-  
-  pToken :: Text -> Parser Text
-  pToken tk = pTokenCost tk 5
-    
-  pMunch :: (Char -> Bool) -> Parser Text
-  pMunch pred = fromList <$> UU.pMunch pred
+      const () <$> pToken "/*" <* pMunch (/= '*') <* pSym '*' <* pAux
+      where pAux =      pSym '/'
+                   <<|> pMunch (/= '*') *> pSym '*' <* pAux
 #+end_src
 
 
