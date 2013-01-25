@@ -117,7 +117,7 @@ This first code block contains some auxiliary type definitions.
 Here begins the abstract syntax for Crisp.
 
 #+begin_src haskell
-  data Module = Module [Relation]
+  type Module = [Relation]
   
   type ConceptId = Text
   

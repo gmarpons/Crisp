@@ -42,7 +42,7 @@ with C-c C-c.
   
   module Crisp.ConcreteSyntax where
   
-  import ClassyPrelude hiding (empty)
+  import ClassyPrelude hiding (empty, readFile, writeFile)
   import Crisp.AbstractSyntax
   import Data.Char
       (isAsciiUpper, isAsciiLower, isDigit)
@@ -52,24 +52,31 @@ with C-c C-c.
       (ListLike(fromList, head, null, singleton, tail, toList))
   import qualified Data.ListLike.FoldableLL as LL
       (FoldableLL(foldl, foldr))
+  import Data.String
+      (String)
   import qualified Data.Text as TextPartialFunctions
       (head, tail)
   import Data.Text
       (cons, foldl, foldr)
   import Data.Text.IO
-      (putStr, putStrLn)
+      (putStr, putStrLn, readFile, writeFile)
   import qualified Text.ParserCombinators.UU.BasicInstances as UU
       (pMunch, pTokenCost)
   import Text.ParserCombinators.UU.BasicInstances
-      (createStr, Error(Inserted), pos, pSym, Str(Str))
+      (createStr, Error(Inserted), Insertion(Insertion), pos, pSatisfy,
+       pSym, Str(Str))
   import Text.ParserCombinators.UU.Core
       ((*>), (<$), (<$>), (<*), (<**>), (<*>), (<<|>), (<?>), (<|>),
-       empty, IsLocationUpdatedBy(..), Nat(..), opt, P, parse,
+       addLength, empty, IsLocationUpdatedBy(..), Nat(..), opt, P, parse,
        pEnd, pSymExt, pSwitch, Steps(Fail))
   import Text.ParserCombinators.UU.Derived
-      (pChainr, pFoldr, pMaybe)
+      (pChainr, pFoldr, pMany, pMaybe)
+  import Text.ParserCombinators.UU.MergeAndPermute
+      ((<||>), mkGram, mkParserM)
   import Text.ParserCombinators.UU.Utils
       (pLower, pSpaces, pUpper)
+    
+  import qualified Crisp.PrologSyntax as P
 #+end_src
 
 
@@ -112,6 +119,60 @@ allow parsing based on layout (indentation).
 * Parsers for non-terminal symbols
   
 #+begin_src haskell
+  pModule :: Parser Module
+  pModule = pMany pRelation
+  
+  pRelation :: Parser (Relation)
+  pRelation = indented pRelation'
+      where
+        pRelation', pPred, pPred', pConcept, pRole :: Parser Relation
+        pRelation' =     pPred
+                     -- <|> pRule
+        pPred    = atIndent (pK "pred") *> pPred'
+        pPred'   =     pConcept
+                   <|> pRole
+        pConcept = uncurry ConceptDef <$> pConceptIdAndVars <*> pMeet
+        pRole    = uncurry RoleDef    <$> pRoleIdAndVars    <*> pMeet
+        -- The following two parsers declare its minimal (token =
+        -- character) length, because they use monadic bind.
+        pConceptIdAndVars :: Parser (ConceptId, Formula Domain)
+        pRoleIdAndVars    :: Parser (RoleId, (Formula Domain, Formula Domain))
+        pConceptIdAndVars = addLength 18 $ do
+          v  <- pVar
+          id <- pConceptId
+          d  <- pOneDomain v
+          return (id, d)
+        pRoleIdAndVars = addLength 26 $ do
+          v1 <- pVar
+          id <- pRoleId
+          v  <- pVar
+          v2 <- if v == v1 then do
+                             -- If repeated var name, we append "@" to
+                             -- it, a character not allowed in ordinary vars.
+                             let msg = "different variable name"
+                             c <- pSatisfy (const False) (Insertion msg '@' 0)
+                             return (v ++ pack [c])
+                else return v
+          (d1, d2) <- pTwoDomains v1 v2
+          return (id, (d1, d2))
+        pConceptId :: Parser ConceptId
+        pRoleId    :: Parser RoleId
+        pConceptId = pK "is" *> pLowerId
+        pRoleId    = flip (,) <$> (True  <$ pK "has" `opt` False) <*> pLowerId
+        pOneDomain, pOneDomain' :: Var -> Parser (Formula Domain)
+        pOneDomain  var = atIndent (pK "vars") *> pOneDomain' var
+        pOneDomain' var = indented $ mkParserM (pDomain var)
+        pTwoDomains, pTwoDomains' :: Var -> Var -> Parser (Formula Domain, Formula Domain)
+        pTwoDomains  v1 v2 = atIndent (pK "vars") *> pTwoDomains' v1 v2
+        pTwoDomains' v1 v2 = indented $ mkParserM $ (,) <$> pDomain v1 <||> pDomain v2
+        pDomain var
+            = mkGram $ 
+              ConceptAssert <$> atIndent (pCheckVar var) <* pK "is" <*> pConceptDomain
+        pCheckVar :: Var -> Parser Var
+        pCheckVar = pK
+        pMeet :: Parser (Formula Filter)
+        pMeet = atIndent (pK "meet") *> pFormulaFilter
+  
   pFormulaDomain :: Parser (Formula Domain)
   pFormulaDomain = ConceptAssert <$> pVar <* pK "is" <*> pConceptDomain
   
@@ -146,7 +207,7 @@ allow parsing based on layout (indentation).
   pAsserts :: Parser (Var -> Formula Filter)
   pAsserts = (lineAnd <$ pO ",") `pChainr` pAssertElem
       where
-        pAssertElem ::Parser (Var -> Formula Filter)
+        pAssertElem :: Parser (Var -> Formula Filter)
         pRoleId     :: Parser RoleId
         pAssertElem =     flip    ConceptAssert <$  pK "is" <*> pConceptFilter
                       <|> reorder RoleAssert    <$> pRoleId             <*> pVar
@@ -374,14 +435,35 @@ something.
 * File handling
 
 #+begin_src haskell
-  -- translateFile :: Text -> IO ()
-  -- translateFile fileName = do
-  --   result <- parseFromFileEx rulesFile fileName
-  --   case result of
-  --     Failure diags -> unless (Seq.null diags) $ displayLn diags
-  --     Success diags translation -> do
-  --                            unless (Seq.null diags) $ displayLn diags
-  --                            print translation
+  translateFile :: String -> IO ()
+  translateFile crispFileName = do
+    let baseFileNameM
+            = (stripPrefix (reverse ".crisp") $ reverse crispFileName) >>= return . reverse
+    case baseFileNameM of
+      Nothing -> return ()
+      Just baseFileName ->
+          do let prologFileName = baseFileName ++ ".pl"
+             concreteSyntax <- readFile crispFileName
+             abstractSyntax <- run pModule concreteSyntax
+             prologCode <-
+                 do ep <- P.emptyEP
+                    ep <- P.addEPCs (map relationToProlog abstractSyntax) ep
+                    return $ P.transLloydTopor ep
+             writeFile prologFileName $ P.show prologCode
+#+end_src
+
+#+begin_src haskell
+  run :: Parser t -> Text -> IO t
+  run p inp =
+      do let r@(a, errors) =
+                 parse ((,) <$ pSpaces <*> p <*> pEnd) (createStrIndent inp)
+             show_errors :: (Show a) => [a] -> IO ()
+             show_errors = sequence_ . (map (putStrLn . show))
+         -- putStrLn ("--  Result: " ++ show a)
+         if null errors then return ()
+         else do putStr ("--  Correcting steps: \n")
+                 show_errors errors
+         return a
 #+end_src
 
 
@@ -394,19 +476,6 @@ Load Haskell module, first time.
   :cmd cd_pwd
   :cd ..
   :l Crisp.ConcreteSyntax
-#+end_src
-
-#+begin_src haskell
-  run :: Show t => Parser t -> Text -> IO ()
-  run p inp =
-      do let r@(a, errors) =
-                 parse ((,) <$ pSpaces <*> p <*> pEnd) (createStrIndent inp)
-             show_errors :: (Show a) => [a] -> IO ()
-             show_errors = sequence_ . (map (putStrLn . show))
-         putStrLn ("--  Result: " ++ show a)
-         if null errors then return ()
-         else do putStr ("--  Correcting steps: \n")
-                 show_errors errors
 #+end_src
 
 #+begin_src haskell :tangle no :results output silent
