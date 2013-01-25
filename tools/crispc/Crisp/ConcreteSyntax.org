@@ -71,6 +71,8 @@ with C-c C-c.
        pEnd, pSymExt, pSwitch, Steps(Fail))
   import Text.ParserCombinators.UU.Derived
       (pChainr, pFoldr, pMany, pMaybe)
+  import qualified Text.ParserCombinators.UU.MergeAndPermute as UU
+      (Gram)
   import Text.ParserCombinators.UU.MergeAndPermute
       ((<||>), mkGram, mkParserM)
   import Text.ParserCombinators.UU.Utils
@@ -113,6 +115,8 @@ allow parsing based on layout (indentation).
   type Parser a = LL.ListLike s Char => P (Str Char s LineColPosIndent) a
   
   type ParserTrafo a b = Parser a -> Parser b
+
+  type Gram a = LL.ListLike s Char => UU.Gram (P (Str Char s LineColPosIndent)) a
 #+end_src
 
 
@@ -133,45 +137,50 @@ allow parsing based on layout (indentation).
                    <|> pRole
         pConcept = uncurry ConceptDef <$> pConceptIdAndVars <*> pMeet
         pRole    = uncurry RoleDef    <$> pRoleIdAndVars    <*> pMeet
-        -- The following two parsers declare its minimal (token =
-        -- character) length, because they use monadic bind.
-        pConceptIdAndVars :: Parser (ConceptId, Formula Domain)
-        pRoleIdAndVars    :: Parser (RoleId, (Formula Domain, Formula Domain))
-        pConceptIdAndVars = addLength 18 $ do
-          v  <- pVar
-          id <- pConceptId
-          d  <- pOneDomain v
-          return (id, d)
-        pRoleIdAndVars = addLength 26 $ do
-          v1 <- pVar
-          id <- pRoleId
-          v  <- pVar
-          v2 <- if v == v1 then do
-                             -- If repeated var name, we append "@" to
-                             -- it, a character not allowed in ordinary vars.
-                             let msg = "different variable name"
-                             c <- pSatisfy (const False) (Insertion msg '@' 0)
-                             return (v ++ pack [c])
-                else return v
-          (d1, d2) <- pTwoDomains v1 v2
-          return (id, (d1, d2))
-        pConceptId :: Parser ConceptId
-        pRoleId    :: Parser RoleId
-        pConceptId = pK "is" *> pLowerId
-        pRoleId    = flip (,) <$> (True  <$ pK "has" `opt` False) <*> pLowerId
-        pOneDomain, pOneDomain' :: Var -> Parser (Formula Domain)
-        pOneDomain  var = atIndent (pK "vars") *> pOneDomain' var
-        pOneDomain' var = indented $ mkParserM (pDomain var)
-        pTwoDomains, pTwoDomains' :: Var -> Var -> Parser (Formula Domain, Formula Domain)
-        pTwoDomains  v1 v2 = atIndent (pK "vars") *> pTwoDomains' v1 v2
-        pTwoDomains' v1 v2 = indented $ mkParserM $ (,) <$> pDomain v1 <||> pDomain v2
-        pDomain var
-            = mkGram $ 
-              ConceptAssert <$> atIndent (pCheckVar var) <* pK "is" <*> pConceptDomain
-        pCheckVar :: Var -> Parser Var
-        pCheckVar = pK
         pMeet :: Parser (Formula Filter)
         pMeet = atIndent (pK "meet") *> pFormulaFilter
+  
+  -- The following parser uses monadic bind, and consequently needs to
+  -- declare its minimal (token = character) length.
+  pConceptIdAndVars :: Parser (ConceptId, Formula Domain)
+  pConceptIdAndVars = addLength 18 $ do
+    v  <- pVar
+    id <- pConceptId
+    d  <- pOneDomain v
+    return (id, d)
+        where
+          pConceptId :: Parser ConceptId
+          pConceptId = pK "is" *> pLowerId
+          pOneDomain, pOneDomain' :: Var -> Parser (Formula Domain)
+          pOneDomain  var = atIndent (pK "vars") *> pOneDomain' var
+          pOneDomain' var = indented $ mkParserM (pDomain var)
+  
+  -- The following parser uses monadic bind, and consequently needs to
+  -- declare its minimal (token = character) length.
+  pRoleIdAndVars    :: Parser (RoleId, (Formula Domain, Formula Domain))
+  pRoleIdAndVars = addLength 26 $ do
+    v1 <- pVar
+    id <- pRoleId
+    v  <- pVar
+    v2 <- if v == v1 then do
+                       -- If repeated var name, we append "@" to
+                       -- it, a character not allowed in ordinary vars.
+                       let msg = "different variable name"
+                       c <- pSatisfy (const False) (Insertion msg '@' 0)
+                       return (v ++ pack [c])
+          else return v
+    (d1, d2) <- pTwoDomains v1 v2
+    return (id, (d1, d2))
+        where
+          pRoleId    :: Parser RoleId
+          pRoleId    = flip (,) <$> (True  <$ pK "has" `opt` False) <*> pLowerId
+          pTwoDomains, pTwoDomains' :: Var -> Var -> Parser (Formula Domain, Formula Domain)
+          pTwoDomains  v1 v2 = atIndent (pK "vars") *> pTwoDomains' v1 v2
+          pTwoDomains' v1 v2 = indented $ mkParserM $ (,) <$> pDomain v1 <||> pDomain v2
+
+  pDomain :: Var -> Gram (Formula Domain)
+  pDomain var = mkGram $ ConceptAssert <$> atIndent (ck var) <* pK "is" <*> pConceptDomain
+      where ck = pK
   
   pFormulaDomain :: Parser (Formula Domain)
   pFormulaDomain = ConceptAssert <$> pVar <* pK "is" <*> pConceptDomain
@@ -285,8 +294,8 @@ allow parsing based on layout (indentation).
                     <|> pFilterId
                     <|> pParens pConceptFilter          -- Recursion
                     <|> compl <$ pK "not" <*> pElem     -- Recursion
-        isect (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x:⊓y)
-        union (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x:⊔y)
+        isect (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x :⊓ y)
+        union (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x :⊔ y)
         compl (MkBConceptFilter x)                      = MkBConceptFilter (C x)
         rebox (MkBConceptDomain x)                      = MkBConceptFilter x
 #+end_src
