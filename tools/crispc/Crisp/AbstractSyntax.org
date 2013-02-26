@@ -35,6 +35,7 @@ with C-c C-c.
     FlexibleInstances,
     GADTs,
     KindSignatures,
+    MultiParamTypeClasses,
     NoImplicitPrelude,
     OverloadedStrings,
     StandaloneDeriving,
@@ -44,10 +45,14 @@ with C-c C-c.
   
   module Crisp.AbstractSyntax where
   
-  import ClassyPrelude hiding (toList)
+  import ClassyPrelude
+  import ClassyPrelude.Classes
+      (CanPack)
   import qualified Crisp.PrologSyntax as P
   import Data.List.NonEmpty
-      (NonEmpty((:|)), toList)
+      (NonEmpty((:|)))
+  import qualified Data.List.NonEmpty
+      (fromList, toList)
 #+end_src
 
 
@@ -58,6 +63,15 @@ with C-c C-c.
   infixl 9 :⊔
   infixl 9 :=
   infixl 9 :≠
+#+end_src
+
+
+* Class instances
+
+#+begin_src haskell
+instance CanPack (NonEmpty a) a where
+    pack   = Data.List.NonEmpty.fromList
+    unpack = Data.List.NonEmpty.toList
 #+end_src
 
 
@@ -147,10 +161,25 @@ Here begins the abstract syntax for Crisp.
       idToProlog (ruleSetId, ruleName)
           = ruleSetId ++ "::" ++ ruleName
   
+  data VarDisplayMode = Location | Range deriving Show
+  
+  data Message = Message { formatStr    :: Text
+                         , mainVar      :: Var
+                         , displayMode  :: VarDisplayMode
+                         , allVars      :: NonEmpty Var }
+                 deriving Show
+    
+  data Msgs =    Msgs { warnMsg  :: Message
+                      -- , noteMsgs :: [Message]    -- TODO: notes
+                      }
+                 deriving Show
+  
   data Relation :: * where
-      ConceptDef :: ConceptId -> Formula Domain                   -> Formula Filter -> Relation
-      RoleDef    :: RoleId    -> (Formula Domain, Formula Domain) -> Formula Filter -> Relation
-      Rule       :: RuleId    -> NonEmpty (Formula Domain)        -> Formula Filter -> Relation
+      ConceptDef :: ConceptId      -> Formula Domain                   -> Formula Filter -> Relation
+      RoleDef    :: RoleId         -> (Formula Domain, Formula Domain) -> Formula Filter -> Relation
+      Rule       :: RuleId -> Msgs -> NonEmpty (Formula Domain)        -> Formula Filter -> Relation
+
+  deriving instance Show Relation
 #+end_src
 
 Constraints:
@@ -225,9 +254,9 @@ Observations:
   relationToProlog :: Relation -> P.EPC
   relationToProlog = mkEPC
       where 
-        mkEPC (ConceptDef id d        filter) = mkEPC' id (d  :| [])   filter
-        mkEPC (RoleDef    id (d1, d2) filter) = mkEPC' id (d1 :| [d2]) filter
-        mkEPC (Rule       id ds       filter) = mkEPC' id ds           filter
+        mkEPC (ConceptDef id      d        filter) = mkEPC' id (d  :| [])   filter
+        mkEPC (RoleDef    id      (d1, d2) filter) = mkEPC' id (d1 :| [d2]) filter
+        mkEPC (Rule       id msgs ds       filter) = mkEPC' id ds           filter
         mkEPC' :: RelationIdToProlog i =>
                   i -> NonEmpty (Formula Domain) -> Formula Filter -> P.EPC
         mkEPC' id domains filter
