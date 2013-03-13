@@ -33,6 +33,7 @@ with C-c C-c.
     GADTs,
     FlexibleContexts,
     FlexibleInstances,
+    InstanceSigs,
     MultiParamTypeClasses,
     NoImplicitPrelude,
     NoMonomorphismRestriction,
@@ -47,67 +48,63 @@ with C-c C-c.
   
   import ClassyPrelude
   import ClassyPrelude.Classes
-      (CanDeleteVal(deleteVal), CanReadFile, CanReverse, CanWriteFileFunc(writeFileFunc))
+    (CanFold, CanNubBy, CanReadFile, CanReverse, CanWriteFile)
+  import Control.Monad.IO.Class ()
   import Crisp.AbstractSyntax
   import Data.Char
-      (isAsciiUpper, isAsciiLower, isDigit)
+    (isAsciiUpper, isAsciiLower, isDigit)
   import Data.Foldable
-      (or, sequence_)
+    (or)
+  import qualified Data.Foldable
+    (foldl)
   import Data.List
-      (transpose)
+    (transpose)
   import qualified Data.List
-      (delete, nub)
+    (nub)
   import qualified Data.List as ListPartialFunctions
-      (head, tail)
+    (head, tail)
   import Data.List.NonEmpty
-      (NonEmpty((:|)),
-       (<|),
-       head, tail)                -- These are total functions
+    (NonEmpty((:|)), (<|))
   import qualified Data.List.NonEmpty
-      (reverse)
+    (reverse)
   import qualified Data.ListLike.Base as LL
-      (ListLike(fromList, head, null, singleton, tail, toList))
+    (ListLike(head, null, singleton, tail))
   import qualified Data.ListLike.FoldableLL as LL
-      (FoldableLL(foldl, foldr))
+    (FoldableLL(foldl, foldr))
   import Data.String
-      (String)
+    (String)
   import qualified Data.Text as TextPartialFunctions
-      (head, tail)
-  import Data.Text
-      (cons)
+    (head, tail)
   import qualified Data.Text
-      (foldl, foldr)
-  import Data.Text.IO
-      (putStr, putStrLn)
+    (foldl, foldr)
   import qualified Data.Text.IO
-      (readFile, writeFile)
+    (readFile, writeFile)
   import Filesystem.Path
-      (FilePath, hasExtension, replaceExtension)
+    (replaceExtension)
   import qualified Filesystem.Path.CurrentOS as OS
-      (decodeString, encodeString)
+    (decodeString, encodeString)
   import qualified Text.ParserCombinators.UU.BasicInstances as UU
-      (pMunch, pTokenCost)
+    (pMunch, pTokenCost)
   import Text.ParserCombinators.UU.BasicInstances
-      (createStr, Error(Inserted), Insertion(Insertion), pos, pSatisfy,
-       pSym, Str(Str))
+    (createStr, Error(Inserted), Insertion(Insertion), pos, pSatisfy, pSym, Str(Str))
   import Text.ParserCombinators.UU.Core
-      ((*>), (<$), (<$>), (<*), (<**>), (<*>), (<<|>), (<?>), (<|>),
-       IsLocationUpdatedBy(..), IsParser, Nat(..), P, Steps(Fail),
-       addLength, opt, parse, pEnd, pSymExt, pSwitch)
+    ((<**>), (<<|>),
+     IsLocationUpdatedBy(..), Nat(..), P, Steps(Fail),
+     addLength, opt, parse, pEnd, pSymExt, pSwitch)
   import qualified Text.ParserCombinators.UU.Core
-      (empty)
+    (empty)
   import Text.ParserCombinators.UU.Derived
-      ((<$$>),
-       pAny, pChainr, pEither, pFoldr, pMany, pMaybe)
+    ((<$$>),
+     pAny, pChainr, pEither, pFoldr, pMany, pMaybe)
   import qualified Text.ParserCombinators.UU.MergeAndPermute as UU
-      (Gram)
+    (Gram)
   import Text.ParserCombinators.UU.MergeAndPermute
-      ((<||>),
-       mkGram, mkParserM)
+    ((<||>),
+     mkGram, mkParserM)
   -- In contrast with other UU.Utils functions, none of the following
   -- imported functions calls lexeme.
   import Text.ParserCombinators.UU.Utils
-      (pAnySym, pLower, pSpaces, pUpper)
+    (pAnySym, pLower, pSpaces, pUpper)
   import qualified Crisp.PrologSyntax as P
 #+end_src
 
@@ -115,17 +112,19 @@ with C-c C-c.
 * Class instances
 
 #+begin_src haskell
-  instance CanDeleteVal [Text] Text where
-      deleteVal = Data.List.delete
-  
   instance CanReverse (NonEmpty a) where
-      reverse = Data.List.NonEmpty.reverse
+    reverse = Data.List.NonEmpty.reverse
   
-  instance CanReadFile (IO Text) where
-      readFile = Data.Text.IO.readFile . OS.encodeString
+  instance CanFold (NonEmpty a) a Bool where
+    fold = Data.Foldable.foldl
   
-  instance CanWriteFileFunc Text where
-      writeFileFunc p c = liftIO $ Data.Text.IO.writeFile (OS.encodeString p) c
+  instance CanReadFile Text where
+    readFile :: MonadIO m => FilePath -> m Text
+    readFile = liftIO . Data.Text.IO.readFile . OS.encodeString
+  
+  instance CanWriteFile Text where
+    writeFile :: MonadIO m => FilePath -> Text -> m ()
+    writeFile path text = liftIO $ Data.Text.IO.writeFile (OS.encodeString path) text
 #+end_src
 
 
@@ -140,10 +139,10 @@ allow parsing based on layout (indentation).
   data LineColPosIndent = LineColPosIndent !Int !Int !Int !Int deriving Show
   
   instance LineColPosIndent `IsLocationUpdatedBy` Char where
-     advance (LineColPosIndent line col pos indent) c
-         | c == '\n' = LineColPosIndent (line + 1) 0         (pos + 1) indent
-         | c == '\t' = LineColPosIndent line       tabCol    (pos + 1) indent
-         | otherwise = LineColPosIndent line       (col + 1) (pos + 1) indent
+     advance (LineColPosIndent line col pos_ indent) c
+         | c == '\n' = LineColPosIndent (line + 1) 0         (pos_ + 1) indent
+         | c == '\t' = LineColPosIndent line       tabCol    (pos_ + 1) indent
+         | otherwise = LineColPosIndent line       (col + 1) (pos_ + 1) indent
          where tabCol = col + 8 - (col - 1) `mod` 8
   
   instance LL.FoldableLL Text Char where
@@ -174,14 +173,15 @@ allow parsing based on layout (indentation).
 * Parsers for non-terminal symbols
 
 #+begin_src haskell
-  -- | nub ('essence') function for NonEmpty lists. Removes repeated
-  -- elements, keeping the first occurrence of every element (i.e.,
-  -- preserves order). Only applicable to finite non-empty lists.
-  nub :: (Eq a) => NonEmpty a -> NonEmpty a
-  nub (x :| xs) = reverse $ nub' xs (x :| [])
-      where nub' []       ls                                   = ls
-            nub' (x : xs) ls@(y :| ys) | x == y || x `elem` ys = nub' xs ls
-                                       | otherwise             = nub' xs (x <| ls)
+  instance CanNubBy (NonEmpty a) a where
+    -- | nubBy ('essence') function for NonEmpty lists. Removes repeated
+    -- elements, keeping the first occurrence of every element (i.e.,
+    -- preserves order). Only applicable to finite non-empty lists.
+    nubBy :: (a -> a -> Bool) -> NonEmpty a -> NonEmpty a
+    nubBy comp (x :| xs) = reverse $ nubBy' xs (x :| [])
+      where nubBy' []       ls                                           = ls
+            nubBy' (y : ys) ls | fold (\a b -> a || y `comp` b) False ls = nubBy' ys ls
+                               | otherwise                               = nubBy' ys (y<|ls)
 #+end_src
 
   
@@ -206,7 +206,7 @@ allow parsing based on layout (indentation).
         pMeet :: Parser (Formula Filter)
         pMeet = atIndent (pK "meet") *> pFormulaFilter
         mkRule :: RuleId -> (Msgs, NonEmpty (Formula Domain)) -> Formula Filter -> Relation
-        mkRule id (msgs, domains) filter = Rule id msgs domains filter
+        mkRule id_ (msgs, domains) filter_ = Rule id_ msgs domains filter_
   
   -- The following parser uses monadic bind, and consequently needs to
   -- declare its minimal (token = character) length.
@@ -219,7 +219,8 @@ allow parsing based on layout (indentation).
     pK "show"
     mainVar_     <- pAny pCheck (toList allVars_)
     displayMode_ <- pVarDisplayMode
-    let message = Message (mkFormatStr formatStr_ allVarsWithReps) mainVar_ displayMode_ allVars_
+    let message
+          = Message (mkFormatStr formatStr_ allVarsWithReps) mainVar_ displayMode_ allVars_
     ds <- pSomeDomains allVars_
     return (Msgs message, ds)
         where
@@ -227,62 +228,67 @@ allow parsing based on layout (indentation).
           pVarDisplayMode =     Location <$ pK "location"
                             <|> Range    <$ pK "range"
           pSomeDomains :: NonEmpty Var -> Parser (NonEmpty (Formula Domain))
-          pSomeDomains vars = atIndent (pK "vars") *> (indented $ mkParserM (gSomeDomains vars))
+          pSomeDomains vs = atIndent (pK "vars") *> (indented $ mkParserM (gSomeDomains vs))
           gSomeDomains :: NonEmpty Var -> Gram (NonEmpty (Formula Domain))
           gSomeDomains (v :| vs)
-              = liftM reverse $ fold combineVarAsserts ((:| []) <$> gDomain v) (map gDomain vs)
+            = liftM reverse $
+              fold combineVarAsserts ((:| []) <$> gDomain v) (map gDomain vs)
           pCheck :: Var -> Parser Var
           pCheck = pK
           mkFormatStr :: NonEmpty Text -> NonEmpty Var -> Text
-          mkFormatStr ts vs = (concat . concat) $ transpose [toList ts, (toNumbers . toList) vs]
-          toNumbers vars = map (maybe "Error" show . flip lookup (varsAL (Data.List.nub vars))) vars
+          mkFormatStr ts vs
+            = (concat . concat) $ transpose [toList ts, (toNumbers . toList) vs]
+          toNumbers vs
+            = map (maybe "Error" show . flip lookup (varsAL (Data.List.nub vs))) vs
           varsAL vars = [(var, num) | var <- vars | num <- [0..]]
           combineVarAsserts gds gd = (<|) <$$> gds <||> gd
   
   pFormatStr :: Parser (NonEmpty Text, NonEmpty Var)
   pFormatStr = pSym '\"' *> pFormatStr' <* pK "\""
-      where
-        pFormatStr'                                :: Parser (NonEmpty Text, NonEmpty Var)
-        pManyEsc_Text_Esc, pText_Esc, pEsc, pNoEsc :: Parser Text
-        pSpecialCpp_Text, pSpecialCpp              :: Parser Text
-        pEsc_Var_Text                              :: Parser (Either ((Text, Text), Var) Text)
-        pEitherVarEsc                              :: Parser (Either Var Text)
-        pFormatVar                                 :: Parser Var
-        pFormatStr' = mkFormatStr <$> pText_Esc <*> pManyEsc_Text_Esc <*> pFormatVar <*> pManyVars
-        pManyEsc_Text_Esc = concat <$> pMany ((++) <$> pEsc <*> pText_Esc)
-        pText_Esc = (++) <$> pNoEsc <*> pEsc
-        pEsc_Var_Text = mkEsc_Var_Text <$> pEsc <*> pEitherVarEsc <*> pNoEsc
-        pEitherVarEsc = pEither pFormatVar pEsc
-        pFormatVar = cons <$> pUpper <*> pMunch idChar -- No lexeme
-        pEsc = singleton <$> pSym '%'
-        pNoEsc = (++) <$> pMunch noEscChar <*> (concat <$> pMany pSpecialCpp_Text)
-        pSpecialCpp_Text = (++) <$> pSpecialCpp <*> pMunch noEscChar
-        -- <|> TODO: other C++ special chars.
-        pSpecialCpp = cons <$> pSym '\\' <*> (singleton <$> pAnySym "\"\\")
-        mkFormatStr :: Text -> Text -> Var -> NonEmpty (Either Text Var)
-                    -> (NonEmpty Text, NonEmpty Var)
-        mkFormatStr x y v (Left z :| es) = ( (x ++ y) <| z :| fst (partitionEithers es)
-                                           , v             :| snd (partitionEithers es))
-        -- mkFormatStr x y v (Right _ :| _) = Impossible case!
-        pManyVars :: Parser (NonEmpty (Either Text Var))
-        pManyVars = mkManyVars <$> pNoEsc <*> pMany pEsc_Var_Text
-        mkManyVars x l = reverse $ fold combineEithers (Left x :| []) l
-        combineEithers (Left  t :| es) (Left ((x, y), v)) = Left y <| Right v <| Left (t ++ x) :| es
-        combineEithers (Left  t :| es) (Right x)          = Left (t ++ x) :| es
-        -- combineEithers (Right v :| es) _ = Impossible case!
-        mkEsc_Var_Text :: Text -> Either Var Text -> Text -> Either ((Text, Text), Var) Text
-        mkEsc_Var_Text x (Left  v) y = Left ((x, y), v)
-        mkEsc_Var_Text x (Right t) y = Right (x ++ t ++ y)
-        noEscChar c = c /= '\"' && c /= '%' && c /= '\\'
+    where
+      pFormatStr'                                :: Parser (NonEmpty Text, NonEmpty Var)
+      pManyEsc_Text_Esc, pText_Esc, pEsc, pNoEsc :: Parser Text
+      pSpecialCpp_Text, pSpecialCpp              :: Parser Text
+      pEsc_Var_Text                              :: Parser (Either ((Text, Text), Var) Text)
+      pEitherVarEsc                              :: Parser (Either Var Text)
+      pFormatVar                                 :: Parser Var
+      pFormatStr'
+        = mkFormatStr <$> pText_Esc <*> pManyEsc_Text_Esc <*> pFormatVar <*> pManyVars
+      pManyEsc_Text_Esc = concat <$> pMany ((++) <$> pEsc <*> pText_Esc)
+      pText_Esc = (++) <$> pNoEsc <*> pEsc
+      pEsc_Var_Text = mkEsc_Var_Text <$> pEsc <*> pEitherVarEsc <*> pNoEsc
+      pEitherVarEsc = pEither pFormatVar pEsc
+      pFormatVar = cons <$> pUpper <*> pMunch idChar -- No lexeme
+      pEsc = singleton <$> pSym '%'
+      pNoEsc = (++) <$> pMunch noEscChar <*> (concat <$> pMany pSpecialCpp_Text)
+      pSpecialCpp_Text = (++) <$> pSpecialCpp <*> pMunch noEscChar
+      -- <|> TODO: other C++ special chars.
+      pSpecialCpp = cons <$> pSym '\\' <*> (singleton <$> pAnySym "\"\\")
+      mkFormatStr :: Text -> Text -> Var -> NonEmpty (Either Text Var)
+                  -> (NonEmpty Text, NonEmpty Var)
+      mkFormatStr x y v (Left z :| es) = ( (x ++ y) <| z :| fst (partitionEithers es)
+                                         , v             :| snd (partitionEithers es))
+      -- mkFormatStr x y v (Right _ :| _) = Impossible case!
+      pManyVars :: Parser (NonEmpty (Either Text Var))
+      pManyVars = mkManyVars <$> pNoEsc <*> pMany pEsc_Var_Text
+      mkManyVars x l = reverse $ fold combineEithers (Left x :| []) l
+      combineEithers (Left  t :| es) (Left ((x, y), v))
+        = Left y <| Right v <| Left (t ++ x) :| es
+      combineEithers (Left  t :| es) (Right x)          = Left (t ++ x) :| es
+      -- combineEithers (Right v :| es) _ = Impossible case!
+      mkEsc_Var_Text :: Text -> Either Var Text -> Text -> Either ((Text, Text), Var) Text
+      mkEsc_Var_Text x (Left  v) y = Left ((x, y), v)
+      mkEsc_Var_Text x (Right t) y = Right (x ++ t ++ y)
+      noEscChar c = c /= '\"' && c /= '%' && c /= '\\'
   
   -- The following parser uses monadic bind, and consequently needs to
   -- declare its minimal (token = character) length.
   pConceptIdAndVars :: Parser (ConceptId, Formula Domain)
   pConceptIdAndVars = addLength 18 $ do
-    v  <- pVar
-    id <- pConceptId
-    d  <- pOneDomain v
-    return (id, d)
+    v   <- pVar
+    id_ <- pConceptId
+    d   <- pOneDomain v
+    return (id_, d)
         where
           pConceptId              :: Parser ConceptId
           pOneDomain, pOneDomain' :: Var -> Parser (Formula Domain)
@@ -291,13 +297,13 @@ allow parsing based on layout (indentation).
           pOneDomain' var         = indented $ mkParserM (gDomain var)
   
   -- The following parser uses monadic bind, and consequently needs to
-  -- declare its minimal (token = character) length.
+  -- declare its minimal token (or character) length.
   pRoleIdAndVars    :: Parser (RoleId, (Formula Domain, Formula Domain))
   pRoleIdAndVars = addLength 26 $ do
-    v1 <- pVar
-    id <- pRoleId
-    v  <- pVar
-    v2 <- if v == v1 then do
+    v1  <- pVar
+    id_ <- pRoleId
+    v   <- pVar
+    v2  <- if v == v1 then do
                        -- If repeated var name, we append "@" to
                        -- it, a character not allowed in ordinary vars.
                        let msg = "different variable name"
@@ -305,13 +311,13 @@ allow parsing based on layout (indentation).
                        return (v ++ pack [c])
           else return v
     (d1, d2) <- pTwoDomains v1 v2
-    return (id, (d1, d2))
-        where
-          pRoleId :: Parser RoleId
-          pTwoDomains, pTwoDomains' :: Var -> Var -> Parser (Formula Domain, Formula Domain)
-          pRoleId    = (,) <$$> (True  <$ pK "has" `opt` False) <*> pLowerId
-          pTwoDomains  v1 v2 = atIndent (pK "vars") *> pTwoDomains' v1 v2
-          pTwoDomains' v1 v2 = indented $ mkParserM $ (,) <$> gDomain v1 <||> gDomain v2
+    return (id_, (d1, d2))
+      where
+        pRoleId :: Parser RoleId
+        pTwoDomains, pTwoDomains' :: Var -> Var -> Parser (Formula Domain, Formula Domain)
+        pRoleId    = (,) <$$> (True  <$ pK "has" `opt` False) <*> pLowerId
+        pTwoDomains  v1 v2 = atIndent (pK "vars") *> pTwoDomains' v1 v2
+        pTwoDomains' v1 v2 = indented $ mkParserM $ (,) <$> gDomain v1 <||> gDomain v2
   
   gDomain :: Var -> Gram (Formula Domain)
   gDomain var
@@ -329,7 +335,7 @@ allow parsing based on layout (indentation).
   -- line.
   pFormulaFilter :: Parser (Formula Filter)
   pFormulaFilter = indented $ pFoldr (And, Top) pLine
-      where 
+      where
         pLine :: Parser (Formula Filter)
         pRHS  :: Parser (Var -> Formula Filter)
         pLine =     atIndent pVar <**> pRHS     -- pVar begins with upper case
@@ -382,7 +388,7 @@ allow parsing based on layout (indentation).
         pDiseqAndEqs = diseqAnd <$ pO "/=" <*> pVar <*> (pEqualities `opt` const Top)
         pEqualities  = pO "=" *> (lineAnd <$ pO "=") `pChainr` pEquality
         pEquality    = (:=) <$$> pVar
-        diseqAnd :: Var -> (Var -> Formula Filter) -> Var -> Formula Filter
+        diseqAnd ::  Var -> (Var -> Formula Filter) -> Var -> Formula Filter
         lineAnd  :: (Var -> Formula Filter) -> (Var -> Formula Filter)
                  ->  Var -> Formula Filter
         diseqAnd varDiseq f varLHS= And (varLHS :≠ varDiseq) (f varDiseq)
@@ -394,14 +400,14 @@ allow parsing based on layout (indentation).
   pConceptDomain :: Parser (BConcept Domain)
   pConceptDomain =     pIntersection
                    <|> pUnion
-      where 
+      where
         pIntersection, pUnion, pElemDomain :: Parser (BConcept Domain)
         pElemFilter :: Parser (BConcept Filter)
         pIntersection =   isectD
                           <$> pElemDomain
                           <*  pK "and"
                           <*> (isectF <$ pK "and") `pChainr` pElemFilter
-        pUnion      =     (union <$ pK "or") `pChainr` pElemDomain
+        pUnion      =     (union_ <$ pK "or") `pChainr` pElemDomain
         pElemDomain =     pDomainId
                       <|> pParens pConceptDomain -- Recursion
         pElemFilter =     rebox <$> pDomainId
@@ -410,7 +416,7 @@ allow parsing based on layout (indentation).
                       <|> compl <$ pK "not" <*> pElemFilter -- Recursion
         isectF (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x :⊓ y)
         isectD (MkBConceptDomain x) (MkBConceptFilter y) = MkBConceptDomain (x :⊓ y)
-        union  (MkBConceptDomain x) (MkBConceptDomain y) = MkBConceptDomain (x :⊔ y)
+        union_ (MkBConceptDomain x) (MkBConceptDomain y) = MkBConceptDomain (x :⊔ y)
         compl  (MkBConceptFilter x)                      = MkBConceptFilter (C x)
         rebox  (MkBConceptDomain x)                      = MkBConceptFilter x
   
@@ -420,21 +426,21 @@ allow parsing based on layout (indentation).
   pConceptFilter :: Parser (BConcept Filter)
   pConceptFilter =     pIntersection
                    <|> pUnion
-      where 
+      where
         pIntersection, pUnion, pElem :: Parser (BConcept Filter)
         pIntersection = isect
                         <$> pElem
                         <*  pK "and"
                         <*> (isect <$ pK "and") `pChainr` pElem
-        pUnion =        (union <$ pK "or") `pChainr` pElem
+        pUnion =        (union_ <$ pK "or") `pChainr` pElem
         pElem  =        rebox <$> pDomainId
                     <|> pFilterId
                     <|> pParens pConceptFilter          -- Recursion
                     <|> compl <$ pK "not" <*> pElem     -- Recursion
-        isect (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x :⊓ y)
-        union (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x :⊔ y)
-        compl (MkBConceptFilter x)                      = MkBConceptFilter (C x)
-        rebox (MkBConceptDomain x)                      = MkBConceptFilter x
+        isect  (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x :⊓ y)
+        union_ (MkBConceptFilter x) (MkBConceptFilter y) = MkBConceptFilter (x :⊔ y)
+        compl  (MkBConceptFilter x)                      = MkBConceptFilter (C x)
+        rebox  (MkBConceptDomain x)                      = MkBConceptFilter x
 #+end_src
 
 
@@ -451,33 +457,31 @@ means of the =lexeme= parser transformer.
   -- start at this very same column. Token parsers fail if the wrong
   -- indentation is found.
   indented :: ParserTrafo a a
-  indented p =
-      pSwitch (\old ->
-                   (         old {pos = setIndentAtCurrentCol (pos old)}
-                   , \new -> new {pos = copyIndent (pos old) (pos new) }
-                   )
-               ) p
-          where
-            setIndentAtCurrentCol (LineColPosIndent l c p _) =
-                LineColPosIndent l c p c
-            copyIndent (LineColPosIndent _ _ _ i) (LineColPosIndent l c p _) =
-                LineColPosIndent l c p i
+  indented parser = pSwitch (\old ->
+                              (         old {pos = setIndentAtCurrentCol (pos old)}
+                              , \new -> new {pos = copyIndent (pos old) (pos new) }
+                              )
+                            ) parser
+    where
+      setIndentAtCurrentCol (LineColPosIndent l c p _) = LineColPosIndent l c p c
+      copyIndent (LineColPosIndent _ _ _ i) (LineColPosIndent l c p _)
+        = LineColPosIndent l c p i
   
   -- | If an indentation has been previously fixed with @indented@,
   -- @atIndent p@ accepts @p@ only if it starts at the very same column
   -- fixed by that indentation.
   atIndent :: ParserTrafo a a
-  atIndent p =
-      pCheckIndent (==)
-      *> pSwitch (\old ->
-                      (         old {pos = resetIndent (pos old)         }
-                      , \new -> new {pos = copyIndent (pos old) (pos new)}
-                      )
-                 ) p
-          where
-            resetIndent (LineColPosIndent l c p _) = LineColPosIndent l c p (-1)
-            copyIndent (LineColPosIndent _ _ _ i) (LineColPosIndent l c p _) =
-                LineColPosIndent l c p i
+  atIndent parser =
+    pCheckIndent (==)
+    *> pSwitch (\old ->
+                 (         old {pos = resetIndent (pos old)         }
+                 , \new -> new {pos = copyIndent (pos old) (pos new)}
+                 )
+               ) parser
+    where
+      resetIndent (LineColPosIndent l c p _) = LineColPosIndent l c p (-1)
+      copyIndent (LineColPosIndent _ _ _ i) (LineColPosIndent l c p _) =
+        LineColPosIndent l c p i
   
   pVar :: Parser Var
   pVar = pUpperId
@@ -539,9 +543,9 @@ something.
   
   pToken :: Text -> Parser Text
   pToken tk = pTokenCost tk 5
-    
+  
   pMunch :: (Char -> Bool) -> Parser Text
-  pMunch pred = fromList <$> UU.pMunch pred
+  pMunch pred_ = fromList <$> UU.pMunch pred_
 #+end_src
 
 Auxiliary functions.
@@ -549,17 +553,17 @@ Auxiliary functions.
 #+begin_src haskell
   pCheckIndent :: (Int -> Int -> Bool) -> Parser ()
   pCheckIndent comp = pSymExt splitState (Zero Infinite) Nothing
-      where
-        splitState :: forall st r . (LL.ListLike st Char) =>
-                      (() -> (Str Char st LineColPosIndent) -> Steps r)
-                          -> (Str Char st LineColPosIndent) -> Steps r
-        splitState k inp@(Str tts msgs pos@(LineColPosIndent l c p i) delOk) =
-            if c `comp` i
-            then k () inp
-            else let msg = "or deleted whitespace"
-                     ins exp =
-                         (3, k () (Str tts (msgs ++ [Inserted msg pos exp]) pos delOk))
-                 in Fail ["Different indentation"] [ins]
+    where
+      splitState :: forall st r . (LL.ListLike st Char) =>
+                    (() -> (Str Char st LineColPosIndent) -> Steps r)
+                        -> (Str Char st LineColPosIndent) -> Steps r
+      splitState k inp@(Str tts msgs pos_@(LineColPosIndent _l c _p i) delOk) =
+          if c `comp` i
+          then k () inp
+          else let msg = "or deleted whitespace"
+                   ins exp_ =
+                       (3, k () (Str tts (msgs ++ [Inserted msg pos_ exp_]) pos_ delOk))
+               in Fail ["Different indentation"] [ins]
   
   pLowerId :: Parser Text
   pLowerId = lexeme $ cons <$> pLower <*> pMunch idChar
@@ -600,25 +604,24 @@ Auxiliary functions.
            abstractSyntax <- run pModule concreteSyntax
            putStrLn (show abstractSyntax)
            prologCode <-
-               do ep <- P.emptyEP
-                  ep <- P.addEPCs (map relationToProlog abstractSyntax) ep
-                  return $ P.transLloydTopor ep
+               do ep  <- P.emptyEP
+                  ep' <- P.addEPCs (map relationToProlog abstractSyntax) ep
+                  return $ P.transLloydTopor ep'
            writeFile prologFilePath $ P.show prologCode
     else return ()    -- TODO: handle error
 #+end_src
 
 #+begin_src haskell
   run :: Parser t -> Text -> IO t
-  run p inp =
-      do let r@(a, errors) =
-                 parse ((,) <$ pSpaces <*> p <*> pEnd) (createStrIndent inp)
-             show_errors :: (Show a) => [a] -> IO ()
-             show_errors = sequence_ . (map (putStrLn . show))
-         -- putStrLn ("--  Result: " ++ show a)
-         if null errors then return ()
-         else do putStr ("--  Correcting steps: \n")
-                 show_errors errors
-         return a
+  run p inp = do
+    let (a, errors) = parse ((,) <$ pSpaces <*> p <*> pEnd) (createStrIndent inp)
+        show_errors :: (Show a) => [a] -> IO ()
+        show_errors = sequence_ . (map (putStrLn . show))
+    -- putStrLn ("--  Result: " ++ show a)
+    if null errors then return ()
+    else do putStrLn ("--  Correcting steps:")
+            show_errors errors
+    return a
 #+end_src
 
 

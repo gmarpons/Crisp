@@ -42,7 +42,7 @@ import qualified ClassyPrelude as CP
     (show)
 import Control.Monad
 import Data.List
-    (delete, foldl, foldr1, union)
+    (delete, foldl, foldr1)
 import Data.Text
     (Text)
 -- import Text.Show
