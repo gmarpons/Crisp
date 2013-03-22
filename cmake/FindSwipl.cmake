@@ -6,32 +6,36 @@
 # of them are optional, and only provided to help CMake to find SWI
 # Prolog in non-standard locations.
 #
-#   SWIPL_BINS          Search path used to find the SWI Prolog
-#                       binaries. If defined, it takes precedence over
-#                       variable $PATH. Standard locations for SWI
-#                       /lib and /include directories are found
-#                       through SWI Prolog commands.
-#
-#   SWIPL_INCLUDES      Search path used to find the SWI Prolog
-#                       include files. If defined, it takes precedence
-#                       over the standard location as computed by the
-#                       swipl command.
-#
-#   SWIPL_LIBS          Search path used to find the SWI Prolog
-#                       libraries. If defined, it takes precedence
-#                       over the standard location as computed by the
-#                       swipl command.
+#   SWIPL_BINS            Search path used to find the SWI Prolog
+#                         binaries. If defined, it takes precedence
+#                         over variable $PATH. Standard locations for
+#                         SWI /lib and /include directories are found
+#                         through SWI Prolog commands.
+#                        
+#   SWIPL_INCLUDES        Search path used to find the SWI Prolog
+#                         include files. If defined, it takes
+#                         precedence over the standard location as
+#                         computed by the swipl command.
+#                        
+#   SWIPL_LIBS            Search path used to find the SWI Prolog
+#                         libraries. If defined, it takes precedence
+#                         over the standard location as computed by
+#                         the swipl command.
 #
 # This module defines the following variables:
 #
-#   SWIPL_FOUND         Whether SWI Prolog binary, library and include
-#                       files where found in the system.
+#   SWIPL_FOUND           Whether SWI Prolog binary, library and
+#                         include files where found in the system.
+#                         
+#   SWIPL_EXECUTABLE      Absolute path for SWI Prolog main
+#                         executable.
+#                         
+#   SWIPL_INCLUDE_DIR     SWI Prolog include directory.
+#                         
+#   SWIPL_LIBRARIES       Link this to embed SWI Prolog in another
+#                         program.
 #
-#   SWIPL_EXECUTABLE    Absolute path for SWI Prolog main executable.
-#
-#   SWIPL_INCLUDE_DIR   SWI Prolog include directory.
-#
-#   SWIPL_LIBRARIES     Link this to embed SWI Prolog in another program.
+#   SWIPL_VERSION_STRING  SWI Prolog version in x.y.z format.
 
 # Sets global variable SWIPL_ROOT_DIR with the base dir of the SWI
 # Prolog installation.
@@ -52,7 +56,6 @@ endfunction(set_swipl_root_dir)
 # architecture of the found SWI Prolog installation.
 function(set_swipl_arch SWIPL_CMD)
   set(SWIPL_ARCH_GOAL "(current_prolog_flag(arch, X), write(X))")
-    # "(current_prolog_flag(version_data, swi(X,Y,Z,_)), format('~w.~w.~w', [X,Y,Z]))")
   execute_process(
     COMMAND ${SWIPL_CMD} -g ${SWIPL_ARCH_GOAL} -t halt
     RESULT_VARIABLE SWIPL_ARCH_RESULT
@@ -63,6 +66,21 @@ function(set_swipl_arch SWIPL_CMD)
   endif()
   set(SWIPL_ARCH "${SWIPL_ARCH}" PARENT_SCOPE)
 endfunction(set_swipl_arch)
+
+# Sets global variable SWIPL_VERSION_STRING
+function(set_swipl_version SWIPL_CMD)
+  set(SWIPL_VERSION_GOAL
+    "(current_prolog_flag(version_data, swi(X,Y,Z,_)), format('~w.~w.~w', [X,Y,Z]))")
+  execute_process(
+    COMMAND ${SWIPL_CMD} -g ${SWIPL_VERSION_GOAL} -t halt
+    RESULT_VARIABLE SWIPL_VERSION_RESULT
+    OUTPUT_VARIABLE SWIPL_VERSION_STRING
+    )
+  if(NOT ${SWIPL_VERSION_RESULT} EQUAL 0)
+    message(FATAL_ERROR "Can't get SWI Prolog version.")
+  endif()
+  set(SWIPL_VERSION_STRING "${SWIPL_VERSION_STRING}" PARENT_SCOPE)
+endfunction(set_swipl_version)
 
 # Main program for this module begins here
 find_program(SWIPL_EXECUTABLE
@@ -75,7 +93,7 @@ find_program(SWIPL_EXECUTABLE
 if(SWIPL_EXECUTABLE)
   set_swipl_root_dir(${SWIPL_EXECUTABLE})
   set_swipl_arch(${SWIPL_EXECUTABLE})
-  # set_swipl_version(${SWIPL_EXECUTABLE})
+  set_swipl_version(${SWIPL_EXECUTABLE})
 
   find_library(SWIPL_LIBRARIES swipl
     HINTS
@@ -97,11 +115,12 @@ if(SWIPL_EXECUTABLE)
   message(STATUS "Swipl libraries: ${SWIPL_LIBRARIES}")
 endif()
 
-# Handle the QUIETLY and REQUIRED arguments and set SWIPL_FOUND to
-# TRUE if all listed variables are TRUE
-find_package_handle_standard_args(SWIPL
+# Handle the QUIETLY and REQUIRED arguments, handle version
+# requirements, and set SWIPL_FOUND to TRUE if all listed variables
+# are TRUE.
+find_package_handle_standard_args(Swipl
   REQUIRED_VARS SWIPL_EXECUTABLE SWIPL_LIBRARIES SWIPL_INCLUDE_DIR
-)
+  VERSION_VAR SWIPL_VERSION_STRING
+  )
 
-# TODO: version
 # TODO: add try-compile
