@@ -36,31 +36,32 @@
 # Sets global variable SWIPL_ROOT_DIR with the base dir of the SWI
 # Prolog installation.
 function(set_swipl_root_dir SWIPL_CMD)
+  set(SWIPL_HOME_GOAL "(current_prolog_flag(home, X), write(X))")
   execute_process(
-    COMMAND ${SWIPL_CMD} --dump-runtime-variables
-    COMMAND sed -n "s:PLBASE=\"\\(.*\\)\";:\\1:p"
-    OUTPUT_VARIABLE SWIPL_BASE_DIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
+    COMMAND ${SWIPL_CMD} -g ${SWIPL_HOME_GOAL} -t halt
+    RESULT_VARIABLE SWIPL_HOME_RESULT
+    OUTPUT_VARIABLE SWIPL_ROOT_DIR
     )
-  if (SWIPL_BASE_DIR MATCHES "^$")
+  if (NOT ${SWIPL_HOME_RESULT} EQUAL 0)
     message(FATAL_ERROR "Can't get swipl base dir")
   endif()
-  set(SWIPL_ROOT_DIR "${SWIPL_BASE_DIR}" PARENT_SCOPE)
+  set(SWIPL_ROOT_DIR ${SWIPL_ROOT_DIR} PARENT_SCOPE)
 endfunction(set_swipl_root_dir)
 
 # Sets global variable SWIPL_ARCH with a string identifying the
 # architecture of the found SWI Prolog installation.
 function(set_swipl_arch SWIPL_CMD)
+  set(SWIPL_ARCH_GOAL "(current_prolog_flag(arch, X), write(X))")
+    # "(current_prolog_flag(version_data, swi(X,Y,Z,_)), format('~w.~w.~w', [X,Y,Z]))")
   execute_process(
-    COMMAND ${SWIPL_CMD} --dump-runtime-variables
-    COMMAND sed -n "s:PLARCH=\"\\(.*\\)\";:\\1:p"
-    OUTPUT_VARIABLE SWIPL_PLARCH
-    OUTPUT_STRIP_TRAILING_WHITESPACE
+    COMMAND ${SWIPL_CMD} -g ${SWIPL_ARCH_GOAL} -t halt
+    RESULT_VARIABLE SWIPL_ARCH_RESULT
+    OUTPUT_VARIABLE SWIPL_ARCH
     )
-  if(SWIPL_PLARCH MATCHES "^$")
-    message(FATAL_ERROR "Can't get swipl library path")
+  if(NOT ${SWIPL_ARCH_RESULT} EQUAL 0)
+    message(FATAL_ERROR "Can't get swipl library path.")
   endif()
-  set(SWIPL_ARCH "${SWIPL_PLARCH}" PARENT_SCOPE)
+  set(SWIPL_ARCH "${SWIPL_ARCH}" PARENT_SCOPE)
 endfunction(set_swipl_arch)
 
 # Main program for this module begins here
@@ -103,5 +104,4 @@ find_package_handle_standard_args(SWIPL
 )
 
 # TODO: version
-# TODO: sed -> cmake regexp
 # TODO: add try-compile
