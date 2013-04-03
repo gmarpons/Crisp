@@ -30,10 +30,11 @@
 #   SWIPL_EXECUTABLE      Absolute path for SWI Prolog main
 #                         executable.
 #                         
-#   SWIPL_INCLUDE_DIR     SWI Prolog include directory.
+#   SWIPL_INCLUDE_DIRS    SWI Prolog include directories. To be used
+#                         with include_directories().
 #                         
-#   SWIPL_LIBRARIES       Link this to embed SWI Prolog in another
-#                         program.
+#   SWIPL_LIBRARIES       SWI Prolog libraries. To be used with
+#                         target_link_libraries.
 #
 #   SWIPL_VERSION_STRING  SWI Prolog version in x.y.z format.
 
@@ -104,14 +105,14 @@ if(SWIPL_EXECUTABLE)
       )
 
   # Look for SWI C-interface library.
-  find_path(SWIPL_INCLUDE_DIR SWI-Prolog.h
+  find_path(SWIPL_INCLUDE_DIRS SWI-Prolog.h
     HINTS
       ${SWIPL_INCLUDES}
       ENV SWIPL_INCLUDES
       ${SWIPL_ROOT_DIR}/include
       )
 
-  message(STATUS "Swipl include dir: ${SWIPL_INCLUDE_DIR}")
+  message(STATUS "Swipl include dir: ${SWIPL_INCLUDE_DIRS}")
   message(STATUS "Swipl libraries: ${SWIPL_LIBRARIES}")
 endif()
 
@@ -119,7 +120,7 @@ endif()
 # requirements, and set SWIPL_FOUND to TRUE if all listed variables
 # are TRUE.
 find_package_handle_standard_args(Swipl
-  REQUIRED_VARS SWIPL_EXECUTABLE SWIPL_LIBRARIES SWIPL_INCLUDE_DIR
+  REQUIRED_VARS SWIPL_EXECUTABLE SWIPL_LIBRARIES SWIPL_INCLUDE_DIRS # SWIPL_TEST_COMPILES
   VERSION_VAR SWIPL_VERSION_STRING
   )
 
