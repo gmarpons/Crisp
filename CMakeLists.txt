@@ -1,15 +1,24 @@
-
-project(Crisp)
+# Required Cmake version and features
 cmake_minimum_required(VERSION 2.8)
+cmake_policy(VERSION 2.8)
 
-# Search for modules here, before checking default CMake modules
+# Project name
+project(Crisp)
+
+# Declare Crisp version number
+set(Crisp_VERSION_MAJOR 0)
+set(Crisp_VERSION_MINOR 2)
+set(Crisp_VERSION_PATCH 0)
+
+# Search for modules in source tree, before checking default CMake
+# modules
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # Requisites
-find_package(Threads REQUIRED)
-find_package(Boost 1.46.1 REQUIRED)
-find_package(Swipl REQUIRED)
-find_package(Clang REQUIRED)
+find_package(Threads          REQUIRED)
+find_package(Boost    1.46.1  REQUIRED)
+find_package(Swipl    6.2     REQUIRED)
+find_package(Clang            REQUIRED)
 
 list(APPEND include_dirs ${CMAKE_CURRENT_SOURCE_DIR}/include)
 list(APPEND include_dirs ${CMAKE_CURRENT_BINARY_DIR}/include)
