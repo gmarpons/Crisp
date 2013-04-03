@@ -112,16 +112,28 @@ if(SWIPL_EXECUTABLE)
       ${SWIPL_ROOT_DIR}/include
       )
 
-  message(STATUS "Swipl include dir: ${SWIPL_INCLUDE_DIRS}")
-  message(STATUS "Swipl libraries: ${SWIPL_LIBRARIES}")
+  message(STATUS "SWI Prolog include dirs: ${SWIPL_INCLUDE_DIRS}")
+  message(STATUS "SWI Prolog libraries: ${SWIPL_LIBRARIES}")
+
+  # Try to compile SWI Prolog header files and a simple call to a SWI
+  # C interface function
+  include(CheckCXXSourceCompiles)
+  set(SWIPL_TEST_SOURCE "
+    #include <SWI-Prolog.h>
+    int main(int argc, char **argv) { PL_initialise(argc, argv); return 0; }
+  ")
+  list(APPEND CMAKE_REQUIRED_INCLUDES ${SWIPL_INCLUDE_DIRS})
+  list(APPEND CMAKE_REQUIRED_LIBRARIES ${SWIPL_LIBRARIES})
+  check_cxx_source_compiles("${SWIPL_TEST_SOURCE}" SWIPL_TEST_COMPILES)
+  if(NOT ${SWIPL_TEST_COMPILES})
+    message(SEND_ERROR "Can't compile a test snippet calling SWI Prolog C interface")
+  endif(NOT ${SWIPL_TEST_COMPILES})
 endif()
 
 # Handle the QUIETLY and REQUIRED arguments, handle version
 # requirements, and set SWIPL_FOUND to TRUE if all listed variables
 # are TRUE.
 find_package_handle_standard_args(Swipl
-  REQUIRED_VARS SWIPL_EXECUTABLE SWIPL_LIBRARIES SWIPL_INCLUDE_DIRS # SWIPL_TEST_COMPILES
+  REQUIRED_VARS SWIPL_EXECUTABLE SWIPL_LIBRARIES SWIPL_INCLUDE_DIRS SWIPL_TEST_COMPILES
   VERSION_VAR SWIPL_VERSION_STRING
   )
-
-# TODO: add try-compile
