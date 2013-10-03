@@ -11,5 +11,7 @@ autom4te.cache/
 /docs/examples/*.pl
 /docs/examples/*.s
 /docs/examples/*.bc
+/docs/examples/*.o
 /docs/examples/hicpp_3_4_2_b.cpp
-
+/.ebrowse-input-files
+/BROWSE
