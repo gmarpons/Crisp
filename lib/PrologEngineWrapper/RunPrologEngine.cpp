@@ -57,9 +57,14 @@ namespace crisp {
       // Twine InitialGoal = Twine(InitialGoalFunctor) + Twine("(")
       //   + Twine(DebugFlag) + Twine(")");
 
+      // TODO: use --home option instead of env. var: read
+      // http://www.swi-prolog.org/pldoc/man?section=findhome
+      // Maybe not necessary to give home at all, if using a
+      // self-contained saved state.
+
       // Necessary to tell SWI where is its Home directory, to find
       // initialization files
-      putenv((char *) "SWI_HOME_DIR=" XSTR(SWIPL_BASE_DIR));
+      putenv((char *) "SWI_HOME_DIR=" XSTR(SWIPL_ROOT_DIR));
 
       // Set arguments for call to Prolog. First argument is the
       // executable file name. We don't set this as it's difficult to do

@@ -26,6 +26,7 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Mangle.h"
 #include "clang/AST/PrettyPrinter.h"
+#include "clang/Basic/FileManager.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
 #include "llvm/Support/Debug.h"
@@ -68,8 +69,7 @@ namespace crisp {
         , SourceManager(CI.getSourceManager())
         , MangleContext(CI.getASTContext().createMangleContext())
         , MainFileName(SourceManager
-                       .getFileEntryForID(SourceManager.getMainFileID())
-                       ->getName())
+                       .getFileEntryForID(SourceManager.getMainFileID())->getName())
         , LlvmDiagsOStream((MainFileName + Twine(".diags")).str().c_str(),
                            ErrorInfoDiags)
         , NormalDiagnosticConsumer(*CI.getDiagnostics().takeClient())

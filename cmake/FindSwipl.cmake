@@ -30,6 +30,8 @@
 #   SWIPL_EXECUTABLE      Absolute path for SWI Prolog main
 #                         executable.
 #                         
+#   SWIPL_ROOT_DIR        SWI Prolog home (base) directory.
+#
 #   SWIPL_INCLUDE_DIRS    SWI Prolog include directories. To be used
 #                         with include_directories().
 #                         
@@ -37,9 +39,19 @@
 #                         target_link_libraries.
 #
 #   SWIPL_VERSION_STRING  SWI Prolog version in x.y.z format.
+#
+# This module provides the following function:
+#
+#   add_swi_prolog_saved_state(TARGET PROLOG_FILE)
+#
+# that adds a SWI saved state as a compilation target. First argument
+# is the name (full or relative) of the SWI Prolog saved state file.
+# If the TARGET name is a relative path it will be interpreted
+# relative to the build tree directory corresponding to the current
+# source directory.
 
-# Sets global variable SWIPL_ROOT_DIR with the base dir of the SWI
-# Prolog installation.
+# Sets parent-scoped variable SWIPL_ROOT_DIR with the base dir of the
+# SWI Prolog installation.
 function(set_swipl_root_dir SWIPL_CMD)
   set(SWIPL_HOME_GOAL "(current_prolog_flag(home, X), write(X))")
   execute_process(
@@ -83,6 +95,23 @@ function(set_swipl_version SWIPL_CMD)
   set(SWIPL_VERSION_STRING "${SWIPL_VERSION_STRING}" PARENT_SCOPE)
 endfunction(set_swipl_version)
 
+# Adds a SWI saved state as a compilation target. First argument is
+# the name (full or relative) of the SWI Prolog saved state file. If
+# the TARGET name is a relative path it will be interpreted relative
+# to the build tree directory corresponding to the current source
+# directory.
+function(add_swi_prolog_saved_state TARGET PROLOG_FILE)
+  set(DEPENDS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${PROLOG_FILE}")
+  add_custom_command(
+    OUTPUT "${TARGET}"
+    COMMAND ${SWIPL_EXECUTABLE} --quiet -o ${TARGET} -c ${DEPENDS_FILE}
+    DEPENDS ${DEPENDS_FILE}
+    COMMENT "Building ${TARGET}"
+    VERBATIM)
+  string(REPLACE "/" "_" TARGET_NAME "${TARGET}")
+  add_custom_target("${TARGET_NAME}_target" ALL DEPENDS ${TARGET})
+endfunction(add_swi_prolog_saved_state)
+
 # Main program for this module begins here
 find_program(SWIPL_EXECUTABLE
   NAMES swipl
@@ -109,6 +138,7 @@ if(SWIPL_EXECUTABLE)
     HINTS
       ${SWIPL_INCLUDES}
       ENV SWIPL_INCLUDES
+    PATHS
       ${SWIPL_ROOT_DIR}/include
       )
 
