@@ -1,9 +1,9 @@
+# Project name
+project(Crisp C CXX)
+
 # Required CMake version and policies
 cmake_minimum_required(VERSION 2.8)
 cmake_policy(VERSION 2.8)
-
-# Project name
-project(Crisp)
 
 # Declare Crisp version number
 set(Crisp_VERSION_MAJOR 0)
