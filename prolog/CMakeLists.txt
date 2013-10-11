@@ -1,4 +1,4 @@
-file(MAKE_DIRECTORY ${BINARY_SWI_BOOT_FILES_DIR})
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/${SWI_BOOT_FILES_DIR}")
 
 add_subdirectory(PrologBootForDeclExtractor)
 add_subdirectory(PrologBootForCrispClangPlugin)
@@ -7,13 +7,13 @@ add_subdirectory(Rules)
 
 # TODO: install
 
-install(
-  FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/PrologBootForCrispClangPlugin.sh
-    ${CMAKE_CURRENT_BINARY_DIR}/PrologBootForCrispLLVMPass.sh
-  DESTINATION share)
+# install(
+#   FILES
+#     ${CMAKE_CURRENT_BINARY_DIR}/PrologBootForCrispClangPlugin.sh
+#     ${CMAKE_CURRENT_BINARY_DIR}/PrologBootForCrispLLVMPass.sh
+#   DESTINATION share)
 
-install(
-  DIRECTORY Rules/
-  DESTINATION share
-  FILES_MATCHING PATTERN "*.pl")
+# install(
+#   DIRECTORY Rules/
+#   DESTINATION share
+#   FILES_MATCHING PATTERN "*.pl")

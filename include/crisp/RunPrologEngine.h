@@ -35,12 +35,11 @@ namespace crisp {
 
     int plRunEngine(const std::string& BootFileName,
                     const std::string& BootFilesDir,
-                    const std::string& InitialGoalFunctor
-                    = std::string("init_msg"));
+                    const std::string& InitialGoalFunctor = std::string("init_msg"));
     int plCleanUp(int Status);
     int plInteractiveSession();
     int plLoadFile(const std::string& FileBaseName,
-                   const std::string& BootFilesDir);
+                   const std::string& RulesDir);
 
   } // End namespace crisp::prolog
 

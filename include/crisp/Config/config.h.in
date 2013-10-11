@@ -1,23 +1,17 @@
-/* This file is a template that CMake uses to generate a config.h file
-   in the build tree that contains some necessary definitions. See the
-   CMakeLists.txt file in this directory */
+/* This file is a template that CMake uses to generate a config.h file in the build tree
+   that contains some useful definitions, to be used from C/C++ code (as an alternative
+   to Cmake's `add_definitions'). See the CMakeLists.txt file in this directory */
 
-/* Build tree directories. The following variables are set in
-   ${CMAKE_SOURCE_DIR}/CMakeLists.txt */
-#define BINARY_ROOT_DIR ${BINARY_ROOT_DIR}
-#define BINARY_DATA_DIR ${BINARY_DATA_DIR}
-#define BINARY_SWI_BOOT_FILES_DIR ${BINARY_SWI_BOOT_FILES_DIR}
-#define BINARY_CRISP_RULES_DIR ${BINARY_CRISP_RULES_DIR}
-#define BINARY_PROLOG_RULES_DIR ${BINARY_PROLOG_RULES_DIR}
+/* Cmake variables */
+#define PROJECT_NAME "${PROJECT_NAME}"
+#define CMAKE_INSTALL_FULL_DATADIR "${CMAKE_INSTALL_FULL_DATADIR}"
+#define CMAKE_BINARY_DIR "${CMAKE_BINARY_DIR}"
 
-/* Installation directories. The following variables are set in
-   ${CMAKE_SOURCE_DIR}/CMakeLists.txt */
-#define INSTALL_ROOT_DIR ${INSTALL_ROOT_DIR}
-#define INSTALL_DATA_DIR ${INSTALL_DATA_DIR}
-#define INSTALL_SWI_BOOT_FILES_DIR ${INSTALL_SWI_BOOT_FILES_DIR}
-#define INSTALL_CRISP_RULES_DIR ${INSTALL_CRISP_RULES_DIR}
-#define INSTALL_PROLOG_RULES_DIR ${INSTALL_PROLOG_RULES_DIR}
+/* The following variables are set in ${CMAKE_SOURCE_DIR}/CMakeLists.txt */
+#define SWI_BOOT_FILES_DIR "${SWI_BOOT_FILES_DIR}"
+#define CRISP_RULES_DIR "${CRISP_RULES_DIR}"
+#define PROLOG_RULES_DIR "${PROLOG_RULES_DIR}"
 
 /* SWI Prolog directory. The following variable is set in
    ${CMAKE_SOURCE_DIR}/cmake/FindSwipl.cmake */
-#define SWIPL_ROOT_DIR ${SWIPL_ROOT_DIR}
+#define SWIPL_ROOT_DIR "${SWIPL_ROOT_DIR}"

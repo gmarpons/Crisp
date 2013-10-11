@@ -37,6 +37,9 @@ message(STATUS "DEBUG LLVM_DEFINITIONS: ${LLVM_DEFINITIONS}")
 message(STATUS "DEBUG LLVM_BUILD_TYPE: ${LLVM_BUILD_TYPE}")
 message(STATUS "DEBUG CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
+# Define GNU standard directories
+include(GNUInstallDirs)
+
 # Crisp-specific include dirs
 list(APPEND CRISP_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/include)
 list(APPEND CRISP_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -48,21 +51,17 @@ message(STATUS "DEBUG CRISP_INCLUDE_DIRS: ${CRISP_INCLUDE_DIRS}")
 set(CMAKE_CXX_COMPILER "${CLANG_EXECUTABLE}++")
 set(CMAKE_C_COMPILER "${CLANG_EXECUTABLE}")
 
-# The following variables are used in subdirectories: include (to
-# configure files to be used by built executables), prolog,
-# lib/CrispClangPlugin and lib/CrispLLVMPass.
-set(BINARY_ROOT_DIR "${CMAKE_BINARY_DIR}")
-set(BINARY_DATA_DIR "${BINARY_ROOT_DIR}")
-set(BINARY_SWI_BOOT_FILES_DIR "${BINARY_DATA_DIR}/SWIBootFiles")
-set(BINARY_CRISP_RULES_DIR "${BINARY_DATA_DIR}/CrispRules")
-set(BINARY_PROLOG_RULES_DIR "${BINARY_DATA_DIR}/PrologRules")
+# The following variables are used in subdirectories. They represent relative paths
+# meant to be prefixed with either "${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}" or
+# ${CMAKE_BINARY_DIR}.
+set(SWI_BOOT_FILES_DIR "SWIBootFiles")
+set(CRISP_RULES_DIR "CrispRules")
+set(PROLOG_RULES_DIR "PrologRules")
 
-set(INSTALL_ROOT_DIR "${CMAKE_INSTALL_PREFIX}")
-set(INSTALL_DATA_DIR "${INSTALL_ROOT_DIR}/share/crisp")
-set(INSTALL_SWI_BOOT_FILES_DIR "${INSTALL_DATA_DIR}/SWIBootFiles")
-set(INSTALL_CRISP_RULES_DIR "${INSTALL_DATA_DIR}/CrispRules")
-set(INSTALL_PROLOG_RULES_DIR "${INSTALL_DATA_DIR}/PrologRules")
+# Install files
+install(FILES COPYING README.md DESTINATION ${CMAKE_INSTALL_DOCDIR})
 
+# Subdirectories
 add_subdirectory(include)
 add_subdirectory(prolog)
 add_subdirectory(lib)

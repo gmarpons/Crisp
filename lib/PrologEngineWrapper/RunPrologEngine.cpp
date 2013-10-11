@@ -102,13 +102,13 @@ namespace crisp {
     }
 
     int plLoadFile(const std::string& FileBaseName,
-                   const std::string& BootFilesDir) {
+                   const std::string& RulesDir) {
       int Success;
       term_t FileBaseNameA = PL_new_term_ref();
       Success = PL_put_atom_chars(FileBaseNameA, FileBaseName.c_str());
       if ( !Success) return Success;
       term_t RulesDirA = PL_new_term_ref();
-      Success = PL_put_atom_chars(RulesDirA, BootFilesDir.c_str());
+      Success = PL_put_atom_chars(RulesDirA, RulesDir.c_str());
       if ( !Success) return Success;
       functor_t LoadFileF = PL_new_functor(PL_new_atom("load_file"), 2);
       term_t LoadFileT = PL_new_term_ref();

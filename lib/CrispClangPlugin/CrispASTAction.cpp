@@ -44,12 +44,9 @@
 
 #include "crisp/ClangPrologQueries.h"
 #include "crisp/RunPrologEngine.h"
+#include "crisp/Support/Environment.h"
 #include "ClangPrologPredicateRegistration.h"
 #include "CompilationInfo.h"
-
-// Stringify environment variables
-#define XSTR(s) STR(s)
-#define STR(s) #s
 
 using namespace llvm;
 using namespace clang;
@@ -124,10 +121,13 @@ namespace crisp {
     int Success = plRegisterPredicates();
     DEBUG(if ( !Success) dbgs() << "Error registering predicates.\n");
 
-    Success = plRunEngine("PrologBootForCrispClangPlugin.sh", BootFilesDir);
-
+    // Run Prolog Engine with the boot file taken from either object (build) directory
+    // (if environment variable CRISPTEST==1) or install directory (the default).
+    Success = plRunEngine("PrologBootForCrispClangPlugin.sh",
+                          prefixWithBuildOrInstallFullPath(BootFilesDir));
     if (Success) {
-      Success = plLoadFile(RulesFileName, BootFilesDir);
+      Success = plLoadFile(RulesFileName,
+                           prefixWithBuildOrInstallFullPath(PROLOG_RULES_DIR));
       DEBUG(if ( !Success) dbgs() << "Error loading rules file '"
                                   << RulesFileName << "' from '"
                                   << BootFilesDir << "'.\n");
@@ -198,9 +198,9 @@ namespace crisp {
     CrispASTAction()
         : PluginASTAction()
         , BootFilesDir("crisp-boot-dir",
-                        cl::desc("Specify boot files directory"),
-                        cl::value_desc("dir"),
-                        cl::init(XSTR(DATA_INSTALL_ROOT)))
+                       cl::desc("Specify boot files directory"),
+                       cl::value_desc("dir"),
+                       cl::init(SWI_BOOT_FILES_DIR))
         , RulesFileName(cl::Positional,
                         cl::value_desc("rule_file"),
                         cl::Required)

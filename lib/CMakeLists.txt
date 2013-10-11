@@ -1,6 +1,7 @@
 add_definitions(-fPIC)
 add_definitions(-fno-rtti)
 
+add_subdirectory(Support)
 add_subdirectory(DeclExtractor)
 add_subdirectory(PrologEngineWrapper)
 
