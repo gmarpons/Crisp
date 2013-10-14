@@ -20,7 +20,7 @@ find_package(Boost    1.46.1  REQUIRED)
 find_package(Swipl    6.2     REQUIRED)
 
 include(llvm-clang)
-find_llvm_and_clang(3.1 3.1)
+find_llvm_and_clang(3.2 3.2)
 
 # Debug messages about requisites
 message(STATUS "DEBUG LLVM-CONFIG_EXECUTABLE: ${LLVM-CONFIG_EXECUTABLE}")

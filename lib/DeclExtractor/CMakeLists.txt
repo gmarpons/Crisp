@@ -15,5 +15,4 @@ add_definitions(${LLVM_DEFINITIONS})
 add_definitions(${CLANG_DEFINITIONS})
 add_definitions(${SWIPL_DEFINITIONS})
 
-target_link_libraries(declextractor PrologEngineWrapper)
-target_link_libraries(declextractor ${SWIPL_LIBRARIES})
+target_link_libraries(declextractor PrologEngineWrapper ${SWIPL_LIBRARIES})

@@ -33,5 +33,7 @@ add_definitions(
   -DSWI_BOOT_FILES_DIR="${SWI_BOOT_FILES_DIR}"
   -DPROLOG_RULES_DIR="${PROLOG_RULES_DIR}")
 
+# TODO: add all necessary definitions to avoid using config.h.
+
 install(TARGETS crispclang
     LIBRARY DESTINATION lib)
