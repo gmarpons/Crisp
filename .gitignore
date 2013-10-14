@@ -15,3 +15,5 @@ autom4te.cache/
 /docs/examples/hicpp_3_4_2_b.cpp
 /.ebrowse-input-files
 /BROWSE
+*.diags
+/docs/examples/DONT_REMOVE.gmarpons
