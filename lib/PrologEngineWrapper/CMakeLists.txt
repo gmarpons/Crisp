@@ -1,8 +1,10 @@
-
 add_library(PrologEngineWrapper STATIC
     ClangPrologQueries.cpp
     PrologUtilityFunctions.cpp
     RunPrologEngine.cpp)
+
+set_target_properties(PrologEngineWrapper PROPERTIES
+  POSITION_INDEPENDENT_CODE True)
 
 include_directories(${CRISP_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})

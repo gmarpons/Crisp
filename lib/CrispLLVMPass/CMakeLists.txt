@@ -18,6 +18,7 @@ target_link_libraries(crispllvm
   PrologEngineWrapper
   Support
   ${SWIPL_LIBRARIES})
+
 add_dependencies(crispllvm run_llvm_decl_extractor)
 
 include_directories(${CRISP_INCLUDE_DIRS})

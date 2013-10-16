@@ -1,5 +1,6 @@
-add_definitions(-fPIC)
+# LLVM tools are usually compiled with the following options
 add_definitions(-fno-rtti)
+add_definitions(-fno-exceptions)
 
 add_subdirectory(Support)
 add_subdirectory(DeclExtractor)

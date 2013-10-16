@@ -1,6 +1,9 @@
 add_library(Support STATIC
   Environment.cpp)
 
+set_target_properties(Support PROPERTIES
+  POSITION_INDEPENDENT_CODE True)
+
 include_directories(${CRISP_INCLUDE_DIRS})
 include_directories(${LLVM_INCLUDE_DIRS})
 include_directories(${CLANG_INCLUDE_DIRS})

@@ -17,6 +17,7 @@ target_link_libraries(crispclang
   PrologEngineWrapper
   Support
   ${SWIPL_LIBRARIES})
+
 add_dependencies(crispclang run_clang_decl_extractor)
 
 include_directories(${CRISP_INCLUDE_DIRS})

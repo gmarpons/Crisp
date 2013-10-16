@@ -47,7 +47,9 @@ list(APPEND CRISP_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # Debug messages about Crisp includes
 message(STATUS "DEBUG CRISP_INCLUDE_DIRS: ${CRISP_INCLUDE_DIRS}")
 
-# TODO: move this to dirs where it's really necessary
+# TODO: move this to dirs where it's really necessary, i.e., with targets that need to
+# compile with clang. This probably will solve the problem with distributions without
+# clang++
 set(CMAKE_CXX_COMPILER "${CLANG_EXECUTABLE}++")
 set(CMAKE_C_COMPILER "${CLANG_EXECUTABLE}")
 
