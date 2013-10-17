@@ -1,11 +1,67 @@
-# We support 4 different ways of finding LLVM/Clang, enumerated across this file.
+# This file provides the following Cmake function:
+#
+#   find_llvm_and_clang(LLVM_REQUIRED_VERSION)
+#
+# that, given a required version of those software packages, tries to find them in the
+# system following four different strategies:
+#
+# 1) Cmake variable LLVM_ROOT is defined and points to the root of a build tree for
+# LLVM/Clang. Libraries and executables are taken from the the given build tree.
+#
+# 2) Cmake variable LLVM_ROOT is defined and points to the root of an install tree for
+# LLVM/Clang. Libraries and executables are taken from the the given install tree.
+#
+# 3) Cmake variable LLVM_ROOT is not defined, but we are compiling from a directory
+# LLVM_BUILD_TREE/projects/crisp, for some root directory LLVM_BUILD_TREE. This is the
+# default place for compiling LLVM projects. Libraries and executables are taken from
+# the build tree we are in.
+#
+# 4) Cmake variable LLVM_ROOT is not defined, and we are not compiling from inside a
+# build tree for LLVM, but a system-wide and PATH-accessible version of the required
+# tools and libraries is found, and we use it.
+#
+# If a different Clang version is needed, a second optional argument with the required
+# version can be given to function `find_llvm_and_clang'. Otherwise, The same version is
+# used for LLVM and Clang.
+#
+# The function sets the following variables:
+#
+#   LLVM_VERSION
+#
+#   LLVM-CONFIG_EXECUTABLE
+#
+#   LLVM_TOOLS_BINARY_DIR
+#
+#   LLVM_INCLUDE_DIRS
+#
+#   LLVM_DEFINITIONS
+#
+#   LLVM_BUILD_TYPE
+#
+#   CLANG_VERSION
+#
+#   CLANG_EXECUTABLE
+#
+#   CLANG_INCLUDE_DIRS
+#
+#   CLANG_DEFINITIONS
 
-function(find_llvm_and_clang LLVM_REQUIRED_VERSION CLANG_REQUIRED_VERSION)
+# TODO: Allow a list of compatible versions for both LLVM and Clang.
+
+function(find_llvm_and_clang LLVM_REQUIRED_VERSION)
   # Unset some variables that we want to derive from other settings.
   unset(LLVM_DIR CACHE)         # TODO: what's this for?
   unset(LLVM-CONFIG_EXECUTABLE CACHE)
   unset(CLANG_EXECUTABLE CACHE)
-  
+
+  # If an optional argument is given, take it as the required version for Clang. Take
+  # same version for LLVM and Clang, otherwise.
+  if(${ARGC} GREATER 1)
+    set(CLANG_REQUIRED_VERSION "${ARGV1}")
+  else(${ARGC} GREATER 1)
+    set(CLANG_REQUIRED_VERSION "${LLVM_REQUIRED_VERSION}")
+  endif(${ARGC} GREATER 1)
+
   if(DEFINED LLVM_ROOT)
     # WARNING: If LLVM_ROOT is defined as a relative path, it is taken to be relative to
     # the *source* tree root.
@@ -13,15 +69,15 @@ function(find_llvm_and_clang LLVM_REQUIRED_VERSION CLANG_REQUIRED_VERSION)
     # Check if using an installed version of LLVM
     set(EXAMPLE_FILE_IN_LLVM_BUILD_TREE "${LLVM_ROOT_ABSOLUTE}/cmake_install.cmake")
     if(EXISTS ${EXAMPLE_FILE_IN_LLVM_BUILD_TREE})
-  
+
       # Case 1: LLVM_ROOT defined and use of a non-installed (build tree) version of
       # LLVM
 
       set_variables_from_llvm_build_tree(${LLVM_ROOT_ABSOLUTE})
     else(EXISTS ${EXAMPLE_FILE_IN_LLVM_BUILD_TREE})
-  
+
       # Case 2: LLVM_ROOT defined and use of an installed version of LLVM
-  
+
       list(APPEND CMAKE_PREFIX_PATH "${LLVM_ROOT_ABSOLUTE}")
       set_variables_from_installed_llvm()
     endif(EXISTS ${EXAMPLE_FILE_IN_LLVM_BUILD_TREE})
@@ -33,17 +89,17 @@ function(find_llvm_and_clang LLVM_REQUIRED_VERSION CLANG_REQUIRED_VERSION)
     # CRISP_RELATIVE_PATH is relative to LLVM_ROOT
     set(CRISP_RELATIVE_PATH "${PROJECTS_DIR}/${PROJECT_NAME}")
     if("${CRISP_RELATIVE_PATH}" STREQUAL "projects/crisp")
-  
+
       # Case 3: LLVM_ROOT not defined and use of a non-installed version of LLVM (we're
       # in LLVM build tree, standard crisp location)
-  
+
       get_filename_component(LLVM_ROOT_ABSOLUTE "${LLVM_PROJECTS_ROOT}" PATH)
       set_variables_from_llvm_build_tree(${LLVM_ROOT_ABSOLUTE})
     else("${CRISP_RELATIVE_PATH}" STREQUAL "projects/crisp")
-  
+
       # Case 4: LLVM_ROOT not defined and use of an installed version (system-wide and
       # PATH-accessible) of LLVM
-  
+
       # As CMAKE_PREFIX_PATH is not set, the following function takes
       # llvm-config and clang executable files from the PATH
       # environment var.
@@ -62,19 +118,25 @@ function(find_llvm_and_clang LLVM_REQUIRED_VERSION CLANG_REQUIRED_VERSION)
     message(FATAL_ERROR "Executable clang not found.")
   endif(NOT CLANG_EXECUTABLE)
 
-  if(NOT ${LLVM_VERSION} EQUAL ${LLVM_REQUIRED_VERSION})
+  if(NOT ${LLVM_VERSION} VERSION_EQUAL ${LLVM_REQUIRED_VERSION})
     message(
       FATAL_ERROR
       "Could NOT find LLVM version ${LLVM_REQUIRED_VERSION} (found version ${LLVM_VERSION})"
       )
-  endif(NOT ${LLVM_VERSION} EQUAL ${LLVM_REQUIRED_VERSION})
+  endif(NOT ${LLVM_VERSION} VERSION_EQUAL ${LLVM_REQUIRED_VERSION})
+  if(NOT ${LLVM_VERSION} STREQUAL ${LLVM_REQUIRED_VERSION})
+    message(
+      WARNING "LLVM version found (${LLVM_VERSION}) slightly different from needed (${LLVM_REQUIRED_VERSION})"
+      )
+  endif(NOT ${LLVM_VERSION} STREQUAL ${LLVM_REQUIRED_VERSION})
 
-  if(NOT ${CLANG_VERSION} EQUAL ${CLANG_REQUIRED_VERSION})
+  if(NOT ${CLANG_VERSION} VERSION_EQUAL ${CLANG_REQUIRED_VERSION})
     message(
       FATAL_ERROR
       "Could NOT find Clang version ${CLANG_REQUIRED_VERSION} (found version ${CLANG_VERSION})"
       )
-  endif(NOT ${CLANG_VERSION} EQUAL ${CLANG_REQUIRED_VERSION})
+  endif(NOT ${CLANG_VERSION} VERSION_EQUAL ${CLANG_REQUIRED_VERSION})
+  # CLANG_VERSION's possible suffix is stripped out in functions `set_variables_from*'.
 
   execute_process(
     COMMAND ${LLVM-CONFIG_EXECUTABLE} --build-mode
@@ -83,8 +145,10 @@ function(find_llvm_and_clang LLVM_REQUIRED_VERSION CLANG_REQUIRED_VERSION)
     )
   string(STRIP "${LLVM_BUILD_TYPE}" LLVM_BUILD_TYPE)
   set(LLVM_BUILD_TYPE ${LLVM_BUILD_TYPE} CACHE INTERNAL "")
+  message(STATUS "LLVM version: ${LLVM_VERSION}")
+  message(STATUS "Clang version: ${CLANG_VERSION}")
 endfunction(find_llvm_and_clang)
-  
+
 function(set_variables_from_llvm_build_tree LLVM_ROOT_ABSOLUTE)
   list(APPEND CMAKE_PREFIX_PATH ${LLVM_ROOT_ABSOLUTE})
   # The following command sets LLVM_TOOLS_BINARY_DIR, LLVM_*_VERSION_*, LLVM_DEFINITIONS

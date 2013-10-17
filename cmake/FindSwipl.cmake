@@ -11,12 +11,12 @@
 #                         over variable $PATH. Standard locations for
 #                         SWI /lib and /include directories are found
 #                         through SWI Prolog commands.
-#                        
+#
 #   SWIPL_INCLUDES        Search path used to find the SWI Prolog
 #                         include files. If defined, it takes
 #                         precedence over the standard location as
 #                         computed by the swipl command.
-#                        
+#
 #   SWIPL_LIBS            Search path used to find the SWI Prolog
 #                         libraries. If defined, it takes precedence
 #                         over the standard location as computed by
@@ -26,15 +26,15 @@
 #
 #   SWIPL_FOUND           Whether SWI Prolog binary, library and
 #                         include files where found in the system.
-#                         
+#
 #   SWIPL_EXECUTABLE      Absolute path for SWI Prolog main
 #                         executable.
-#                         
+#
 #   SWIPL_ROOT_DIR        SWI Prolog home (base) directory.
 #
 #   SWIPL_INCLUDE_DIRS    SWI Prolog include directories. To be used
 #                         with include_directories().
-#                         
+#
 #   SWIPL_LIBRARIES       SWI Prolog libraries. To be used with
 #                         target_link_libraries.
 #
