@@ -159,7 +159,8 @@ function(set_variables_from_llvm_build_tree LLVM_ROOT_ABSOLUTE)
   set(LLVM_DEFINITIONS ${LLVM_DEFINITIONS} CACHE INTERNAL "")
   # Set LLVM-CONFIG_EXECUTABLE
   # Executable found through CMAKE_PREFIX_PATH, set above
-  find_program(LLVM-CONFIG_EXECUTABLE NAMES llvm-config)
+  find_program(LLVM-CONFIG_EXECUTABLE
+    NAMES llvm-config-${LLVM_REQUIRED_VERSION} llvm-config)
   # Set LLVM_INCLUDE_DIRS
   execute_process(
     COMMAND ${LLVM-CONFIG_EXECUTABLE} --src-root
@@ -180,7 +181,7 @@ function(set_variables_from_llvm_build_tree LLVM_ROOT_ABSOLUTE)
     message(FATAL_ERROR "Clang build tree not found in ${CLANG_OBJ_ROOT}")
   endif()
   find_program(CLANG_EXECUTABLE
-    NAMES clang
+    NAMES clang-${CLANG_REQUIRED_VERSION} clang
     HINTS ${LLVM_TOOLS_BINARY_DIR}
     )
   execute_process(
@@ -207,7 +208,8 @@ function(set_variables_from_installed_llvm)
   # If CMAKE_PREFIX_PATH contains LLVM_ROOT_ABSOLUTE, the following
   # executable is taken from that directory. Otherwise, it is taken
   # from the PATH environment var.
-  find_program(LLVM-CONFIG_EXECUTABLE NAMES llvm-config)
+  find_program(LLVM-CONFIG_EXECUTABLE
+    NAMES llvm-config-${LLVM_REQUIRED_VERSION} llvm-config)
   execute_process(
     COMMAND ${LLVM-CONFIG_EXECUTABLE} --bindir
     RESULT_VARIABLE LLVM-CONFIG_RESULT
@@ -226,7 +228,7 @@ function(set_variables_from_installed_llvm)
   # executable is taken from that directory. Otherwise, it is taken
   # from the PATH environment var.
   find_program(CLANG_EXECUTABLE
-    NAMES clang
+    NAMES clang-${CLANG_REQUIRED_VERSION} clang
     HINTS ${LLVM_TOOLS_BINARY_DIR}
     )
   execute_process(
