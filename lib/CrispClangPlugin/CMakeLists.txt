@@ -36,5 +36,4 @@ add_definitions(
 
 # TODO: add all necessary definitions to avoid using config.h.
 
-install(TARGETS crispclang
-    LIBRARY DESTINATION lib)
+install(TARGETS crispclang LIBRARY DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})

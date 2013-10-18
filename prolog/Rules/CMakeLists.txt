@@ -6,3 +6,8 @@ set(BINARY_PROLOG_RULES_DIR "${CMAKE_BINARY_DIR}/${PROLOG_RULES_DIR}")
 foreach(rule_file ${RULE_FILES})
   configure_file(${rule_file} "${BINARY_PROLOG_RULES_DIR}/${rule_file}" COPYONLY)
 endforeach()
+
+# Install
+install(
+  FILES ${RULE_FILES}
+  DESTINATION "${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}/${PROLOG_RULES_DIR}")

@@ -35,6 +35,10 @@ message(STATUS "DEBUG CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 # Define GNU standard directories
 include(GNUInstallDirs)
 
+# In some Unix systems (e.g. Arch Linux) need to use RPATH (runtime path) to find SWI
+# library from installed shared objects.
+list(APPEND CMAKE_INSTALL_RPATH ${SWIPL_LIBRARY_DIRS})
+
 # Crisp-specific include dirs
 list(APPEND CRISP_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/include)
 list(APPEND CRISP_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -45,7 +49,7 @@ message(STATUS "DEBUG CRISP_INCLUDE_DIRS: ${CRISP_INCLUDE_DIRS}")
 # TODO: move this to dirs where it's really necessary, i.e., with targets that need to
 # compile with clang. This probably will solve the problem with distributions without
 # clang++
-set(CMAKE_CXX_COMPILER "${CLANG_EXECUTABLE}++")
+set(CMAKE_CXX_COMPILER "${CLANG_EXECUTABLE}")
 set(CMAKE_C_COMPILER "${CLANG_EXECUTABLE}")
 
 # The following variables are used in subdirectories. They represent relative paths
@@ -55,16 +59,16 @@ set(SWI_BOOT_FILES_DIR "SWIBootFiles")
 set(CRISP_RULES_DIR "CrispRules")
 set(PROLOG_RULES_DIR "PrologRules")
 
-# Install files
-install(FILES COPYING README.md DESTINATION ${CMAKE_INSTALL_DOCDIR})
-
 # Subdirectories
 add_subdirectory(include)
 add_subdirectory(prolog)
 add_subdirectory(lib)
 
+# Install documentation files
+install(FILES COPYING README.md DESTINATION ${CMAKE_INSTALL_DOCDIR})
+
 # add_subdirectory(test)
 
 # TODO: make check (only if llvm-lit present)
-# TODO: make install
 # TODO: make clean
+# TODO: make doc

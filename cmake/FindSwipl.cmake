@@ -38,6 +38,9 @@
 #   SWIPL_LIBRARIES       SWI Prolog libraries. To be used with
 #                         target_link_libraries.
 #
+#   SWIPL_LIBRARY_DIRS    SWI Prolog library directories. Useful for
+#                         RPATH on UNIX.
+#
 #   SWIPL_VERSION_STRING  SWI Prolog version in x.y.z format.
 #
 # This module provides the following function:
@@ -126,12 +129,10 @@ if(SWIPL_EXECUTABLE)
   set_swipl_version(${SWIPL_EXECUTABLE})
 
   find_library(SWIPL_LIBRARIES swipl
-    HINTS
-      ${SWIPL_LIBS}
-      ENV SWIPL_LIBS
-    PATHS
-      ${SWIPL_ROOT_DIR}/lib/${SWIPL_ARCH}
-      )
+    HINTS ${SWIPL_LIBS} ENV SWIPL_LIBS
+    PATHS ${SWIPL_ROOT_DIR}/lib/${SWIPL_ARCH})
+
+  string(REGEX REPLACE "\(.*\)/[^/]*" "\\1" SWIPL_LIBRARY_DIRS "${SWIPL_LIBRARIES}")
 
   # Look for SWI C-interface library.
   find_path(SWIPL_INCLUDE_DIRS SWI-Prolog.h
