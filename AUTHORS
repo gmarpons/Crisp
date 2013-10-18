@@ -1,40 +1,21 @@
-This file lists, in alphabetical order, the authors of Crisp and their
-legally significant (*) contributions.
+This file lists, in alphabetical order, the authors of Crisp with
+legally significant (*) contributions. The contribution of every
+particular author can be found in the commit history of the Crisp
+source code repository (https://github.com/gmarpons/Crisp). For a
+given commit, the author of the commit is considered the contributor
+of its contents. The exceptions to this rule (when some person
+contributes to a file and this is not reflected in the authority of
+any commit) are listed below.
 
 (*) See http://www.gnu.org/prep/maintain/html_node/Legally-Significant.html.
 
 
-Ángel Herranz Nieva <aherranz@babel.ls.fi.upm.es>: wrote
-  PrologSyntax.hs
-
-László Nagy <rizsotto@gmail.com>: wrote */CMakeLists.txt
-  FindClang.cmake FindSwipl.cmake lit.cfg lit.site.cfg.in
-  hicpp_3_3_13.cpp
+Ángel Herranz Nieva <aherranz@babel.ls.fi.upm.es>: wrote a first
+  version of PrologSyntax.hs (not reflected in commit history).
 
 Guillem Marpons Ucero <gmarpons@babel.ls.fi.upm.es>: started the
-  project
-and wrote COPYING .dir-locals.el .gitignore LICENSE.TXT
-  Makefile.crisp.rules README.md doxygen.cfg.in doxygen.css
-  doxygen.footer doxygen.header doxygen.intro ClangPrologQueries.h
-  PrologPredBaseTemplates.h PrologPredDeclarationMacros.h
-  PrologPredRegistrationMacros.h PrologPredTemplatesForClangTypes.h
-  PrologUtilityFunctions.h RunPrologEngine.h ClangDeclarations.cpp
-  ClangPrologPredicateRegistration.c
-  ClangPrologPredicateRegistration.h ClangPrologPredicates.cpp
-  ClangPrologPredicates.h CompilationInfo.cpp CompilationInfo.h
-  CrispASTAction.cpp CrispModulePass.cpp LLVMCompilationInfo.cpp
-  LLVMCompilationInfo.h LLVMDeclarations.cpp
-  LLVMPrologPredicateRegistration.c LLVMPrologPredicateRegistration.h
-  LLVMPrologPredicates.cpp LLVMPrologPredicates.h
-  LLVMPrologQueries.cpp LLVMPrologQueries.h
-  ClangFunctionsForBootstrapping.inc DeclExtractorASTAction.cpp
-  DeclExtractorPrologPredicateRegistration.c
-  DeclExtractorPrologPredicateRegistration.h
-  DeclExtractorPrologPredicates.cpp DeclExtractorPrologPredicates.h
-  ClangPrologQueries.cpp PrologUtilityFunctions.cpp
-  RunPrologEngine.cpp PrologBootForCrispClangPlugin.pl
-  PrologBootForCrispLLVMPass.pl PrologBootForDeclExtractor.pl
-  AbstractSyntax.org
-and changed configure.ac PrologSyntax.hs
+  project and is its current maintainer.
 
-
+László Nagy <rizsotto@gmail.com>: made improvements to different parts
+  of the project, including the Cmake build system and the test
+  automation.
