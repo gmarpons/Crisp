@@ -1,5 +1,5 @@
 # Project name
-project(Crisp C CXX)
+project(crisp C CXX)
 
 # Required CMake version and policies
 cmake_minimum_required(VERSION 2.8)
