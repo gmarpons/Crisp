@@ -45,6 +45,10 @@
 #   CLANG_INCLUDE_DIRS
 #
 #   CLANG_DEFINITIONS
+#
+#   LIT_EXECUTABLE
+#
+#   LIT_FOUND
 
 # TODO: Allow a list of compatible versions for both LLVM and Clang.
 
@@ -146,7 +150,18 @@ function(find_llvm_and_clang LLVM_REQUIRED_VERSION)
   string(STRIP "${LLVM_BUILD_TYPE}" LLVM_BUILD_TYPE)
   set(LLVM_BUILD_TYPE ${LLVM_BUILD_TYPE} CACHE INTERNAL "")
   message(STATUS "LLVM version: ${LLVM_VERSION}")
+  message(STATUS "LLVM root directory: ${LLVM_ROOT_ABSOLUTE}")
+  message(STATUS "LLVM build type: ${LLVM_BUILD_TYPE}")
   message(STATUS "Clang version: ${CLANG_VERSION}")
+  message(STATUS "Clang executable: ${CLANG_EXECUTABLE}")
+
+  find_program(LIT_EXECUTABLE
+    NAMES lit-${LLVM_REQUIRED_VERSION} lit llvm-lit
+    HINTS ${LLVM_TOOLS_BINARY_DIR})
+  if(LIT_EXECUTABLE)
+    set(LIT_FOUND True CACHE INTERNAL "")
+    message(STATUS "LLVM's lit found : ${LIT_EXECUTABLE}")
+  endif(LIT_EXECUTABLE)
 endfunction(find_llvm_and_clang)
 
 function(set_variables_from_llvm_build_tree LLVM_ROOT_ABSOLUTE)

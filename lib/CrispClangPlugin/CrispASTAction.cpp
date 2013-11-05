@@ -235,6 +235,8 @@ namespace crisp {
                    b::mem_fun_ref(&std::string::c_str));
     }
     {
+      // FIXME: crisp-boot-dir should no longer be a public option.
+      // Now only useful with relative paths.
       static cl::opt<std::string> const
         BootFilesDirParser("crisp-boot-dir",
                            cl::desc("Specify boot files directory"),

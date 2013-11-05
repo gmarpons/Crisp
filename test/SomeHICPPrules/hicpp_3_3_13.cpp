@@ -1,5 +1,8 @@
 // RUN: %crisp_clang_cc1 -plugin-arg-crisp-clang SomeHICPPrules %s -verify
 
+// TODO: update to new lit variable syntax:
+// http://llvm.org/docs/TestingGuide.html#variables-and-substitutions
+
 class B {
 public:
   B(); // expected-warning 2 {{HICPP 3.3.13: ctor/dtor 'B' calls (maybe indirectly) virtual method 'func'}} // expected-warning {{HICPP 3.3.13: ctor/dtor 'B' calls (maybe indirectly) virtual method 'func2'}}

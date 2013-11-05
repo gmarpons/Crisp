@@ -136,13 +136,10 @@ if(SWIPL_EXECUTABLE)
 
   # Look for SWI C-interface library.
   find_path(SWIPL_INCLUDE_DIRS SWI-Prolog.h
-    HINTS
-      ${SWIPL_INCLUDES}
-      ENV SWIPL_INCLUDES
-    PATHS
-      ${SWIPL_ROOT_DIR}/include
-      )
+    HINTS ${SWIPL_INCLUDES} ENV SWIPL_INCLUDES
+    PATHS ${SWIPL_ROOT_DIR}/include)
 
+  message(STATUS "SWI Prolog version: ${SWIPL_VERSION_STRING}")
   message(STATUS "SWI Prolog include dirs: ${SWIPL_INCLUDE_DIRS}")
   message(STATUS "SWI Prolog libraries: ${SWIPL_LIBRARIES}")
 

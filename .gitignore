@@ -17,3 +17,4 @@ autom4te.cache/
 /BROWSE
 *.diags
 /docs/examples/DONT_REMOVE.gmarpons
+/test/SomeHICPPrules/*.cpp.pl
