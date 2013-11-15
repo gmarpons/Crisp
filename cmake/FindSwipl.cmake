@@ -24,7 +24,7 @@
 #
 # This module defines the following variables:
 #
-#   SWIPL_FOUND           Whether SWI Prolog binary, library and
+#   Swipl_FOUND           Whether SWI Prolog binary, library and
 #                         include files where found in the system.
 #
 #   SWIPL_EXECUTABLE      Absolute path for SWI Prolog main
@@ -103,7 +103,7 @@ endfunction(set_swipl_version)
 # the TARGET name is a relative path it will be interpreted relative
 # to the build tree directory corresponding to the current source
 # directory.
-function(add_swi_prolog_saved_state TARGET PROLOG_FILE)
+function(add_swi_prolog_saved_state TARGET TARGET_NAME PROLOG_FILE)
   set(DEPENDS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${PROLOG_FILE}")
   add_custom_command(
     OUTPUT "${TARGET}"
@@ -111,8 +111,7 @@ function(add_swi_prolog_saved_state TARGET PROLOG_FILE)
     DEPENDS ${DEPENDS_FILE}
     COMMENT "Building ${TARGET}"
     VERBATIM)
-  string(REPLACE "/" "_" TARGET_NAME "${TARGET}")
-  add_custom_target("${TARGET_NAME}_target" ALL DEPENDS ${TARGET})
+  add_custom_target("${TARGET_NAME}" DEPENDS ${TARGET})
 endfunction(add_swi_prolog_saved_state)
 
 # Main program for this module begins here
@@ -158,10 +157,12 @@ if(SWIPL_EXECUTABLE)
   endif(NOT ${SWIPL_TEST_COMPILES})
 endif()
 
-# Handle the QUIETLY and REQUIRED arguments, handle version
-# requirements, and set SWIPL_FOUND to TRUE if all listed variables
-# are TRUE.
+include(FindPackageHandleStandardArgs)
+
+# Handle the QUIETLY and REQUIRED arguments, handle version requirements, and set
+# SWIPL_FOUND to TRUE if all listed variables are TRUE.
 find_package_handle_standard_args(Swipl
+  FOUND_VAR Swipl_FOUND         # It's recommended to use OriginalCase_Name
   REQUIRED_VARS SWIPL_EXECUTABLE SWIPL_LIBRARIES SWIPL_INCLUDE_DIRS SWIPL_TEST_COMPILES
   VERSION_VAR SWIPL_VERSION_STRING
   )

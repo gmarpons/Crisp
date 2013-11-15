@@ -1,23 +1,27 @@
+# This library target is not meant to be linked anywhere. Its build process generates a
+# .inc file used by targed 'crispclang'.
 add_library(run_clang_decl_extractor STATIC
-    ClangDeclarations.cpp)
+  ClangDeclarations.cpp)
 
 add_dependencies(run_clang_decl_extractor declextractor)
-add_dependencies(run_clang_decl_extractor generate_saved_state)
 
 set_source_files_properties(ClangDeclarations.cpp PROPERTIES
     COMPILE_FLAGS "-Xclang -load -Xclang ${DECLEXTRACTOR_BUILD_DIR}/libdeclextractor.so -Xclang -add-plugin -Xclang decl-extractor -Xclang -plugin-arg-decl-extractor -Xclang ${CMAKE_BINARY_DIR}/${SWI_BOOT_FILES_DIR} -Xclang -plugin-arg-decl-extractor -Xclang init_clang_base_types")
 
 add_library(crispclang SHARED
-    ClangPrologPredicateRegistration.c
-    ClangPrologPredicates.cpp
-    CompilationInfo.cpp
-    CrispASTAction.cpp)
+  ClangPrologPredicateRegistration.c
+  ClangPrologPredicates.cpp
+  CompilationInfo.cpp
+  CrispASTAction.cpp)
 
 target_link_libraries(crispclang
   PrologEngineWrapper
   Support
   ${SWIPL_LIBRARIES})
 
+# prolog_boot_for_crisp_clang_plugin is not really needed for crispclang, but all clients
+# of crispclang are going to need it, so we set a dependency.
+add_dependencies(crispclang prolog_boot_for_crisp_clang_plugin)
 add_dependencies(crispclang run_clang_decl_extractor)
 
 include_directories(${CRISP_INCLUDE_DIRS})

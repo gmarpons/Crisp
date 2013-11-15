@@ -1,5 +1,7 @@
+# TODO: generate check target only if suitable Python version found
+
 # If LLVM's lit found, enable regression tests with lit
-if(LIT_FOUND)
+if(LlvmLibsAndTools_lit_FOUND)
   # Prepare build directory for the use of lit
   configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/lit.site.cfg.in
@@ -16,7 +18,7 @@ if(LIT_FOUND)
   add_dependencies(check crispclang)
   add_dependencies(check crispllvm)
   message(STATUS "Generated `check' target to run regression tests with lit")
-else(LIT_FOUND)
+else(LlvmLibsAndTools_lit_FOUND)
   message(STATUS "LLVM's lit not found, no `check' target generated")
-endif(LIT_FOUND)
+endif(LlvmLibsAndTools_lit_FOUND)
 
